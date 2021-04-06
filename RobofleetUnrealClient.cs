@@ -2,7 +2,7 @@
 using System.IO;
 using UnrealBuildTool;
 
-public class RobofleetClientUnrealModule : ModuleRules
+public class RobofleetUnrealClient : ModuleRules
 {
     // convenience properties
     private string ModulePath
@@ -15,7 +15,7 @@ public class RobofleetClientUnrealModule : ModuleRules
         get { return Path.GetFullPath(Path.Combine(ModulePath, "../../ThirdParty/")); }
     }
 
-    public RobofleetClientUnrealModule(ReadOnlyTargetRules Target) : base(Target)
+    public RobofleetUnrealClient(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
