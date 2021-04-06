@@ -1,0 +1,3 @@
+[submodule "Private/robofleet_client_lib"]
+	path = Private/robofleet_client_lib
+	url = https://github.com/ut-amrl/robofleet_client_lib
