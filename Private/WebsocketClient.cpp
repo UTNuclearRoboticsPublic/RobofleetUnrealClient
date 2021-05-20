@@ -52,7 +52,6 @@ void UWebsocketClient::Ping(std::vector<char> Payload)
 
 
 	Socket->Send(TEXT("isthisping"));
-	Socket->
 	//Socket->Send(CompleteFrame.data());
 	//Socket->Send(CompleteFrame.data());
 }
