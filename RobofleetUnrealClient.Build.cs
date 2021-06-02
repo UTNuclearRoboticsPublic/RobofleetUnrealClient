@@ -12,13 +12,17 @@ public class RobofleetUnrealClient : ModuleRules
 
     private string ThirdPartyPath
     {
-        get { return Path.GetFullPath(Path.Combine(ModulePath, "../../ThirdParty/")); }
+        get { return Path.GetFullPath(Path.Combine(ModulePath, "./")); }
     }
 
     public RobofleetUnrealClient(ReadOnlyTargetRules Target) : base(Target)
-	{
+    {
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
 		PublicDependencyModuleNames.AddRange(new string[] {"Core", "CoreUObject", "Engine", "WebSockets" });
+		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Private/robofleet_client_lib/include"));
+		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Private/robofleet_client_lib"));
+		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Private"));
+
     }
 }

@@ -18,19 +18,64 @@ void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:808
 {
 	Socket = FWebSocketsModule::Get().CreateWebSocket(ServerURL, ServerProtocol);
 
-	//Socket->OnConnected().Add(&UWebsocketClient::OnConnected);
-
-	Socket->Connect();
-
+	// Bind Socket functions
+	//Socket->OnConnected().AddUFunction(this, FName("OnConnected"));
+	//Socket->OnConnectionError().AddUFunction(this, FName("OnConnectionError"));
+	//Socket->OnMessageSent().AddUFunction(this, FName("OnMessageSent"));
 	Socket->OnRawMessage().AddLambda([](const void* Data, SIZE_T Size, SIZE_T BytesRemaining) -> void {
-		UE_LOG(LogTemp, Warning, TEXT("Message Received"))
+		UE_LOG(LogTemp, Warning, TEXT("Message Received"));
 		});
+
 }
 
 void UWebsocketClient::OnConnected()
 {
-
+	UE_LOG(LogTemp, Warning, TEXT("Connected to websocket."))
 }
+
+void UWebsocketClient::OnConnectionError()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Encountered error while trying to connect to websocket."))
+}
+
+void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Message Received"));
+}
+
+void UWebsocketClient::OnMessageSent()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Message Sent"));
+}
+
+void UWebsocketClient::Send(const void* ptr, uint32_t size, bool isBinary)
+{
+	Socket->Send(ptr, size, isBinary);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void UWebsocketClient::Ping(std::vector<char> Payload)
 {

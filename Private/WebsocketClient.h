@@ -27,10 +27,14 @@ public:
 
 
 	void Initialize(FString ServerURL = TEXT("ws://localhost:8080"), FString ServerProtocol = TEXT("ws"));
-
 	void OnConnected();
+	void OnConnectionError();
+	void OnMessageSent();
+	void OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T BytesRemaining);
 
-	void Ping(std::vector<char> Payload);
+	void Send(const void* ptr, uint32_t size, bool isBinary);
+
+	void Ping(std::vector<char> Payload);	
 
 	std::vector<char> GetFrameHeader(char opCode, uint32 payloadLenght, uint32 maskingKey, bool lastFrame);
 };
