@@ -10,10 +10,19 @@
 #include "decode.hpp"
 #include "message_structs.h"
 #include <string>
+#include <map>
+#include <memory> // TODO use UE4 shared ptr instead
 #include "WebsocketClient.h"
+#include<cstdint>
+#include<string>
 
 #include "RobofleetClientBase.generated.h"
 
+struct RobotData {
+	RobotLocation Location;
+	RobotStatus Status;
+	bool IsAlive;
+};
 
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
@@ -27,12 +36,36 @@ public:
 	int Verbosity;
 	FString HostUrl;
 	UWebsocketClient* hobarey;
+	std::map<std::string, std::shared_ptr<RobotData> > RobotMap;
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void deneme();
 
 	void WebsocketDataCB(const void* Data);
+	//UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	//TArray<FString> GetRobotNames();
 
+	std::shared_ptr<RobotData> GetRobotDataByName(std::string RobotName);
+	std::map<std::string, std::shared_ptr<RobotData> > GetAllRobotData();
+
+	//UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	//EAgentRole GetAgentRole(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	FString GetRobotStatus(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	bool IsRobotOk(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	float GetRobotBatteryLevel(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	FString GetRobotLocationString(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	FVector GetRobotPosition(const FString& RobotName);
+	
 	template <typename T>
 	void encode_ros_msg(
 		const T& msg, const std::string& msg_type, std::string&  from_topic,
