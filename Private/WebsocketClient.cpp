@@ -11,23 +11,37 @@ UWebsocketClient::UWebsocketClient()
 
 UWebsocketClient::~UWebsocketClient()
 {
+	// TODO proper handling of websocket erasure is needed
+	//Socket->Close();
+	callbackRegistered = false;
 
 }
 
 void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/) 
 {
 	Socket = FWebSocketsModule::Get().CreateWebSocket(ServerURL, ServerProtocol);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(ServerURL));
 
 	// Bind Socket functions
-	//Socket->OnConnected().AddUFunction(this, FName("OnConnected"));
-	//Socket->OnConnectionError().AddUFunction(this, FName("OnConnectionError"));
-	//Socket->OnMessageSent().AddUFunction(this, FName("OnMessageSent"));
-	Socket->OnRawMessage().AddLambda([](const void* Data, SIZE_T Size, SIZE_T BytesRemaining) -> void {
-		UE_LOG(LogTemp, Warning, TEXT("Message Received"));
-		});
+	Socket->OnConnected().AddUFunction(this, FName("OnConnected"));
+	Socket->OnConnectionError().AddUFunction(this, FName("OnConnectionError"));
+	Socket->OnMessageSent().AddUFunction(this, FName("OnMessageSent"));
 
+	// Unreal having a problem with binding to a raw function, and a UFUNCTION doesn't like having a void* as a arg
+	// For now, use lambda directly
+	Socket->OnRawMessage().AddLambda([this](const void* Data, SIZE_T Size, SIZE_T BytesRemaining) -> void {
+		OnMessageReceived(Data, Size, BytesRemaining);
+		//UE_LOG(LogTemp, Warning, TEXT("Message Received"));
+	});
+		
+
+	Socket->Connect();
 }
 
+void UWebsocketClient::IsCallbackRegistered(bool val)
+{
+	callbackRegistered = val;
+}
 void UWebsocketClient::OnConnected()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Connected to websocket."))
@@ -41,6 +55,9 @@ void UWebsocketClient::OnConnectionError()
 void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Message Received"));
+	if (callbackRegistered) {
+		OnReceivedCB(Data);
+	}
 }
 
 void UWebsocketClient::OnMessageSent()
@@ -50,6 +67,7 @@ void UWebsocketClient::OnMessageSent()
 
 void UWebsocketClient::Send(const void* ptr, uint32_t size, bool isBinary)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Message Sending"));
 	Socket->Send(ptr, size, isBinary);
 }
 

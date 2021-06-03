@@ -8,6 +8,7 @@
 #include "WebSocketsModule.h"
 #include "IWebSocket.h"
 #include <vector>
+#include <functional>
 
 #include "WebsocketClient.generated.h"
 
@@ -24,12 +25,22 @@ public:
 	~UWebsocketClient();
 	
 	TSharedPtr<IWebSocket> Socket;
-
+	std::function< void (const void*) > callback;
+	bool callbackRegistered;
 
 	void Initialize(FString ServerURL = TEXT("ws://localhost:8080"), FString ServerProtocol = TEXT("ws"));
+
+	std::function<void(const void*)> OnReceivedCB;
+
+	UFUNCTION()
 	void OnConnected();
+	
+	UFUNCTION()
 	void OnConnectionError();
+	
+	UFUNCTION()
 	void OnMessageSent();
+	
 	void OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T BytesRemaining);
 
 	void Send(const void* ptr, uint32_t size, bool isBinary);
@@ -37,4 +48,7 @@ public:
 	void Ping(std::vector<char> Payload);	
 
 	std::vector<char> GetFrameHeader(char opCode, uint32 payloadLenght, uint32 maskingKey, bool lastFrame);
+
+	void IsCallbackRegistered(bool val);
+
 };

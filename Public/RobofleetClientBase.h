@@ -31,7 +31,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void deneme();
 
-	void CallbackTest(const void* Data);
+	void WebsocketDataCB(const void* Data);
 
 	template <typename T>
 	void encode_ros_msg(
