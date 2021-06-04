@@ -17,10 +17,10 @@ UWebsocketClient::~UWebsocketClient()
 
 }
 
-void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/) 
+void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/, bool isVerbose /*= false*/) 
 {
 	Socket = FWebSocketsModule::Get().CreateWebSocket(ServerURL, ServerProtocol);
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(ServerURL));
+	verbose = isVerbose;
 
 	// Bind Socket functions
 	Socket->OnConnected().AddUFunction(this, FName("OnConnected"));
@@ -31,7 +31,6 @@ void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:808
 	// For now, use lambda directly
 	Socket->OnRawMessage().AddLambda([this](const void* Data, SIZE_T Size, SIZE_T BytesRemaining) -> void {
 		OnMessageReceived(Data, Size, BytesRemaining);
-		//UE_LOG(LogTemp, Warning, TEXT("Message Received"));
 	});
 		
 
@@ -54,7 +53,9 @@ void UWebsocketClient::OnConnectionError()
 
 void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Message Received"));
+	if(verbose)
+		UE_LOG(LogTemp, Warning, TEXT("Message Received"));
+
 	if (callbackRegistered) {
 		OnReceivedCB(Data);
 	}
@@ -62,12 +63,14 @@ void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T B
 
 void UWebsocketClient::OnMessageSent()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Message Sent"));
+	if(verbose)
+		UE_LOG(LogTemp, Warning, TEXT("Message Sent"));
 }
 
 void UWebsocketClient::Send(const void* ptr, uint32_t size, bool isBinary)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Message Sending"));
+	if (verbose)
+		UE_LOG(LogTemp, Warning, TEXT("Message Sending"));
 	Socket->Send(ptr, size, isBinary);
 }
 

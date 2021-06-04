@@ -27,8 +27,9 @@ public:
 	TSharedPtr<IWebSocket> Socket;
 	std::function< void (const void*) > callback;
 	bool callbackRegistered;
+	bool verbose;
 
-	void Initialize(FString ServerURL = TEXT("ws://localhost:8080"), FString ServerProtocol = TEXT("ws"));
+	void Initialize(FString ServerURL = TEXT("ws://localhost:8080"), FString ServerProtocol = TEXT("ws"), bool isVerbose = false);
 
 	std::function<void(const void*)> OnReceivedCB;
 

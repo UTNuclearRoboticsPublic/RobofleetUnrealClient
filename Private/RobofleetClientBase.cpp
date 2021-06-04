@@ -1,23 +1,16 @@
 #include "RobofleetClientBase.h"
 
-// The base topic names for topics we want from roboleet
-const std::string StatusTopicName = "status";
-const std::string LocalizationTopicName = "localization";
 
-//TODO fill in names of actual robots, Get this list from the server instead of hardcoding
-std::vector<std::string> RobotNames = { "maxbot0", "gvrbot_051", "gvrbot_053", "robot_commander_001", "robot_commander_002" };
+const bool verbose = true;
 
-
+std::map<std::string, FDateTime> RobotsSeenTime;
+std::set<std::string> RobotsSeen = {};
 
 URobofleetBase::URobofleetBase()
 {
 	MaxQueueBeforeWaiting = 1;
 	Verbosity = 2;
 	HostUrl = "ws://localhost:8080";
-
-	for (int i = 0; i < RobotNames.size(); i++) {
-		RobotMap[RobotNames[i]] = std::make_shared<RobotData>();
-	}
 }
 
 void URobofleetBase::deneme()
@@ -25,7 +18,6 @@ void URobofleetBase::deneme()
 	UE_LOG(LogTemp, Warning, TEXT("Module Starting"));
 
 	hobarey = NewObject<UWebsocketClient>();
-
 	hobarey->Initialize(TEXT("ws://192.168.1.19:8080"), TEXT("ws"));
 	hobarey->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
 	hobarey->IsCallbackRegistered(true);
@@ -35,8 +27,15 @@ void URobofleetBase::deneme()
 
 
 	//MessageSchedulerLib<const void*> helpor(10, hamcio);
-	UE_LOG(LogTemp, Warning, TEXT("Module loaded"));
+	RegisterRobotStatusSubscription();
+	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
+}
 
+/*
+ * Used to track all robots currently on robofleet. 
+ * Status messages are very low overhead, so subscribing to all is not a problem.
+ */
+void URobofleetBase::RegisterRobotStatusSubscription() {
 	// STATUS messages
 	RobofleetSubscription msg;
 	msg.topic_regex = "/*/status";
@@ -45,59 +44,97 @@ void URobofleetBase::deneme()
 	std::string subs = "/subscriptions";
 	encode_ros_msg<RobofleetSubscription>(
 		msg, topic, subs, subs);
+}
 
+/*
+ * Used to register a higher-overhead topic on-demand. 
+ * Note that `MessageType` should be fully qualified with the message package name, i.e.
+ * `amrl_msgs/Localization2D` 
+ */
+void URobofleetBase::RegisterRobotSubscription(std::string TopicName, std::string RobotName, std::string MessageType) {
+	// STATUS messages
+	RobofleetSubscription msg;
+	msg.topic_regex = "/" + RobotName + "/" + TopicName;
+	msg.action = 1;
+	std::string topic = MessageType;
+	std::string subs = "/subscriptions";
+	encode_ros_msg<RobofleetSubscription>(
+		msg, topic, subs, subs);
+}
+
+/*
+ * Called on a timer, removes robots that haven't been seen in a while.
+ */
+void URobofleetBase::PruneInactiveRobots() {
+	std::map<std::string, FDateTime> newMap;
+	int CutoffTime = 10;
+	for (std::map<std::string, FDateTime>::iterator it = RobotsSeenTime.begin(); it != RobotsSeenTime.end(); ++it) {
+		if (FDateTime::Now() - it->second > CutoffTime) {
+			RobotsSeen.erase(it->first);
+		}
+		else {
+			newMap[it->first] = it->second;
+		}
+	}
+	RobotsSeenTime = newMap;
 }
 
 
 void URobofleetBase::WebsocketDataCB(const void* Data)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Callback Testing"));
-	const fb::amrl_msgs::RobofleetStatus* StatusRoot = flatbuffers::GetRoot<fb::amrl_msgs::RobofleetStatus>(Data);
-	const fb::amrl_msgs::Localization2DMsg* LocationRoot = flatbuffers::GetRoot<fb::amrl_msgs::Localization2DMsg>(Data);
-	std::string MsgTopic = StatusRoot->__metadata()->topic()->c_str();
+	const fb::MsgWithMetadata* msg = flatbuffers::GetRoot<fb::MsgWithMetadata>(Data);
+	std::string MsgTopic = msg->__metadata()->topic()->c_str();
 
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	std::string RobotNamespace = MsgTopic.substr(1, NamespaceIndex);
+	std::string TopicIsolated = MsgTopic.substr(NamespaceIndex+2, MsgTopic.length());
 
-	// Check if the robot that this message belongs to is one that we care about. If not, don't update.
-	if (std::find(RobotNames.begin(), RobotNames.end(), RobotNamespace) == RobotNames.end()) {
-		return;
-	}
 
-	// Check what type of message data was received, and stuff the appropriate struct
-	std::size_t isStatus = MsgTopic.find(StatusTopicName);
-	std::size_t isLocalization = MsgTopic.find(LocalizationTopicName);
-	if (isStatus != std::string::npos) {
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(StatusRoot->status()->c_str()));
-		RobotMap[RobotNamespace]->Status.status = StatusRoot->status()->c_str();
-		RobotMap[RobotNamespace]->Status.location = StatusRoot->location()->c_str();
-		RobotMap[RobotNamespace]->Status.is_ok = StatusRoot->is_ok();
-		RobotMap[RobotNamespace]->Status.battery_level = StatusRoot->battery_level();
+	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
+	// If we're seeing this robot for the first time, create new data holder
+	if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
+		RobotMap[RobotNamespace] = std::make_shared<RobotData>();
+	}
+	RobotsSeen.insert(RobotNamespace);
 
-	}
-	else if (isLocalization != std::string::npos) {
-		std::string LocationMsgRobot = LocationRoot->__metadata()->topic()->c_str();
-		RobotMap[RobotNamespace]->Location.frame = LocationRoot->header()->frame_id()->c_str();
-		RobotMap[RobotNamespace]->Location.x = LocationRoot->pose()->x();
-		RobotMap[RobotNamespace]->Location.y = LocationRoot->pose()->y();
-		RobotMap[RobotNamespace]->Location.theta = LocationRoot->pose()->theta();
-	}
-	for (int i = 0; i < RobotNames.size(); i++) {
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotNames[i].c_str()));
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[RobotNames[i]]->Status.status.c_str()));
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[RobotNames[i]]->Status.location.c_str()));
-		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[RobotNames[i]]->Status.battery_level);
-		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[RobotNames[i]]->Location.x);
-	}
+	DecodeMsg(Data, TopicIsolated, RobotNamespace);
+
+	if (verbose)
+		PrintRobotsSeen();
 
 }
 
-std::shared_ptr<RobotData> URobofleetBase::GetRobotDataByName(std::string RobotName) {
-	return RobotMap[RobotName];
+void URobofleetBase::PrintRobotsSeen() {
+	for (auto elem : RobotsSeen) {
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(elem.c_str()));
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.location.c_str()));
+		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
+		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[elem]->Location.x);
+	}
 }
 
-std::map<std::string, std::shared_ptr<RobotData> > URobofleetBase::GetAllRobotData() {
-	return RobotMap;
+template <typename T>
+typename T URobofleetBase::DecodeMsg(const void* Data) {
+	const auto* root = flatbuffers::GetRoot<typename flatbuffers_type_for<T>::type>(Data);
+	const T msg = decode<T>(root);
+	return msg;
+}
+
+/*
+ * This usage is unfortunate, but without std::any_cast and std::any, I can't see a way 
+ * around switching on topic name, since we explicitly care about the returned type 
+ * (and aren't just sending it over the wire like in ROS)
+ */
+void URobofleetBase::DecodeMsg(const void* Data, std::string topic, std::string RobotNamespace) {
+	if (topic == "status") {
+		RobotStatus rs = DecodeMsg<RobotStatus>(Data);
+		RobotMap[RobotNamespace]->Status = rs;
+	}
+	else if (topic == "localization") {
+		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
+		RobotMap[RobotNamespace]->Location = rl;
+	}
 }
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)

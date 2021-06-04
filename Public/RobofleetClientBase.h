@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "MessageSchedulerLib.hpp"
 #include "include/schema_generated.h"
+#include <flatbuffers/flatbuffers.h>
 #include "encode.hpp"
 #include "decode.hpp"
 #include "message_structs.h"
@@ -42,14 +43,18 @@ public:
 	void deneme();
 
 	void WebsocketDataCB(const void* Data);
-	//UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	//TArray<FString> GetRobotNames();
 
-	std::shared_ptr<RobotData> GetRobotDataByName(std::string RobotName);
-	std::map<std::string, std::shared_ptr<RobotData> > GetAllRobotData();
+	template <typename T> typename T DecodeMsg(const void* Data);
+	void DecodeMsg(const void* Data, std::string topic, std::string RobotNamespace);
 
-	//UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	//EAgentRole GetAgentRole(const FString& RobotName);
+	void RegisterRobotSubscription(std::string TopicName, std::string RobotName, std::string MessageType);
+	void RegisterRobotStatusSubscription();
+
+	void PrintRobotsSeen();
+
+	UFUNCTION()
+	void PruneInactiveRobots();
+
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	FString GetRobotStatus(const FString& RobotName);
