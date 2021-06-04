@@ -35,12 +35,11 @@ public:
 	URobofleetBase();
 	int MaxQueueBeforeWaiting;
 	int Verbosity;
-	FString HostUrl;
 	UWebsocketClient* hobarey;
 	std::map<std::string, std::shared_ptr<RobotData> > RobotMap;
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	void deneme();
+	void Connect(FString HostUrl);
 
 	void WebsocketDataCB(const void* Data);
 
@@ -50,6 +49,7 @@ public:
 	void RegisterRobotSubscription(std::string TopicName, std::string RobotName, std::string MessageType);
 	void RegisterRobotStatusSubscription();
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void PrintRobotsSeen();
 
 	UFUNCTION()

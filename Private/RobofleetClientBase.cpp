@@ -10,15 +10,16 @@ URobofleetBase::URobofleetBase()
 {
 	MaxQueueBeforeWaiting = 1;
 	Verbosity = 2;
-	HostUrl = "ws://localhost:8080";
 }
 
-void URobofleetBase::deneme()
+
+// TODO Remove or rename this function
+void URobofleetBase::Connect(FString HostUrl)
 {	
 	UE_LOG(LogTemp, Warning, TEXT("Module Starting"));
 
 	hobarey = NewObject<UWebsocketClient>();
-	hobarey->Initialize(TEXT("ws://192.168.1.19:8080"), TEXT("ws"));
+	hobarey->Initialize(HostUrl, TEXT("ws"));
 	hobarey->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
 	hobarey->IsCallbackRegistered(true);
 
@@ -105,6 +106,8 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 }
 
 void URobofleetBase::PrintRobotsSeen() {
+
+	UE_LOG(LogTemp, Warning, TEXT("Printing Existing Robots"));
 	for (auto elem : RobotsSeen) {
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(elem.c_str()));
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
@@ -139,6 +142,7 @@ void URobofleetBase::DecodeMsg(const void* Data, std::string topic, std::string 
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
+	// Check if robot exists
 	std::string RobotNamestd = std::string(TCHAR_TO_UTF8(*RobotName));
 	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Status.status.c_str()));
 }
