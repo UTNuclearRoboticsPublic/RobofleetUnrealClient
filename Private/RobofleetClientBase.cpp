@@ -1,33 +1,31 @@
 #include "RobofleetClientBase.h"
 
-
-const bool verbose = true;
-
-std::map<std::string, FDateTime> RobotsSeenTime;
-std::set<std::string> RobotsSeen = {};
-
 URobofleetBase::URobofleetBase()
 {
 	MaxQueueBeforeWaiting = 1;
-	Verbosity = 2;
+	Verbosity = 0;
+}
+
+URobofleetBase::URobofleetBase(int VerbosityLevel)
+{
+	MaxQueueBeforeWaiting = 1;
+	Verbosity = VerbosityLevel;
 }
 
 
-// TODO Remove or rename this function
+void URobofleetBase::Disconnect() {
+	SocketClient->Disconnect();
+}
+
 void URobofleetBase::Connect(FString HostUrl)
 {	
-	UE_LOG(LogTemp, Warning, TEXT("Module Starting"));
+	UE_LOG(LogTemp, Warning, TEXT("RobofleetClient Module starting"));
 
-	hobarey = NewObject<UWebsocketClient>();
-	hobarey->Initialize(HostUrl, TEXT("ws"));
-	hobarey->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
-	hobarey->IsCallbackRegistered(true);
+	SocketClient = NewObject<UWebsocketClient>();
+	SocketClient->Initialize(HostUrl, TEXT("ws"), false);
+	SocketClient->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
+	SocketClient->IsCallbackRegistered(true);
 
-	//std::vector<char> payload = { 'b','y','e','q','t' };
-	//hobarey->Ping(payload);
-
-
-	//MessageSchedulerLib<const void*> helpor(10, hamcio);
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
 }
@@ -43,7 +41,7 @@ void URobofleetBase::RegisterRobotStatusSubscription() {
 	msg.action = 1;
 	std::string topic = "amrl_msgs/RobofleetSubscription";
 	std::string subs = "/subscriptions";
-	encode_ros_msg<RobofleetSubscription>(
+	EncodeRosMsg<RobofleetSubscription>(
 		msg, topic, subs, subs);
 }
 
@@ -52,14 +50,13 @@ void URobofleetBase::RegisterRobotStatusSubscription() {
  * Note that `MessageType` should be fully qualified with the message package name, i.e.
  * `amrl_msgs/Localization2D` 
  */
-void URobofleetBase::RegisterRobotSubscription(std::string TopicName, std::string RobotName, std::string MessageType) {
-	// STATUS messages
+void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType) {
 	RobofleetSubscription msg;
-	msg.topic_regex = "/" + RobotName + "/" + TopicName;
+	msg.topic_regex = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	msg.action = 1;
-	std::string topic = MessageType;
+	std::string topic = std::string(TCHAR_TO_UTF8(*MessageType));
 	std::string subs = "/subscriptions";
-	encode_ros_msg<RobofleetSubscription>(
+	EncodeRosMsg<RobofleetSubscription>(
 		msg, topic, subs, subs);
 }
 
@@ -67,9 +64,9 @@ void URobofleetBase::RegisterRobotSubscription(std::string TopicName, std::strin
  * Called on a timer, removes robots that haven't been seen in a while.
  */
 void URobofleetBase::PruneInactiveRobots() {
-	std::map<std::string, FDateTime> newMap;
+	std::map<FString, FDateTime> newMap;
 	int CutoffTime = 10;
-	for (std::map<std::string, FDateTime>::iterator it = RobotsSeenTime.begin(); it != RobotsSeenTime.end(); ++it) {
+	for (std::map<FString, FDateTime>::iterator it = RobotsSeenTime.begin(); it != RobotsSeenTime.end(); ++it) {
 		if (FDateTime::Now() - it->second > CutoffTime) {
 			RobotsSeen.erase(it->first);
 		}
@@ -87,20 +84,20 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
 
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
-	std::string RobotNamespace = MsgTopic.substr(1, NamespaceIndex);
-	std::string TopicIsolated = MsgTopic.substr(NamespaceIndex+2, MsgTopic.length());
+	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
+	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex+2, MsgTopic.length()).c_str());
 
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
 	// If we're seeing this robot for the first time, create new data holder
 	if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
-		RobotMap[RobotNamespace] = std::make_shared<RobotData>();
+		RobotMap[RobotNamespace] = MakeShared<RobotData>();
 	}
 	RobotsSeen.insert(RobotNamespace);
 
 	DecodeMsg(Data, TopicIsolated, RobotNamespace);
 
-	if (verbose)
+	if (Verbosity)
 		PrintRobotsSeen();
 
 }
@@ -109,7 +106,7 @@ void URobofleetBase::PrintRobotsSeen() {
 
 	UE_LOG(LogTemp, Warning, TEXT("Printing Existing Robots"));
 	for (auto elem : RobotsSeen) {
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(elem.c_str()));
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(elem));
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.location.c_str()));
 		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
@@ -129,7 +126,7 @@ typename T URobofleetBase::DecodeMsg(const void* Data) {
  * around switching on topic name, since we explicitly care about the returned type 
  * (and aren't just sending it over the wire like in ROS)
  */
-void URobofleetBase::DecodeMsg(const void* Data, std::string topic, std::string RobotNamespace) {
+void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNamespace) {
 	if (topic == "status") {
 		RobotStatus rs = DecodeMsg<RobotStatus>(Data);
 		RobotMap[RobotNamespace]->Status = rs;
@@ -143,30 +140,35 @@ void URobofleetBase::DecodeMsg(const void* Data, std::string topic, std::string 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
 	// Check if robot exists
-	std::string RobotNamestd = std::string(TCHAR_TO_UTF8(*RobotName));
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
 	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Status.status.c_str()));
 }
 
 bool URobofleetBase::IsRobotOk(const FString& RobotName)
 {
-	std::string RobotNamestd = std::string(TCHAR_TO_UTF8(*RobotName));
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return false;
 	return RobotMap[RobotNamestd]->Status.is_ok;
 }
 
 float URobofleetBase::GetRobotBatteryLevel(const FString& RobotName)
 {
-	std::string RobotNamestd = std::string(TCHAR_TO_UTF8(*RobotName));
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return -1.0;
 	return RobotMap[RobotNamestd]->Status.battery_level;
 }
 
 FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
 {
-	std::string RobotNamestd = std::string(TCHAR_TO_UTF8(*RobotName));
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
 	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Status.location.c_str()));
 }
 
 FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 {
-	std::string RobotNamestd = std::string(TCHAR_TO_UTF8(*RobotName));
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
 }

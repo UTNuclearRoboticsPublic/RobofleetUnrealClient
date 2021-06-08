@@ -11,10 +11,8 @@ UWebsocketClient::UWebsocketClient()
 
 UWebsocketClient::~UWebsocketClient()
 {
-	// TODO proper handling of websocket erasure is needed
-	//Socket->Close();
 	callbackRegistered = false;
-
+	Disconnect();
 }
 
 void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/, bool isVerbose /*= false*/) 
@@ -33,8 +31,12 @@ void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:808
 		OnMessageReceived(Data, Size, BytesRemaining);
 	});
 		
-
 	Socket->Connect();
+}
+
+void UWebsocketClient::Disconnect() {
+	if(Socket != NULL)
+		Socket->Close();
 }
 
 void UWebsocketClient::IsCallbackRegistered(bool val)
