@@ -11,26 +11,94 @@ UWebsocketClient::UWebsocketClient()
 
 UWebsocketClient::~UWebsocketClient()
 {
-
+	callbackRegistered = false;
+	Disconnect();
 }
 
-void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/) 
+void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/, bool isVerbose /*= false*/) 
 {
 	Socket = FWebSocketsModule::Get().CreateWebSocket(ServerURL, ServerProtocol);
+	verbose = isVerbose;
 
-	//Socket->OnConnected().Add(&UWebsocketClient::OnConnected);
+	// Bind Socket functions
+	Socket->OnConnected().AddUFunction(this, FName("OnConnected"));
+	Socket->OnConnectionError().AddUFunction(this, FName("OnConnectionError"));
+	Socket->OnMessageSent().AddUFunction(this, FName("OnMessageSent"));
 
+	// Unreal having a problem with binding to a raw function, and a UFUNCTION doesn't like having a void* as a arg
+	// For now, use lambda directly
+	Socket->OnRawMessage().AddLambda([this](const void* Data, SIZE_T Size, SIZE_T BytesRemaining) -> void {
+		OnMessageReceived(Data, Size, BytesRemaining);
+	});
+		
 	Socket->Connect();
-
-	Socket->OnRawMessage().AddLambda([](const void* Data, SIZE_T Size, SIZE_T BytesRemaining) -> void {
-		UE_LOG(LogTemp, Warning, TEXT("Message Received"))
-		});
 }
 
+void UWebsocketClient::Disconnect() {
+	if(Socket != NULL)
+		Socket->Close();
+}
+
+void UWebsocketClient::IsCallbackRegistered(bool val)
+{
+	callbackRegistered = val;
+}
 void UWebsocketClient::OnConnected()
 {
-
+	UE_LOG(LogTemp, Warning, TEXT("Connected to websocket."))
 }
+
+void UWebsocketClient::OnConnectionError()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Encountered error while trying to connect to websocket."))
+}
+
+void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
+{
+	if(verbose)
+		UE_LOG(LogTemp, Warning, TEXT("Message Received"));
+
+	if (callbackRegistered) {
+		OnReceivedCB(Data);
+	}
+}
+
+void UWebsocketClient::OnMessageSent()
+{
+	if(verbose)
+		UE_LOG(LogTemp, Warning, TEXT("Message Sent"));
+}
+
+void UWebsocketClient::Send(const void* ptr, uint32_t size, bool isBinary)
+{
+	if (verbose)
+		UE_LOG(LogTemp, Warning, TEXT("Message Sending"));
+	Socket->Send(ptr, size, isBinary);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void UWebsocketClient::Ping(std::vector<char> Payload)
 {
