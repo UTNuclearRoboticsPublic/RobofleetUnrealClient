@@ -22,6 +22,10 @@ struct RobotData {
 	bool IsAlive;
 };
 
+//OnNewRobotSeen event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewRobotSeen, FString, RobotName);
+
+
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 {
@@ -87,4 +91,6 @@ public:
 	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
 	void RegisterRobotStatusSubscription();
 
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnNewRobotSeen OnNewRobotSeen;
 };

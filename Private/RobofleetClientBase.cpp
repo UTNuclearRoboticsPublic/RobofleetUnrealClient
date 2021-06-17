@@ -92,6 +92,7 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	// If we're seeing this robot for the first time, create new data holder
 	if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
 		RobotMap[RobotNamespace] = MakeShared<RobotData>();
+		OnNewRobotSeen.Broadcast(RobotNamespace);
 	}
 	RobotsSeen.insert(RobotNamespace);
 
