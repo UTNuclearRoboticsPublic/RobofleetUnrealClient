@@ -68,6 +68,7 @@ void URobofleetBase::PruneInactiveRobots() {
 	int CutoffTime = 10;
 	for (std::map<FString, FDateTime>::iterator it = RobotsSeenTime.begin(); it != RobotsSeenTime.end(); ++it) {
 		if (FDateTime::Now() - it->second > CutoffTime) {
+			OnRobotPruned.Broadcast(it->first);
 			RobotsSeen.erase(it->first);
 		}
 		else {

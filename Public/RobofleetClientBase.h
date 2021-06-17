@@ -25,6 +25,9 @@ struct RobotData {
 //OnNewRobotSeen event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewRobotSeen, FString, RobotName);
 
+//OnRobotPruned event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
+
 
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
@@ -36,18 +39,14 @@ public:
 	URobofleetBase();
 	URobofleetBase(int VerbosityLevel);
 
+private:
+
 	int MaxQueueBeforeWaiting;
 	int Verbosity = 0;
 	UWebsocketClient* SocketClient;
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::set<FString> RobotsSeen = {};
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		void Connect(FString HostUrl);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		void Disconnect();
 
 	template <typename T> typename T DecodeMsg(const void* Data);
 	void DecodeMsg(const void* Data, FString topic, FString RobotNamespace);
@@ -65,32 +64,43 @@ public:
 		SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		FString GetRobotStatus(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		float GetRobotBatteryLevel(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		FString GetRobotLocationString(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		FVector GetRobotPosition(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		bool IsRobotOk(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		void PrintRobotsSeen();
-
-	UFUNCTION()
-		void PruneInactiveRobots();
-
 	void WebsocketDataCB(const void* Data);
 
 	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
 	void RegisterRobotStatusSubscription();
 
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	void Connect(FString HostUrl);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	void Disconnect();
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	FString GetRobotStatus(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	float GetRobotBatteryLevel(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	FString GetRobotLocationString(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	FVector GetRobotPosition(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	bool IsRobotOk(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	void PrintRobotsSeen();
+
+	UFUNCTION()
+	void PruneInactiveRobots();
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnRobotPruned OnRobotPruned;
 };
