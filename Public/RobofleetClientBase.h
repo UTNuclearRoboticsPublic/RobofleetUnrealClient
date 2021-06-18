@@ -66,9 +66,6 @@ private:
 
 	void WebsocketDataCB(const void* Data);
 
-	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
-	void RegisterRobotStatusSubscription();
-
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
@@ -94,8 +91,14 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void PrintRobotsSeen();
+	
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	void RegisterRobotStatusSubscription();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void PruneInactiveRobots();
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
