@@ -39,7 +39,6 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 public:
 	// TODO: expose constructor to blueprints
 	URobofleetBase();
-	URobofleetBase(int VerbosityLevel);
 
 private:
 
@@ -63,7 +62,15 @@ private:
 		auto metadata = encode_metadata(fbb, msg_type, to_topic);
 		auto root_offset = encode<T>(fbb, msg, metadata);
 		fbb.Finish(flatbuffers::Offset<void>(root_offset));
-		SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
+		if (SocketClient->IsValidLowLevel())
+		{
+			UE_LOG(LogRobofleet, Warning, TEXT("Sending Message over socket"));
+			SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
+		}
+		else
+		{
+			UE_LOG(LogRobofleet, Warning, TEXT("Message not sent since socket is destroyed"));
+		}
 	}
 
 	void WebsocketDataCB(const void* Data);

@@ -8,12 +8,6 @@ URobofleetBase::URobofleetBase()
 	Verbosity = 0;
 }
 
-URobofleetBase::URobofleetBase(int VerbosityLevel)
-{
-	MaxQueueBeforeWaiting = 1;
-	Verbosity = VerbosityLevel;
-}
-
 
 void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();

@@ -13,6 +13,7 @@ UWebsocketClient::~UWebsocketClient()
 {
 	callbackRegistered = false;
 	Disconnect();
+	UE_LOG(LogTemp, Warning, TEXT("WEBSOCKET DESTROYED"));
 }
 
 void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/, bool isVerbose /*= false*/) 
