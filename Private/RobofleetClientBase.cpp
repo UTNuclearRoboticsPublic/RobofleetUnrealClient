@@ -1,5 +1,7 @@
 #include "RobofleetClientBase.h"
 
+DEFINE_LOG_CATEGORY(LogRobofleet);
+
 URobofleetBase::URobofleetBase()
 {
 	MaxQueueBeforeWaiting = 1;
@@ -106,13 +108,13 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 
 void URobofleetBase::PrintRobotsSeen() {
 
-	UE_LOG(LogTemp, Warning, TEXT("Printing Existing Robots"));
+	UE_LOG(LogRobofleet, Warning, TEXT("Printing Existing Robots"));
 	for (auto elem : RobotsSeen) {
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(elem));
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.location.c_str()));
-		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
-		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[elem]->Location.x);
+		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(elem));
+		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.location.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
+		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Location.x);
 	}
 }
 

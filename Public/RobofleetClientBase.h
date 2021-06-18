@@ -21,6 +21,8 @@ struct RobotData {
 	RobotStatus Status;
 	bool IsAlive;
 };
+//Define Log Category
+DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
 
 //OnNewRobotSeen event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewRobotSeen, FString, RobotName);
