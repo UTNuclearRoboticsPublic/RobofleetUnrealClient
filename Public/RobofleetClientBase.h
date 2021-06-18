@@ -44,7 +44,10 @@ private:
 
 	int MaxQueueBeforeWaiting;
 	int Verbosity = 0;
+
+	UPROPERTY()
 	UWebsocketClient* SocketClient;
+
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::set<FString> RobotsSeen = {};
