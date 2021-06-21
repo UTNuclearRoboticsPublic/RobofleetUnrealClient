@@ -22,6 +22,14 @@ struct RobotData {
 	bool IsAlive;
 };
 
+UENUM(BlueprintType)
+enum EAgentRole
+{
+	Robot,
+	Operator,
+	Undefined
+};
+
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 {
@@ -62,6 +70,9 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+		EAgentRole GetAgentRole(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 		FString GetRobotStatus(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
@@ -69,6 +80,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 		FString GetRobotLocationString(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+		TArray<FString> GetRobotNames();
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 		FVector GetRobotPosition(const FString& RobotName);

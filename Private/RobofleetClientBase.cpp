@@ -137,6 +137,28 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 }
 
+// TODO - make more general
+EAgentRole URobofleetBase::GetAgentRole(const FString& RobotName)
+{
+	//TODO actually implement agent role
+	FRegexPattern OperatorPattern(TEXT("commander|operator"));
+	FRegexMatcher OperatorMatcher(OperatorPattern, RobotName);
+	if (OperatorMatcher.FindNext())
+	{
+		return EAgentRole::Operator;
+	}
+	else
+	{
+		FRegexPattern RobotPattern(TEXT("gvrbot|gvr|NRG"));
+		FRegexMatcher RobotMatcher(RobotPattern, RobotName);
+		if (RobotMatcher.FindNext())
+		{
+			return EAgentRole::Robot;
+		}
+	}
+	return EAgentRole::Undefined;
+}
+
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
 	// Check if robot exists
@@ -165,6 +187,15 @@ FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
 	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
 	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Status.location.c_str()));
 }
+
+TArray<FString> URobofleetBase::GetRobotNames() {
+	TArray<FString> RobotNames;
+	for (std::set<FString>::iterator it = RobotsSeen.begin(); it != RobotsSeen.end(); ++it) {
+		RobotNames.Add(*it);
+	}
+	return RobotNames;
+}
+
 
 FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 {
