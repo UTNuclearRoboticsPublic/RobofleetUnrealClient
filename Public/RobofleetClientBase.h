@@ -48,6 +48,8 @@ private:
 	UPROPERTY()
 	UWebsocketClient* SocketClient;
 
+	FTimerHandle RefreshTimerHandle;
+
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::set<FString> RobotsSeen = {};

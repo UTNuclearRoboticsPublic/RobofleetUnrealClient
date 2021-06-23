@@ -1,4 +1,5 @@
 #include "RobofleetClientBase.h"
+#include "GameFramework/Actor.h"
 
 DEFINE_LOG_CATEGORY(LogRobofleet);
 
@@ -17,12 +18,24 @@ void URobofleetBase::Connect(FString HostUrl)
 {	
 	UE_LOG(LogTemp, Warning, TEXT("RobofleetClient Module starting"));
 
-	SocketClient = NewObject<UWebsocketClient>();
+	if (!SocketClient->IsValidLowLevel())
+	{
+		SocketClient = NewObject<UWebsocketClient>();
+	}
 	SocketClient->Initialize(HostUrl, TEXT("ws"), false);
 	SocketClient->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
 	SocketClient->IsCallbackRegistered(true);
 
-	RegisterRobotStatusSubscription();
+	if (AActor* OwningActor = Cast<AActor>(GetOuter()))
+	{
+		UE_LOG(LogRobofleet, Warning, TEXT("Owner is Actor, setting refresh timers"));
+		OwningActor->GetWorld()->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RegisterRobotStatusSubscription, 5, true);
+	}
+	else
+	{
+		UE_LOG(LogRobofleet, Error, TEXT("Owner is non Actor, can not set refresh timers"));
+	}
+	
 	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
 }
 
