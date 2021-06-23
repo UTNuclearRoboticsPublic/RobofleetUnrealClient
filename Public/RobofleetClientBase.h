@@ -106,14 +106,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void PrintRobotsSeen();
 	
+	UFUNCTION()
+	void RefreshRobotList();
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	void PruneInactiveRobots();
+	
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void RegisterRobotStatusSubscription();
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	void PruneInactiveRobots();
+	
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;

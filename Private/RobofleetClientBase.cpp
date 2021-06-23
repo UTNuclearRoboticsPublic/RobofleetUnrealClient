@@ -29,7 +29,7 @@ void URobofleetBase::Connect(FString HostUrl)
 	if (AActor* OwningActor = Cast<AActor>(GetOuter()))
 	{
 		UE_LOG(LogRobofleet, Warning, TEXT("Owner is Actor, setting refresh timers"));
-		OwningActor->GetWorld()->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RegisterRobotStatusSubscription, 5, true);
+		OwningActor->GetWorld()->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
 	}
 	else
 	{
@@ -123,6 +123,12 @@ void URobofleetBase::PrintRobotsSeen() {
 		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
 		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Location.x);
 	}
+}
+
+void URobofleetBase::RefreshRobotList()
+{
+	RegisterRobotStatusSubscription();
+	PruneInactiveRobots();
 }
 
 template <typename T>
