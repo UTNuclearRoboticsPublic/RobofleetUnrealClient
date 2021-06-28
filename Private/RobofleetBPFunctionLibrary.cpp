@@ -13,7 +13,15 @@ void URobofleetBPFunctionLibrary::StartRobofleetSession()
 
 void URobofleetBPFunctionLibrary::ConfigRobofleetSession(FString HostUrl, const UObject* WorldContextObject)
 {
-	FRobofleetUnrealClientModule::Get()->RobofleetClient->Initialize(HostUrl, WorldContextObject);
+	URobofleetBase* RoboClient = FRobofleetUnrealClientModule::Get()->RobofleetClient;
+	if (RoboClient->IsValidLowLevel())
+	{
+		RoboClient->Initialize(HostUrl, WorldContextObject);
+	}
+	else
+	{
+		UE_LOG(LogRobofleet, Error, TEXT("Robofleet session not running"))
+	}
 }
 
 

@@ -1,7 +1,6 @@
 #include "RobofleetClientBase.h"
 #include "GameFramework/Actor.h"
 
-DEFINE_LOG_CATEGORY(LogRobofleet);
 
 URobofleetBase::URobofleetBase()
 {
