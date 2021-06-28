@@ -82,8 +82,10 @@ private:
 
 public:
 
+	// TODO: Move the Blueprint exposure to the BP function library
+
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	void Connect(FString HostUrl);
+	void Initialize(FString HostUrl, const UObject* WorldContextObject);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void Disconnect();

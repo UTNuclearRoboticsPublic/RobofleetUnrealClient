@@ -14,7 +14,7 @@ void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();
 }
 
-void URobofleetBase::Connect(FString HostUrl)
+void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObject)
 {	
 	UE_LOG(LogTemp, Warning, TEXT("RobofleetClient Module starting"));
 
@@ -26,15 +26,8 @@ void URobofleetBase::Connect(FString HostUrl)
 	SocketClient->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
 	SocketClient->IsCallbackRegistered(true);
 
-	if (AActor* OwningActor = Cast<AActor>(GetOuter()))
-	{
-		UE_LOG(LogRobofleet, Warning, TEXT("Owner is Actor, setting refresh timers"));
-		OwningActor->GetWorld()->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
-	}
-	else
-	{
-		UE_LOG(LogRobofleet, Error, TEXT("Owner is non Actor, can not set refresh timers"));
-	}
+	UE_LOG(LogRobofleet, Warning, TEXT("Setting refresh timers"));
+	GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
 	
 	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
 }
