@@ -18,6 +18,4 @@ public:
 
 	UPROPERTY()
 	URobofleetBase* RobofleetClient;
-
-	void StartRobofleetSession();
 };

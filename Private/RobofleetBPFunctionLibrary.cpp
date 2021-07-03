@@ -6,22 +6,26 @@
 #include "RobofleetUnrealClientModule.h"
 #include "RobofleetClientBase.h"
 
-void URobofleetBPFunctionLibrary::StartRobofleetSession()
-{
-	FRobofleetUnrealClientModule::Get()->StartRobofleetSession();
-}
-
 void URobofleetBPFunctionLibrary::ConfigRobofleetSession(FString HostUrl, const UObject* WorldContextObject)
 {
 	URobofleetBase* RoboClient = FRobofleetUnrealClientModule::Get()->RobofleetClient;
-	if (RoboClient->IsValidLowLevel())
+	if (IsValid(FRobofleetUnrealClientModule::Get()->RobofleetClient))
 	{
-		RoboClient->Initialize(HostUrl, WorldContextObject);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->Initialize(HostUrl, WorldContextObject);
 	}
 	else
 	{
-		UE_LOG(LogRobofleet, Error, TEXT("Robofleet session not running"))
+		UE_LOG(LogRobofleet, Error, TEXT("Robofleet session not running"));
 	}
 }
 
+FString URobofleetBPFunctionLibrary::GetRobotStatus(const FString& RobotName)
+{
+	URobofleetBase* RoboClient = FRobofleetUnrealClientModule::Get()->RobofleetClient;
+	if (IsValid(RoboClient))
+	{
+		return RoboClient->GetRobotStatus(RobotName);
+	}
+	return TEXT("");
+}
 

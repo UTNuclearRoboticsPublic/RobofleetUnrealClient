@@ -14,10 +14,9 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 {
 	GENERATED_BODY()
 	
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void StartRobofleetSession();
-
 	UFUNCTION(BlueprintCallable, Category = "Robofleet", meta = (WorldContext = "WorldContextObject"))
 	static void ConfigRobofleetSession(FString HostUrl, const UObject* WorldContextObject);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetRobotStatus(const FString& RobotName);
 };

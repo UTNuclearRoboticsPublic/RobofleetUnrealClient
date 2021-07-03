@@ -17,10 +17,8 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 {	
 	UE_LOG(LogTemp, Warning, TEXT("RobofleetClient Module starting"));
 
-	if (!SocketClient->IsValidLowLevel())
-	{
-		SocketClient = NewObject<UWebsocketClient>();
-	}
+	
+	SocketClient = NewObject<UWebsocketClient>();
 	SocketClient->Initialize(HostUrl, TEXT("ws"), false);
 	SocketClient->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
 	SocketClient->IsCallbackRegistered(true);

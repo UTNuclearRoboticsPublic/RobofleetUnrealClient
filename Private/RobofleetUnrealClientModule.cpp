@@ -7,8 +7,8 @@ DEFINE_LOG_CATEGORY(LogRobofleet);
 
 void FRobofleetUnrealClientModule::StartupModule()
 {
-	// Put your module initialization code here
 	UE_LOG(LogTemp, Warning, TEXT("Robofleet Unreal Client Module is Loaded"))
+	RobofleetClient = NewObject<URobofleetBase>();
 }
 
 void FRobofleetUnrealClientModule::ShutdownModule()
@@ -31,12 +31,4 @@ bool FRobofleetUnrealClientModule::IsLoaded()
 FRobofleetUnrealClientModule* FRobofleetUnrealClientModule::Get()
 {
 	return static_cast<FRobofleetUnrealClientModule*>(FModuleManager::Get().GetModule(FName(TEXT("RobofleetUnrealClient"))));
-}
-
-void FRobofleetUnrealClientModule::StartRobofleetSession()
-{
-	if (!RobofleetClient->IsValidLowLevel())
-	{
-		RobofleetClient = NewObject<URobofleetBase>();
-	}
 }
