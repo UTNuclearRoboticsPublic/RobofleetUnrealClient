@@ -6,26 +6,74 @@
 #include "RobofleetUnrealClientModule.h"
 #include "RobofleetClientBase.h"
 
-void URobofleetBPFunctionLibrary::ConfigRobofleetSession(FString HostUrl, const UObject* WorldContextObject)
+void URobofleetBPFunctionLibrary::StartRobofleetSession(FString HostUrl, const UObject* WorldContextObject)
 {
-	URobofleetBase* RoboClient = FRobofleetUnrealClientModule::Get()->RobofleetClient;
-	if (IsValid(FRobofleetUnrealClientModule::Get()->RobofleetClient))
-	{
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->Initialize(HostUrl, WorldContextObject);
-	}
-	else
-	{
-		UE_LOG(LogRobofleet, Error, TEXT("Robofleet session not running"));
-	}
+	FRobofleetUnrealClientModule::Get()->StartRobofleetSession(HostUrl, WorldContextObject);
 }
 
 FString URobofleetBPFunctionLibrary::GetRobotStatus(const FString& RobotName)
 {
-	URobofleetBase* RoboClient = FRobofleetUnrealClientModule::Get()->RobofleetClient;
-	if (IsValid(RoboClient))
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		return RoboClient->GetRobotStatus(RobotName);
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetRobotStatus(RobotName);
 	}
 	return TEXT("");
+}
+
+float URobofleetBPFunctionLibrary::GetRobotBatteryLevel(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetRobotBatteryLevel(RobotName);
+	}
+	return 0.0f;
+}
+
+FString URobofleetBPFunctionLibrary::GetRobotLocationString(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetRobotLocationString(RobotName);
+	}
+	return TEXT("");
+}
+
+FVector URobofleetBPFunctionLibrary::GetRobotPosition(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetRobotPosition(RobotName);
+	}
+	return FVector(0,0,0);
+}
+
+bool URobofleetBPFunctionLibrary::IsRobotOk(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->IsRobotOk(RobotName);
+	}
+	return false;
+}
+
+void URobofleetBPFunctionLibrary::PrintRobotsSeen()
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PrintRobotsSeen();
+	}
+}
+
+void URobofleetBPFunctionLibrary::RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->RegisterRobotSubscription(TopicName, RobotName, MessageType);
+	}
+}
+
+URobofleetBase* URobofleetBPFunctionLibrary::GetClientReference()
+{
+	return FRobofleetUnrealClientModule::Get()->RobofleetClient;
 }
 

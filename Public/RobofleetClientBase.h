@@ -44,6 +44,7 @@ private:
 
 	int MaxQueueBeforeWaiting;
 	int Verbosity = 0;
+	bool bIsInitilized = false;
 
 	UPROPERTY()
 	UWebsocketClient* SocketClient;
@@ -82,45 +83,34 @@ private:
 
 public:
 
+	bool IsInitilized();
+	bool IsConnected();
 	// TODO: Move the Blueprint exposure to the BP function library
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void Initialize(FString HostUrl, const UObject* WorldContextObject);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void Disconnect();
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	FString GetRobotStatus(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	float GetRobotBatteryLevel(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	FString GetRobotLocationString(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	FVector GetRobotPosition(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	bool IsRobotOk(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void PrintRobotsSeen();
 	
 	UFUNCTION()
 	void RefreshRobotList();
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void PruneInactiveRobots();
 	
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void RegisterRobotStatusSubscription();
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
-
-	
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;

@@ -13,12 +13,25 @@ void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();
 }
 
+bool URobofleetBase::IsInitilized()
+{
+	return bIsInitilized;
+}
+
+bool URobofleetBase::IsConnected()
+{
+	if (IsValid(SocketClient))
+	{
+		return SocketClient->Socket->IsConnected();
+	}
+	return false;
+}
+
 void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObject)
 {	
-	UE_LOG(LogTemp, Warning, TEXT("RobofleetClient Module starting"));
+	UE_LOG(LogTemp, Warning, TEXT("RobofleetClient module is initializing"));
 
-	
-	SocketClient = NewObject<UWebsocketClient>();
+	SocketClient = NewObject<UWebsocketClient>(this);
 	SocketClient->Initialize(HostUrl, TEXT("ws"), false);
 	SocketClient->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
 	SocketClient->IsCallbackRegistered(true);
@@ -27,6 +40,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
 	
 	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
+	bIsInitilized = true;
 }
 
 /*

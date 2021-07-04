@@ -8,7 +8,6 @@ DEFINE_LOG_CATEGORY(LogRobofleet);
 void FRobofleetUnrealClientModule::StartupModule()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Robofleet Unreal Client Module is Loaded"))
-	RobofleetClient = NewObject<URobofleetBase>();
 }
 
 void FRobofleetUnrealClientModule::ShutdownModule()
@@ -30,5 +29,28 @@ bool FRobofleetUnrealClientModule::IsLoaded()
 
 FRobofleetUnrealClientModule* FRobofleetUnrealClientModule::Get()
 {
-	return static_cast<FRobofleetUnrealClientModule*>(FModuleManager::Get().GetModule(FName(TEXT("RobofleetUnrealClient"))));
+	return static_cast<FRobofleetUnrealClientModule*>(FModuleManager::Get().GetModule(GetModuleName()));
+}
+
+bool FRobofleetUnrealClientModule::IsSessionRunning()
+{
+	if (IsValid(Get()->RobofleetClient))
+	{
+		if (Get()->RobofleetClient->IsConnected())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void FRobofleetUnrealClientModule::StartRobofleetSession(FString HostUrl, const UObject* WorldContextObject)
+{
+	//static bool bIsInitialized = false;
+	//if (!bIsInitialized)
+	{
+		//bIsInitialized = true;
+		RobofleetClient = NewObject<URobofleetBase>();
+		RobofleetClient->Initialize(HostUrl, WorldContextObject);
+	}
 }

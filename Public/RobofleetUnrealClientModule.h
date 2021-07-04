@@ -15,7 +15,10 @@ public:
 	static FName GetModuleName();
 	static bool IsLoaded();
 	static FRobofleetUnrealClientModule* Get();
+	static bool IsSessionRunning();
 
 	UPROPERTY()
 	URobofleetBase* RobofleetClient;
+
+	void StartRobofleetSession(FString HostUrl, const UObject* WorldContextObject);
 };
