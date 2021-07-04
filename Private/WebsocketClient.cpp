@@ -3,8 +3,7 @@
 
 #include "WebsocketClient.h"
 
-// TODO: This inclusion is temp!!! Make log categories in a seperate header and include that instead. 
-#include "RobofleetClientBase.h"
+DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
 
 //DEFINE_LOG_CATEGORY(LogRobofleet);
 
