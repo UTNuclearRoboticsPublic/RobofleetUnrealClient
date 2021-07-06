@@ -70,7 +70,6 @@ private:
 		fbb.Finish(flatbuffers::Offset<void>(root_offset));
 		if (SocketClient->IsValidLowLevel())
 		{
-			UE_LOG(LogRobofleet, Warning, TEXT("Sending Message over socket"));
 			SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
 		}
 		else

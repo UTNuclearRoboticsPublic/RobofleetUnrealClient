@@ -131,8 +131,12 @@ void URobofleetBase::PrintRobotsSeen() {
 
 void URobofleetBase::RefreshRobotList()
 {
-	RegisterRobotStatusSubscription();
-	PruneInactiveRobots();
+	if (IsConnected())
+	{
+		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
+		RegisterRobotStatusSubscription();
+		PruneInactiveRobots();
+	}
 }
 
 template <typename T>
