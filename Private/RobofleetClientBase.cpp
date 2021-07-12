@@ -39,6 +39,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	UE_LOG(LogRobofleet, Warning, TEXT("Setting refresh timers"));
 	GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
 	
+	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
 	bIsInitilized = true;
 }
@@ -134,7 +135,6 @@ void URobofleetBase::RefreshRobotList()
 	if (IsConnected())
 	{
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
-		RegisterRobotStatusSubscription();
 		PruneInactiveRobots();
 	}
 }

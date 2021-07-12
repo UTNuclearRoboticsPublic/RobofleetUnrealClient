@@ -21,7 +21,7 @@ struct RobotData {
 	RobotStatus Status;
 	bool IsAlive;
 };
-//Define Log Category
+//Define Log Category and Verbosity
 DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
 
 //OnNewRobotSeen event
