@@ -197,3 +197,10 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
 }
+
+FVector URobofleetBase::GetDronePosition(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
+	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, RobotMap[RobotNamestd]->Location.z);
+}

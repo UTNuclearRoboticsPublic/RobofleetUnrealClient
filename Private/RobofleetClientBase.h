@@ -98,6 +98,8 @@ public:
 
 	FVector GetRobotPosition(const FString& RobotName);
 
+	FVector GetDronePosition(const FString& RobotName);
+
 	bool IsRobotOk(const FString& RobotName);
 
 	void PrintRobotsSeen();
