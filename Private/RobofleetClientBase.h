@@ -19,6 +19,7 @@
 struct RobotData {
 	RobotLocation Location;
 	RobotStatus Status;
+	RobotLocation3D Location3D; // TODO: Need to define class within robofleet_client_lib to accept nav_msgs/Odometry
 	bool IsAlive;
 };
 //Define Log Category and Verbosity
