@@ -161,6 +161,10 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
 		RobotMap[RobotNamespace]->Location = rl;
 	}
+	else if (topic == "odometry/raw") {
+		RobotLocation ro = DecodeMsg<RobotLocation>(Data);
+		RobotMap[RobotNamespace]->Location = ro;
+	}
 }
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
@@ -203,5 +207,5 @@ FVector URobofleetBase::GetDronePosition(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
-	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, RobotMap[RobotNamestd]->Location.z);
+	return FVector(RobotMap[RobotNamestd]->Location3D.x, RobotMap[RobotNamestd]->Location3D.y, RobotMap[RobotNamestd]->Location3D.z);
 }
