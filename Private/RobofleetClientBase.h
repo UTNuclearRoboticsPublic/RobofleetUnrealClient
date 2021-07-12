@@ -21,6 +21,15 @@ struct RobotData {
 	RobotStatus Status;
 	bool IsAlive;
 };
+//Define Log Category and Verbosity
+DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
+
+//OnNewRobotSeen event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewRobotSeen, FString, RobotName);
+
+//OnRobotPruned event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
+
 
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
@@ -30,20 +39,21 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 public:
 	// TODO: expose constructor to blueprints
 	URobofleetBase();
-	URobofleetBase(int VerbosityLevel);
+
+private:
 
 	int MaxQueueBeforeWaiting;
 	int Verbosity = 0;
+	bool bIsInitilized = false;
+
+	UPROPERTY()
 	UWebsocketClient* SocketClient;
+
+	FTimerHandle RefreshTimerHandle;
+
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::set<FString> RobotsSeen = {};
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		void Connect(FString HostUrl);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		void Disconnect();
 
 	template <typename T> typename T DecodeMsg(const void* Data);
 	void DecodeMsg(const void* Data, FString topic, FString RobotNamespace);
@@ -58,33 +68,52 @@ public:
 		auto metadata = encode_metadata(fbb, msg_type, to_topic);
 		auto root_offset = encode<T>(fbb, msg, metadata);
 		fbb.Finish(flatbuffers::Offset<void>(root_offset));
-		SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
+		if (SocketClient->IsValidLowLevel())
+		{
+			SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
+		}
+		else
+		{
+			UE_LOG(LogRobofleet, Warning, TEXT("Message not sent since socket is destroyed"));
+		}
 	}
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		FString GetRobotStatus(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		float GetRobotBatteryLevel(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		FString GetRobotLocationString(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		FVector GetRobotPosition(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		bool IsRobotOk(const FString& RobotName);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-		void PrintRobotsSeen();
-
-	UFUNCTION()
-		void PruneInactiveRobots();
 
 	void WebsocketDataCB(const void* Data);
 
-	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
+public:
+
+	bool IsInitilized();
+	bool IsConnected();
+	// TODO: Move the Blueprint exposure to the BP function library
+
+	void Initialize(FString HostUrl, const UObject* WorldContextObject);
+
+	void Disconnect();
+
+	FString GetRobotStatus(const FString& RobotName);
+
+	float GetRobotBatteryLevel(const FString& RobotName);
+
+	FString GetRobotLocationString(const FString& RobotName);
+
+	FVector GetRobotPosition(const FString& RobotName);
+
+	bool IsRobotOk(const FString& RobotName);
+
+	void PrintRobotsSeen();
+	
+	UFUNCTION()
+	void RefreshRobotList();
+
+	void PruneInactiveRobots();
+	
 	void RegisterRobotStatusSubscription();
 
+	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnNewRobotSeen OnNewRobotSeen;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnRobotPruned OnRobotPruned;
 };

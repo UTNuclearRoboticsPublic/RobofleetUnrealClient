@@ -1,4 +1,6 @@
 #include "RobofleetClientBase.h"
+#include "GameFramework/Actor.h"
+
 
 URobofleetBase::URobofleetBase()
 {
@@ -6,28 +8,40 @@ URobofleetBase::URobofleetBase()
 	Verbosity = 0;
 }
 
-URobofleetBase::URobofleetBase(int VerbosityLevel)
-{
-	MaxQueueBeforeWaiting = 1;
-	Verbosity = VerbosityLevel;
-}
-
 
 void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();
 }
 
-void URobofleetBase::Connect(FString HostUrl)
-{	
-	UE_LOG(LogTemp, Warning, TEXT("RobofleetClient Module starting"));
+bool URobofleetBase::IsInitilized()
+{
+	return bIsInitilized;
+}
 
-	SocketClient = NewObject<UWebsocketClient>();
+bool URobofleetBase::IsConnected()
+{
+	if (IsValid(SocketClient))
+	{
+		return SocketClient->Socket->IsConnected();
+	}
+	return false;
+}
+
+void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObject)
+{	
+	UE_LOG(LogTemp, Warning, TEXT("RobofleetClient module is initializing"));
+
+	SocketClient = NewObject<UWebsocketClient>(this);
 	SocketClient->Initialize(HostUrl, TEXT("ws"), false);
 	SocketClient->OnReceivedCB = std::bind(&URobofleetBase::WebsocketDataCB, this, std::placeholders::_1);
 	SocketClient->IsCallbackRegistered(true);
 
+	UE_LOG(LogRobofleet, Warning, TEXT("Setting refresh timers"));
+	GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
+	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
+	bIsInitilized = true;
 }
 
 /*
@@ -67,7 +81,8 @@ void URobofleetBase::PruneInactiveRobots() {
 	std::map<FString, FDateTime> newMap;
 	int CutoffTime = 10;
 	for (std::map<FString, FDateTime>::iterator it = RobotsSeenTime.begin(); it != RobotsSeenTime.end(); ++it) {
-		if (FDateTime::Now() - it->second > CutoffTime) {
+		if (FDateTime::Now().GetSecond() - it->second.GetSecond() > CutoffTime) {
+			OnRobotPruned.Broadcast(it->first);
 			RobotsSeen.erase(it->first);
 		}
 		else {
@@ -92,6 +107,7 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	// If we're seeing this robot for the first time, create new data holder
 	if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
 		RobotMap[RobotNamespace] = MakeShared<RobotData>();
+		OnNewRobotSeen.Broadcast(RobotNamespace);
 	}
 	RobotsSeen.insert(RobotNamespace);
 
@@ -104,13 +120,22 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 
 void URobofleetBase::PrintRobotsSeen() {
 
-	UE_LOG(LogTemp, Warning, TEXT("Printing Existing Robots"));
+	UE_LOG(LogRobofleet, Warning, TEXT("Printing Existing Robots"));
 	for (auto elem : RobotsSeen) {
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(elem));
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.location.c_str()));
-		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
-		UE_LOG(LogTemp, Warning, TEXT("%f"), RobotMap[elem]->Location.x);
+		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(elem));
+		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.location.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
+		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Location.x);
+	}
+}
+
+void URobofleetBase::RefreshRobotList()
+{
+	if (IsConnected())
+	{
+		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
+		PruneInactiveRobots();
 	}
 }
 

@@ -3,6 +3,9 @@
 
 #include "WebsocketClient.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
+
+//DEFINE_LOG_CATEGORY(LogRobofleet);
 
 UWebsocketClient::UWebsocketClient()
 {
@@ -13,6 +16,7 @@ UWebsocketClient::~UWebsocketClient()
 {
 	callbackRegistered = false;
 	Disconnect();
+	UE_LOG(LogRobofleet, Warning, TEXT("Websocket Client destroyed"));
 }
 
 void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/, bool isVerbose /*= false*/) 
@@ -32,11 +36,13 @@ void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:808
 	});
 		
 	Socket->Connect();
+	UE_LOG(LogRobofleet, Log, TEXT("Websocket Client Initialized"));
 }
 
 void UWebsocketClient::Disconnect() {
 	if(Socket != NULL)
 		Socket->Close();
+	UE_LOG(LogRobofleet, Log, TEXT("Websocket Disconnected"));
 }
 
 void UWebsocketClient::IsCallbackRegistered(bool val)
@@ -45,7 +51,7 @@ void UWebsocketClient::IsCallbackRegistered(bool val)
 }
 void UWebsocketClient::OnConnected()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Connected to websocket."))
+	UE_LOG(LogTemp, Log, TEXT("Connected to websocket."))
 }
 
 void UWebsocketClient::OnConnectionError()
@@ -55,8 +61,8 @@ void UWebsocketClient::OnConnectionError()
 
 void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
 {
-	if(verbose)
-		UE_LOG(LogTemp, Warning, TEXT("Message Received"));
+	
+	UE_LOG(LogTemp, Verbose, TEXT("Message Received"));
 
 	if (callbackRegistered) {
 		OnReceivedCB(Data);
@@ -65,14 +71,13 @@ void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T B
 
 void UWebsocketClient::OnMessageSent()
 {
-	if(verbose)
-		UE_LOG(LogTemp, Warning, TEXT("Message Sent"));
+	UE_LOG(LogTemp, Verbose, TEXT("Message Sent"));
 }
 
 void UWebsocketClient::Send(const void* ptr, uint32_t size, bool isBinary)
 {
-	if (verbose)
-		UE_LOG(LogTemp, Warning, TEXT("Message Sending"));
+	
+	UE_LOG(LogTemp, Verbose, TEXT("Message Sending"));
 	Socket->Send(ptr, size, isBinary);
 }
 

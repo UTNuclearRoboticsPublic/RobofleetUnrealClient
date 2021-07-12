@@ -3,10 +3,22 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleInterface.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
+class URobofleetBase;
 
 class FRobofleetUnrealClientModule : public IModuleInterface
 {
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+
+public:
+
+	static FName GetModuleName();
+	static bool IsLoaded();
+	static FRobofleetUnrealClientModule* Get();
+	static bool IsSessionRunning();
+
+	UPROPERTY()
+	URobofleetBase* RobofleetClient;
+
+	void StartRobofleetSession(FString HostUrl, const UObject* WorldContextObject);
 };
