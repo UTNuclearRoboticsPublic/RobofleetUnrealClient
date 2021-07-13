@@ -32,7 +32,7 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 	static FVector GetRobotPosition(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static FVector GetDronePosition(const FString& RobotName)
+	static FVector GetDronePosition(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static bool IsRobotOk(const FString& RobotName);
