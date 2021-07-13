@@ -19,7 +19,7 @@
 struct RobotData {
 	RobotLocation Location;
 	RobotStatus Status;
-	RobotGeometry Geometry; // TODO: Need to define class within robofleet_client_lib to accept nav_msgs/Odometry
+	RobotGeometry Geometry; // TODO: Need to define class within robofleet_client_lib to accept geometry_msgs/Point
 	bool IsAlive;
 };
 
