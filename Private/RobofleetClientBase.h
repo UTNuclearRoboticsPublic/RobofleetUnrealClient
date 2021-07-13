@@ -19,9 +19,28 @@
 struct RobotData {
 	RobotLocation Location;
 	RobotStatus Status;
-	RobotGeometry Geometry; // TODO: Need to define class within robofleet_client_lib to accept geometry_msgs/Point
+	RobotPoseStamped Pose; // TODO: Need to define class within robofleet_client_lib to accept geometry_msgs/PoseStamped - See Below
 	bool IsAlive;
 };
+
+// The following needs to be added to message_structs.h in the robofleet_client_lib
+/*
+struct RobotPoseStamped {
+	//Header
+	std::string frame;
+	
+	//geometry_msgs/Pose
+	//	geometry_msgs/Point
+	float position_x;
+	float position_y;
+	float position_z;
+	//  geometry_msgs/Quaternion
+	float orientation_x;
+	float orientation_y;
+	float orientation_z;
+	float orientation_w;
+};
+*/
 
 //Define Log Category and Verbosity
 DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
