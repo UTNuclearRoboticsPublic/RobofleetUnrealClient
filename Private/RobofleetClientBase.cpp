@@ -207,7 +207,7 @@ FVector URobofleetBase::GetDronePosition(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1);
-	return FVector(RobotMap[RobotNamestd]->Pose.position_x, 
-				   RobotMap[RobotNamestd]->Pose.position_y, 
-				   RobotMap[RobotNamestd]->Pose.position_z);
+	return FVector(RobotMap[RobotNamestd]->RobotPose.point.x, 
+				   RobotMap[RobotNamestd]->RobotPose.point.y, 
+				   RobotMap[RobotNamestd]->RobotPose.point.z);
 }
