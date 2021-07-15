@@ -161,9 +161,9 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
 		RobotMap[RobotNamespace]->Location = rl;
 	}
-	else if (topic == "odometry/raw") {
-		RobotLocation ro = DecodeMsg<RobotLocation>(Data);
-		RobotMap[RobotNamespace]->Location = ro;
+	else if (topic == "localization3d") {
+		PoseStamped ro = DecodeMsg<PoseStamped>(Data);
+		RobotMap[RobotNamespace]->RobotPose = ro;
 	}
 }
 
@@ -203,11 +203,12 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
 }
 
+// Plan to rewrite based on FTransform 
 FVector URobofleetBase::GetDronePosition(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1);
-	return FVector(RobotMap[RobotNamestd]->RobotPose.point.x, 
-				   RobotMap[RobotNamestd]->RobotPose.point.y, 
-				   RobotMap[RobotNamestd]->RobotPose.point.z);
+	return FVector(RobotMap[RobotNamestd]->RobotPose.pose.point.x, 
+				   RobotMap[RobotNamestd]->RobotPose.pose.point.y, 
+				   RobotMap[RobotNamestd]->RobotPose.pose.point.z);
 }
