@@ -19,7 +19,7 @@
 struct RobotData {
 	RobotLocation Location;
 	RobotStatus Status;
-	Pose RobotPose; // TODO: Need to define class within robofleet_client_lib to accept geometry_msgs/PoseStamped - See Below
+	PoseStamped RobotPose; // TODO: Need to define class within robofleet_client_lib to accept geometry_msgs/PoseStamped - See Below
 	bool IsAlive;
 };
 
