@@ -39,6 +39,7 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 public:
 	// TODO: expose constructor to blueprints
 	URobofleetBase();
+	~URobofleetBase();
 
 private:
 
@@ -116,4 +117,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotPruned OnRobotPruned;
+
+	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
+	UFUNCTION(BlueprintCallable)
+	void RemoveObjectFromRoot();
 };

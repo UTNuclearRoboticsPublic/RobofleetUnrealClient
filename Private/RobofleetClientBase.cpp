@@ -9,6 +9,11 @@ URobofleetBase::URobofleetBase()
 }
 
 
+URobofleetBase::~URobofleetBase()
+{
+	UE_LOG(LogRobofleet, Error, TEXT("RobofleetBaseClient Destroyed"));
+}
+
 void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();
 }
@@ -74,6 +79,11 @@ void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotN
 		msg, topic, subs, subs);
 }
 
+void URobofleetBase::RemoveObjectFromRoot()
+{
+	RemoveFromRoot();
+}
+
 /*
  * Called on a timer, removes robots that haven't been seen in a while.
  */
@@ -135,7 +145,7 @@ void URobofleetBase::RefreshRobotList()
 	if (IsConnected())
 	{
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
-		PruneInactiveRobots();
+		//PruneInactiveRobots();
 	}
 }
 
