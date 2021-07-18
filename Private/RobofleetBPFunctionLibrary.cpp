@@ -64,11 +64,11 @@ void URobofleetBPFunctionLibrary::PrintRobotsSeen()
 	}
 }
 
-void URobofleetBPFunctionLibrary::RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType)
+void URobofleetBPFunctionLibrary::RegisterRobotSubscription(FString TopicName, FString RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->RegisterRobotSubscription(TopicName, RobotName, MessageType);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->RegisterRobotSubscription(TopicName, RobotName);
 	}
 }
 

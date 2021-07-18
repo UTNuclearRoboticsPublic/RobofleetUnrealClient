@@ -110,7 +110,7 @@ public:
 	
 	void RegisterRobotStatusSubscription();
 
-	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
+	void RegisterRobotSubscription(FString TopicName, FString RobotName);
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
