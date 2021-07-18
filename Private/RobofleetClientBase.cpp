@@ -145,6 +145,8 @@ void URobofleetBase::RefreshRobotList()
 	if (IsConnected())
 	{
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
+		RegisterRobotStatusSubscription();
+		RegisterRobotSubscription("localization", "*");
 		//PruneInactiveRobots();
 	}
 }
@@ -168,7 +170,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 	else if (topic == "localization") {
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
-		UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
+		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
 		RobotMap[RobotNamespace]->Location = rl;
 	}
 }
