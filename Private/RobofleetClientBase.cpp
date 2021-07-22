@@ -9,6 +9,11 @@ URobofleetBase::URobofleetBase()
 }
 
 
+URobofleetBase::~URobofleetBase()
+{
+	UE_LOG(LogRobofleet, Error, TEXT("RobofleetBaseClient Destroyed"));
+}
+
 void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();
 }
@@ -40,7 +45,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
 	
 	RegisterRobotStatusSubscription();
-	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
+	RegisterRobotSubscription("localization", "*");
 	RegisterRobotSubscription("odometry/raw", "*", "nav_msgs/Odometry"); // Drone location publisher
 	bIsInitilized = true;
 }
@@ -65,14 +70,19 @@ void URobofleetBase::RegisterRobotStatusSubscription() {
  * Note that `MessageType` should be fully qualified with the message package name, i.e.
  * `amrl_msgs/Localization2D` 
  */
-void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType) {
+void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName) {
 	RobofleetSubscription msg;
 	msg.topic_regex = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	msg.action = 1;
-	std::string topic = std::string(TCHAR_TO_UTF8(*MessageType));
+	std::string topic = "amrl_msgs/RobofleetSubscription";
 	std::string subs = "/subscriptions";
 	EncodeRosMsg<RobofleetSubscription>(
 		msg, topic, subs, subs);
+}
+
+void URobofleetBase::RemoveObjectFromRoot()
+{
+	RemoveFromRoot();
 }
 
 /*
@@ -136,7 +146,9 @@ void URobofleetBase::RefreshRobotList()
 	if (IsConnected())
 	{
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
-		PruneInactiveRobots();
+		RegisterRobotStatusSubscription();
+		RegisterRobotSubscription("localization", "*");
+		//PruneInactiveRobots();
 	}
 }
 
@@ -159,6 +171,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 	else if (topic == "localization") {
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
+		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
 		RobotMap[RobotNamespace]->Location = rl;
 	}
 	else if (topic == "localization3d") {
