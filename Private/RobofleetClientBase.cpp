@@ -46,7 +46,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
-	RegisterRobotSubscription("odometry/raw", "*", "nav_msgs/Odometry"); // Drone location publisher
+	RegisterRobotSubscription("odometry/raw", "*"); // Drone location publisher
 	bIsInitilized = true;
 }
 
