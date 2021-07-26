@@ -210,3 +210,16 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
 }
+
+TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
+{
+	TArray<FString> RobotsAtSite;
+	for (auto RobotName : RobotsSeen)
+	{
+		if (GetRobotLocationString(RobotName) == Location)
+		{
+			RobotsAtSite.Add(RobotName);
+		}
+		return RobotsAtSite;
+	}
+}

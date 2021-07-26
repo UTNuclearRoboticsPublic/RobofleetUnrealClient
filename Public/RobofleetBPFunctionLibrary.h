@@ -30,6 +30,9 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FVector GetRobotPosition(const FString& RobotName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static bool IsRobotOk(const FString& RobotName);

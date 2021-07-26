@@ -47,6 +47,15 @@ FVector URobofleetBPFunctionLibrary::GetRobotPosition(const FString& RobotName)
 	return FVector(0,0,0);
 }
 
+TArray<FString> URobofleetBPFunctionLibrary::GetAllRobotsAtSite(const FString& Location)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAllRobotsAtSite(Location);
+	}
+	return TArray<FString>();
+}
+
 bool URobofleetBPFunctionLibrary::IsRobotOk(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

@@ -99,6 +99,8 @@ public:
 
 	FVector GetRobotPosition(const FString& RobotName);
 
+	TArray<FString> GetAllRobotsAtSite(const FString& Location);
+
 	bool IsRobotOk(const FString& RobotName);
 
 	void PrintRobotsSeen();
