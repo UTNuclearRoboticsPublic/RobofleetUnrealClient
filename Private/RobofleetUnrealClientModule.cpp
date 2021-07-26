@@ -1,5 +1,7 @@
 #include "RobofleetUnrealClientModule.h"
 #include "RobofleetClientBase.h"
+#include "WebSocketsModule.h"
+
 
 IMPLEMENT_MODULE(FRobofleetUnrealClientModule, RobofleetUnrealClient);
 
@@ -7,6 +9,7 @@ DEFINE_LOG_CATEGORY(LogRobofleet);
 
 void FRobofleetUnrealClientModule::StartupModule()
 {
+	FModuleManager::LoadModuleChecked<FWebSocketsModule>(TEXT("WebSockets"));
 	UE_LOG(LogTemp, Warning, TEXT("Robofleet Unreal Client Module is Loaded"))
 }
 
@@ -50,7 +53,10 @@ void FRobofleetUnrealClientModule::StartRobofleetSession(FString HostUrl, const 
 	//if (!bIsInitialized)
 	{
 		//bIsInitialized = true;
-		RobofleetClient = NewObject<URobofleetBase>();
+		RobofleetClient = NewObject<URobofleetBase>(GEngine->GetWorldFromContextObject(WorldContextObject));
+		
+		// TODO: FInd a better way to avoid GC...
+		RobofleetClient->AddToRoot();
 		RobofleetClient->Initialize(HostUrl, WorldContextObject);
 	}
 }

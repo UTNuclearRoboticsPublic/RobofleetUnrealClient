@@ -21,8 +21,9 @@ UWebsocketClient::~UWebsocketClient()
 
 void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/, bool isVerbose /*= false*/) 
 {
+	UE_LOG(LogRobofleet, Log, TEXT("Robofleet websocket is initializing with Server URL: %s, and Protocol: %s"), *ServerURL, *ServerProtocol);
 	Socket = FWebSocketsModule::Get().CreateWebSocket(ServerURL, ServerProtocol);
-	verbose = isVerbose;
+	UE_LOG(LogRobofleet, Log, TEXT("Robofleet websocket is created"));
 
 	// Bind Socket functions
 	Socket->OnConnected().AddUFunction(this, FName("OnConnected"));
