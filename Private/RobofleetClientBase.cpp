@@ -220,6 +220,6 @@ TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 		{
 			RobotsAtSite.Add(RobotName);
 		}
-		return RobotsAtSite;
 	}
+	return RobotsAtSite;
 }
