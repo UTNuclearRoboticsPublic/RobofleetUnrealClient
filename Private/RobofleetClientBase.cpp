@@ -132,11 +132,12 @@ void URobofleetBase::PrintRobotsSeen() {
 
 	UE_LOG(LogRobofleet, Warning, TEXT("Printing Existing Robots"));
 	for (auto elem : RobotsSeen) {
-		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(elem));
-		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
-		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.location.c_str()));
-		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
-		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Location.x);
+		UE_LOG(LogRobofleet, Warning, TEXT("---------------"));
+		UE_LOG(LogRobofleet, Warning, TEXT("Robot Name: %s"), *FString(elem));
+		UE_LOG(LogRobofleet, Warning, TEXT("Status: %s"), *FString(RobotMap[elem]->Status.status.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("Location String: %s"), *FString(RobotMap[elem]->Status.location.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("Battery Level: %f"), RobotMap[elem]->Status.battery_level);
+		UE_LOG(LogRobofleet, Warning, TEXT("Location, X: %f, Y: %f, Z: %f"), RobotMap[elem]->Location.x, RobotMap[elem]->Location.y, RobotMap[elem]->Location.z);
 	}
 }
 
