@@ -219,7 +219,9 @@ TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 		if (GetRobotLocationString(RobotName) == Location)
 		{
 			RobotsAtSite.Add(RobotName);
+			
 		}
-		return RobotsAtSite;
+		
 	}
+	return RobotsAtSite;
 }
