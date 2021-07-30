@@ -19,8 +19,10 @@
 struct RobotData {
 	RobotLocation Location;
 	RobotStatus Status;
+	DetectedItem Detection;
 	bool IsAlive;
 };
+
 //Define Log Category and Verbosity
 DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
 
@@ -100,6 +102,19 @@ public:
 	FVector GetRobotPosition(const FString& RobotName);
 
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
+
+	FString GetDetectedName(const FString& RobotName);
+
+	FString GetDetectedRepIDRef(const FString& RobotName);
+
+	FString GetDetectedAnchorIDRef(const FString& RobotName);
+
+	FVector GetDetectedPositionRef(const FString& RobotName);
+
+	FVector GetDetectedPositionGlobal(const FString& RobotName);
+
+	// Need to Add Image Return Type
+
 
 	bool IsRobotOk(const FString& RobotName);
 

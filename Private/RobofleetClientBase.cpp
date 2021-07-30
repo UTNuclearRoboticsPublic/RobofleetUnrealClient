@@ -174,6 +174,10 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
 		RobotMap[RobotNamespace]->Location = rl;
 	}
+	else if (topic == "detection") {
+		DetectedItem dI = DecodeMsg<DetectedItem>(Data);
+		RobotMap[RobotNamespace]->Detection = dI; 
+	}
 }
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
@@ -223,4 +227,39 @@ TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 		}
 	}
 	return RobotsAtSite;
+}
+
+FString URobofleetBase::GetDetectedName(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Detection.name.c_str()));
+}
+
+FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Detection.repID.c_str()));
+}
+
+FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Detection.anchorID.c_str()));
+}
+
+FVector URobofleetBase::GetDetectedPositionRef(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1);
+	return FVector(RobotMap[RobotNamestd]->Detection.x, RobotMap[RobotNamestd]->Detection.y, RobotMap[RobotNamestd]->Detection.z);
+}
+
+FVector URobofleetBase::GetDetectedPositionGlobal(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1, -1, -1);
+	return FVector(RobotMap[RobotNamestd]->Detection.lat, RobotMap[RobotNamestd]->Detection.lon, RobotMap[RobotNamestd]->Detection.elv);
 }
