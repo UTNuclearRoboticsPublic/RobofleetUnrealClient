@@ -86,3 +86,49 @@ URobofleetBase* URobofleetBPFunctionLibrary::GetClientReference()
 	return FRobofleetUnrealClientModule::Get()->RobofleetClient;
 }
 
+FString URobofleetBPFunctionLibrary::GetDetectedName(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedName(RobotName);
+	}
+	return TEXT("");
+}
+
+FString URobofleetBPFunctionLibrary::GetDetectedRepIDRef(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedRepIDRef(RobotName);
+	}
+	return TEXT("");
+}
+
+FString URobofleetBPFunctionLibrary::GetDetectedAnchorIDRef(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedAnchorIDRef(RobotName);
+	}
+	return TEXT("");
+}
+
+FVector URobofleetBPFunctionLibrary::GetDetectedPositionRef(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedPositionRef(RobotName);
+	}
+	return FVector(0, 0, 0);
+}
+
+FVector URobofleetBPFunctionLibrary::GetDetectedPositionGlobal(const FString & RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedPositionGlobal(RobotName);
+	}
+	return FVector(0, 0, 0);
+}
+
+// need to add detected image 
