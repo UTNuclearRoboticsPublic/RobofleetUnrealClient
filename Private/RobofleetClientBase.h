@@ -39,6 +39,7 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 public:
 	// TODO: expose constructor to blueprints
 	URobofleetBase();
+	~URobofleetBase();
 
 private:
 
@@ -102,6 +103,8 @@ public:
 
 	TArray<uint8> GetRobotImage(const FString& RobotName);
 
+	TArray<FString> GetAllRobotsAtSite(const FString& Location);
+
 	bool IsRobotOk(const FString& RobotName);
 
 	void PrintRobotsSeen();
@@ -113,11 +116,15 @@ public:
 	
 	void RegisterRobotStatusSubscription();
 
-	void RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType);
+	void RegisterRobotSubscription(FString TopicName, FString RobotName);
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotPruned OnRobotPruned;
+
+	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
+	UFUNCTION(BlueprintCallable)
+	void RemoveObjectFromRoot();
 };

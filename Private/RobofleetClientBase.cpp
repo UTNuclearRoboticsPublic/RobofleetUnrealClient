@@ -9,6 +9,11 @@ URobofleetBase::URobofleetBase()
 }
 
 
+URobofleetBase::~URobofleetBase()
+{
+	UE_LOG(LogRobofleet, Error, TEXT("RobofleetBaseClient Destroyed"));
+}
+
 void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();
 }
@@ -40,7 +45,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
 	
 	RegisterRobotStatusSubscription();
-	RegisterRobotSubscription("localization", "*", "amrl_msgs/Localization2D");
+	RegisterRobotSubscription("localization", "*");
 	bIsInitilized = true;
 }
 
@@ -64,14 +69,19 @@ void URobofleetBase::RegisterRobotStatusSubscription() {
  * Note that `MessageType` should be fully qualified with the message package name, i.e.
  * `amrl_msgs/Localization2D` 
  */
-void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName, FString MessageType) {
+void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName) {
 	RobofleetSubscription msg;
 	msg.topic_regex = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	msg.action = 1;
-	std::string topic = std::string(TCHAR_TO_UTF8(*MessageType));
+	std::string topic = "amrl_msgs/RobofleetSubscription";
 	std::string subs = "/subscriptions";
 	EncodeRosMsg<RobofleetSubscription>(
 		msg, topic, subs, subs);
+}
+
+void URobofleetBase::RemoveObjectFromRoot()
+{
+	RemoveFromRoot();
 }
 
 /*
@@ -122,11 +132,12 @@ void URobofleetBase::PrintRobotsSeen() {
 
 	UE_LOG(LogRobofleet, Warning, TEXT("Printing Existing Robots"));
 	for (auto elem : RobotsSeen) {
-		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(elem));
-		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.status.c_str()));
-		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(RobotMap[elem]->Status.location.c_str()));
-		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Status.battery_level);
-		UE_LOG(LogRobofleet, Warning, TEXT("%f"), RobotMap[elem]->Location.x);
+		UE_LOG(LogRobofleet, Warning, TEXT("---------------"));
+		UE_LOG(LogRobofleet, Warning, TEXT("Robot Name: %s"), *FString(elem));
+		UE_LOG(LogRobofleet, Warning, TEXT("Status: %s"), *FString(RobotMap[elem]->Status.status.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("Location String: %s"), *FString(RobotMap[elem]->Status.location.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("Battery Level: %f"), RobotMap[elem]->Status.battery_level);
+		UE_LOG(LogRobofleet, Warning, TEXT("Location, X: %f, Y: %f, Z: %f"), RobotMap[elem]->Location.x, RobotMap[elem]->Location.y, RobotMap[elem]->Location.z);
 	}
 }
 
@@ -135,7 +146,9 @@ void URobofleetBase::RefreshRobotList()
 	if (IsConnected())
 	{
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
-		PruneInactiveRobots();
+		RegisterRobotStatusSubscription();
+		RegisterRobotSubscription("localization", "*");
+		//PruneInactiveRobots();
 	}
 }
 
@@ -158,6 +171,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 	else if (topic == "localization") {
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
+		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
 		RobotMap[RobotNamespace]->Location = rl;
 	}
 
@@ -213,4 +227,16 @@ TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 	// you may want an TArray<FColor>
 	// FColor pixelColor = {0, &RobotImageMap[Name].data[i] : i+3}
 	return imageData;
+
+TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
+{
+	TArray<FString> RobotsAtSite;
+	for (auto RobotName : RobotsSeen)
+	{
+		if (GetRobotLocationString(RobotName) == Location)
+		{
+			RobotsAtSite.Add(RobotName);
+		}
+	}
+	return RobotsAtSite;
 }
