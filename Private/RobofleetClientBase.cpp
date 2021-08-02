@@ -179,6 +179,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		//call function to convert msg to bitmap
 		//return bitmap
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
+		OnImageReceived.Broadcast(RobotNamespace);
 	}
 }
 
@@ -227,6 +228,7 @@ TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 	// you may want an TArray<FColor>
 	// FColor pixelColor = {0, &RobotImageMap[Name].data[i] : i+3}
 	return imageData;
+}
 
 TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 {

@@ -30,6 +30,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewRobotSeen, FString, RobotName)
 //OnRobotPruned event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
 
+//OnImageRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
+
 
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
@@ -123,6 +126,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotPruned OnRobotPruned;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnImageReceived OnImageReceived;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
