@@ -160,6 +160,12 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
 		RobotMap[RobotNamespace]->Location = rl;
 	}
+
+	else if (topic == "image_raw/compressed") {
+		//call function to convert msg to bitmap
+		//return bitmap
+		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
+	}
 }
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
@@ -196,4 +202,15 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
+}
+
+TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
+{
+	//needs to return type that Texture expects
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	TArray<uint8> imageData;
+	imageData.Append(&RobotImageMap[RobotNamestd].data[0], RobotImageMap[RobotNamestd].data.size());
+	// you may want an TArray<FColor>
+	// FColor pixelColor = {0, &RobotImageMap[Name].data[i] : i+3}
+	return imageData;
 }

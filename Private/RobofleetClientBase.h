@@ -51,7 +51,9 @@ private:
 
 	FTimerHandle RefreshTimerHandle;
 
+	
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
+	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::set<FString> RobotsSeen = {};
 
@@ -97,6 +99,8 @@ public:
 	FString GetRobotLocationString(const FString& RobotName);
 
 	FVector GetRobotPosition(const FString& RobotName);
+
+	TArray<uint8> GetRobotImage(const FString& RobotName);
 
 	bool IsRobotOk(const FString& RobotName);
 

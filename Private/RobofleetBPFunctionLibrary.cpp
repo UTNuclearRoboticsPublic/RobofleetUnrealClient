@@ -56,6 +56,15 @@ bool URobofleetBPFunctionLibrary::IsRobotOk(const FString& RobotName)
 	return false;
 }
 
+TArray<uint8> URobofleetBPFunctionLibrary::GetRobotImage(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetRobotImage(RobotName);
+	}
+	return TArray<uint8>();
+}
+
 void URobofleetBPFunctionLibrary::PrintRobotsSeen()
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
