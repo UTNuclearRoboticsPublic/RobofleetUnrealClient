@@ -32,6 +32,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewRobotSeen, FString, RobotName)
 //OnRobotPruned event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
 
+//OnImageRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
+
 
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
@@ -54,7 +57,9 @@ private:
 
 	FTimerHandle RefreshTimerHandle;
 
+	
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
+	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::set<FString> RobotsSeen = {};
 
@@ -101,6 +106,8 @@ public:
 
 	FVector GetRobotPosition(const FString& RobotName);
 
+	TArray<uint8> GetRobotImage(const FString& RobotName);
+
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
 	FString GetDetectedName(const FString& RobotName);
@@ -134,6 +141,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotPruned OnRobotPruned;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnImageReceived OnImageReceived;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)

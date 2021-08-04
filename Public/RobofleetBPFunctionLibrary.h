@@ -38,6 +38,9 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 	static bool IsRobotOk(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static TArray<uint8> GetRobotImage(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PrintRobotsSeen();
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
