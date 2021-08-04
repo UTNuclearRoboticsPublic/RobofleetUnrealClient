@@ -150,6 +150,7 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
+		RegisterRobotSubscription("detected", "*");
 		//PruneInactiveRobots();
 	}
 }
