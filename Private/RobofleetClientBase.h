@@ -120,9 +120,6 @@ public:
 
 	FVector GetDetectedPositionGlobal(const FString& RobotName);
 
-	// Need to Add Image Return Type
-
-
 	bool IsRobotOk(const FString& RobotName);
 
 	void PrintRobotsSeen();
