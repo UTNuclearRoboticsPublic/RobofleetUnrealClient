@@ -61,6 +61,10 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FVector GetDetectedPositionGlobal(const FString& RobotName);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static bool IsItemDetected(const FString& RobotName);
+
+
 	// need to add detected image
 
 	// Use only for delegates

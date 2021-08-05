@@ -140,4 +140,14 @@ FVector URobofleetBPFunctionLibrary::GetDetectedPositionGlobal(const FString & R
 	return FVector(0, 0, 0);
 }
 
+bool URobofleetBPFunctionLibrary::IsItemDetected(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->IsItemDetected(RobotName);
+	}
+	return false;
+}
+
+
 // need to add detected image 

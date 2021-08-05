@@ -249,6 +249,15 @@ TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 	return RobotsAtSite;
 }
 
+bool URobofleetBase::IsItemDetected(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (strlen(RobotMap[RobotNamestd]->Detection.name.c_str()) != 0)
+		return true;
+	else
+		return false;
+}
+
 FString URobofleetBase::GetDetectedName(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
