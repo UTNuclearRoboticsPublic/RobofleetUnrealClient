@@ -139,7 +139,7 @@ void URobofleetBase::PrintRobotsSeen() {
 		UE_LOG(LogRobofleet, Warning, TEXT("Location String: %s"), *FString(RobotMap[elem]->Status.location.c_str()));
 		UE_LOG(LogRobofleet, Warning, TEXT("Battery Level: %f"), RobotMap[elem]->Status.battery_level);
 		UE_LOG(LogRobofleet, Warning, TEXT("Location: X: %f, Y: %f, Z: %f"), RobotMap[elem]->Location.x, RobotMap[elem]->Location.y, RobotMap[elem]->Location.z);
-		UE_LOG(LogRobofleet, Warning, TEXT("Detection Details: Name: %s, X: %f, Y: %f, Z: %f"), *FString(RobotMap[elem]->Detection.name.c_str()), RobotMap[elem]->Detection.x, RobotMap[elem]->Detection.y, RobotMap[elem]->Detection.z);
+		UE_LOG(LogRobofleet, Warning, TEXT("Detection Details: Name: %s, X: %f, Y: %f, Z: %f"), *FString(DetectedItemMap[elem].name.c_str()), DetectedItemMap[elem].x, DetectedItemMap[elem].y, DetectedItemMap[elem].z);
 	}
 }
 
@@ -178,8 +178,8 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotMap[RobotNamespace]->Location = rl;
 	}
 	else if (topic == "detected") {
-		DetectedItem dI = DecodeMsg<DetectedItem>(Data);
-		RobotMap[RobotNamespace]->Detection = dI;
+		DetectedItemMap[RobotNamespace] = DecodeMsg<DetectedItem>(Data);
+		OnDetectedItemReceived.Broadcast(RobotNamespace);
 	}
 	else if (topic == "image_raw/compressed") {
 		//call function to convert msg to bitmap
@@ -230,7 +230,7 @@ TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 	//needs to return type that Texture expects
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	TArray<uint8> imageData;
-	imageData.Append(&RobotMap[RobotNamestd]->Detection.cmpr_image.data[0], RobotMap[RobotNamestd]->Detection.cmpr_image.data.size());
+	imageData.Append(&DetectedItemMap[RobotNamestd].cmpr_image.data[0], DetectedItemMap[RobotNamestd].cmpr_image.data.size());
 	// you may want an TArray<FColor>
 	// FColor pixelColor = {0, &RobotImageMap[Name].data[i] : i+3}
 	return imageData;
@@ -252,43 +252,40 @@ TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 bool URobofleetBase::IsItemDetected(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (strlen(RobotMap[RobotNamestd]->Detection.name.c_str()) != 0)
-		return true;
-	else
-		return false;
+	return !DetectedItemMap[RobotNamestd].name.empty();
 }
 
 FString URobofleetBase::GetDetectedName(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Detection.name.c_str()));
+	return FString(UTF8_TO_TCHAR(DetectedItemMap[RobotNamestd].name.c_str()));
 }
 
 FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Detection.repID.c_str()));
+	return FString(UTF8_TO_TCHAR(DetectedItemMap[RobotNamestd].repID.c_str()));
 }
 
 FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Detection.anchorID.c_str()));
+	return FString(UTF8_TO_TCHAR(DetectedItemMap[RobotNamestd].anchorID.c_str()));
 }
 
 FVector URobofleetBase::GetDetectedPositionRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1);
-	return FVector(RobotMap[RobotNamestd]->Detection.x, RobotMap[RobotNamestd]->Detection.y, RobotMap[RobotNamestd]->Detection.z);
+	return FVector(DetectedItemMap[RobotNamestd].x, DetectedItemMap[RobotNamestd].y, DetectedItemMap[RobotNamestd].z);
 }
 
 FVector URobofleetBase::GetDetectedPositionGlobal(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1, -1, -1);
-	return FVector(RobotMap[RobotNamestd]->Detection.lat, RobotMap[RobotNamestd]->Detection.lon, RobotMap[RobotNamestd]->Detection.elv);
+	return FVector(DetectedItemMap[RobotNamestd].lat, DetectedItemMap[RobotNamestd].lon, DetectedItemMap[RobotNamestd].elv);
 }

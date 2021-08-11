@@ -19,7 +19,7 @@
 struct RobotData {
 	RobotLocation Location;
 	RobotStatus Status;
-	DetectedItem Detection;
+	//DetectedItem Detection;
 	bool IsAlive;
 };
 
@@ -35,6 +35,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
 //OnImageRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
 
+//OnDetectedItemRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, RobotName);
 
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
@@ -61,6 +63,7 @@ private:
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
+	std::map<FString, DetectedItem> DetectedItemMap;
 	std::set<FString> RobotsSeen = {};
 
 	template <typename T> typename T DecodeMsg(const void* Data);
@@ -143,6 +146,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnImageReceived OnImageReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnDetectedItemReceived OnDetectedItemReceived;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
