@@ -1,5 +1,6 @@
 #include "RobofleetClientBase.h"
 #include "GameFramework/Actor.h"
+#include <typeinfo>
 
 
 URobofleetBase::URobofleetBase()
@@ -46,6 +47,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
+	RegisterRobotSubscription("imagecompressed", "*");
 	bIsInitilized = true;
 }
 
@@ -148,6 +150,7 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
+		RegisterRobotSubscription("imagecompressed", "*");
 		//PruneInactiveRobots();
 	}
 }
@@ -175,9 +178,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotMap[RobotNamespace]->Location = rl;
 	}
 
-	else if (topic == "image_raw/compressed") {
-		//call function to convert msg to bitmap
-		//return bitmap
+	else if (topic == "imagecompressed") {
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
 	}
@@ -221,14 +222,22 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 
 TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 {
-	//needs to return type that Texture expects
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	TArray<uint8> imageData;
-	imageData.Append(&RobotImageMap[RobotNamestd].data[0], RobotImageMap[RobotNamestd].data.size());
-	// you may want an TArray<FColor>
-	// FColor pixelColor = {0, &RobotImageMap[Name].data[i] : i+3}
-	return imageData;
+	//returns the constructor/ init list: TArray<type>(arrayPtr, arraySize)
+	return TArray<uint8>(&RobotImageMap[RobotNamestd].data[0], RobotImageMap[RobotNamestd].data.size());
 }
+
+bool URobofleetBase::IsRobotImageCompressed(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotImageMap[RobotNamestd].format.find("compressed") != std::string::npos)
+	{
+		return true;
+	}
+	else return false;
+
+}
+
 
 TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 {

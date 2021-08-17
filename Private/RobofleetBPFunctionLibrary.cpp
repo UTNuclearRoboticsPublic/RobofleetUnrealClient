@@ -74,6 +74,15 @@ TArray<uint8> URobofleetBPFunctionLibrary::GetRobotImage(const FString& RobotNam
 	return TArray<uint8>();
 }
 
+bool URobofleetBPFunctionLibrary::IsRobotImageCompressed(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->IsRobotImageCompressed(RobotName);
+	}
+	return bool();
+}
+
 void URobofleetBPFunctionLibrary::PrintRobotsSeen()
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

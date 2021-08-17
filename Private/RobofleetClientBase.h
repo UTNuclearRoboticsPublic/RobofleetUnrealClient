@@ -21,6 +21,7 @@ struct RobotData {
 	RobotStatus Status;
 	bool IsAlive;
 };
+
 //Define Log Category and Verbosity
 DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
 
@@ -105,6 +106,8 @@ public:
 	FVector GetRobotPosition(const FString& RobotName);
 
 	TArray<uint8> GetRobotImage(const FString& RobotName);
+
+	bool IsRobotImageCompressed(const FString& RobotName);
 
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
