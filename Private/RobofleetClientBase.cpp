@@ -118,15 +118,15 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	// If we're seeing this robot for the first time, create new data holder
 	if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
 		RobotMap[RobotNamespace] = MakeShared<RobotData>();
+		RobotsSeen.insert(RobotNamespace);
+		DecodeMsg(Data, TopicIsolated, RobotNamespace);
 		OnNewRobotSeen.Broadcast(RobotNamespace);
 	}
-	RobotsSeen.insert(RobotNamespace);
-
-	DecodeMsg(Data, TopicIsolated, RobotNamespace);
-
-	if (Verbosity)
-		PrintRobotsSeen();
-
+	else
+	{
+		RobotsSeen.insert(RobotNamespace);
+		DecodeMsg(Data, TopicIsolated, RobotNamespace);
+	}
 }
 
 void URobofleetBase::PrintRobotsSeen() {
