@@ -36,6 +36,9 @@ public:
 
 	UFUNCTION()
 	void OnConnected();
+
+	UFUNCTION()
+	void OnClosed();
 	
 	UFUNCTION()
 	void OnConnectionError();
@@ -53,4 +56,8 @@ public:
 
 	void IsCallbackRegistered(bool val);
 
+	// TODO: Make a buffer struct and clean up the raw pointer, optimization wise the current implementation should be close to fastest but can be organized a bit better and made safer.
+	char* DataBuffer;
+	int PrevSize;
+	bool bIsBuffering = false;
 };

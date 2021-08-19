@@ -28,6 +28,7 @@ bool URobofleetBase::IsConnected()
 {
 	if (IsValid(SocketClient))
 	{
+		//UE_LOG(LogRobofleet, Warning, TEXT("Websocket is Valid"))
 		return SocketClient->Socket->IsConnected();
 	}
 	return false;
@@ -48,6 +49,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
 	RegisterRobotSubscription("imagecompressed", "*");
+	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 	bIsInitilized = true;
 }
 
@@ -108,11 +110,12 @@ void URobofleetBase::PruneInactiveRobots() {
 void URobofleetBase::WebsocketDataCB(const void* Data)
 {
 	const fb::MsgWithMetadata* msg = flatbuffers::GetRoot<fb::MsgWithMetadata>(Data);
+	
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
 
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
-	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex+2, MsgTopic.length()).c_str());
+	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
 
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
@@ -124,10 +127,6 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	RobotsSeen.insert(RobotNamespace);
 
 	DecodeMsg(Data, TopicIsolated, RobotNamespace);
-
-	if (Verbosity)
-		PrintRobotsSeen();
-
 }
 
 void URobofleetBase::PrintRobotsSeen() {
@@ -150,7 +149,7 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
-		RegisterRobotSubscription("imagecompressed", "*");
+		//RegisterRobotSubscription("imagecompressed", "*");
 		//PruneInactiveRobots();
 	}
 }
