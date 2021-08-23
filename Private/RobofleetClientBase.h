@@ -125,8 +125,6 @@ public:
 
 	bool IsRobotOk(const FString& RobotName);
 
-	bool IsItemDetected(const FString& RobotName);
-
 	void PrintRobotsSeen();
 	
 	UFUNCTION()

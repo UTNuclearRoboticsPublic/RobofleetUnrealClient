@@ -249,31 +249,25 @@ TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 	return RobotsAtSite;
 }
 
-bool URobofleetBase::IsItemDetected(const FString& RobotName)
-{
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	return !DetectedItemMap[RobotNamestd].name.empty();
-}
-
 FString URobofleetBase::GetDetectedName(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(UTF8_TO_TCHAR(DetectedItemMap[RobotNamestd].name.c_str()));
+	return FString(DetectedItemMap[RobotNamestd].name.c_str());
 }
 
 FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(UTF8_TO_TCHAR(DetectedItemMap[RobotNamestd].repID.c_str()));
+	return FString(DetectedItemMap[RobotNamestd].repID.c_str());
 }
 
 FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(UTF8_TO_TCHAR(DetectedItemMap[RobotNamestd].anchorID.c_str()));
+	return FString(DetectedItemMap[RobotNamestd].anchorID.c_str());
 }
 
 FVector URobofleetBase::GetDetectedPositionRef(const FString& RobotName)
