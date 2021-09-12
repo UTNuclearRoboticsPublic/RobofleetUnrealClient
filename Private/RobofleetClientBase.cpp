@@ -1,5 +1,6 @@
 #include "RobofleetClientBase.h"
 #include "GameFramework/Actor.h"
+#include <typeinfo>
 
 
 URobofleetBase::URobofleetBase()
@@ -27,6 +28,7 @@ bool URobofleetBase::IsConnected()
 {
 	if (IsValid(SocketClient))
 	{
+		//UE_LOG(LogRobofleet, Warning, TEXT("Websocket is Valid"))
 		return SocketClient->Socket->IsConnected();
 	}
 	return false;
@@ -46,6 +48,8 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
+	RegisterRobotSubscription("imagecompressed", "*");
+	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 	bIsInitilized = true;
 }
 
@@ -106,11 +110,12 @@ void URobofleetBase::PruneInactiveRobots() {
 void URobofleetBase::WebsocketDataCB(const void* Data)
 {
 	const fb::MsgWithMetadata* msg = flatbuffers::GetRoot<fb::MsgWithMetadata>(Data);
+	
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
 
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
-	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex+2, MsgTopic.length()).c_str());
+	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
 
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
@@ -122,10 +127,6 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	RobotsSeen.insert(RobotNamespace);
 
 	DecodeMsg(Data, TopicIsolated, RobotNamespace);
-
-	if (Verbosity)
-		PrintRobotsSeen();
-
 }
 
 void URobofleetBase::PrintRobotsSeen() {
@@ -148,6 +149,7 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
+		//RegisterRobotSubscription("imagecompressed", "*");
 		//PruneInactiveRobots();
 	}
 }
@@ -173,6 +175,11 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
 		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
 		RobotMap[RobotNamespace]->Location = rl;
+	}
+
+	else if (topic == "imagecompressed") {
+		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
+		OnImageReceived.Broadcast(RobotNamespace);
 	}
 }
 
@@ -211,6 +218,25 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
 }
+
+TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	//returns the constructor/ init list: TArray<type>(arrayPtr, arraySize)
+	return TArray<uint8>(&RobotImageMap[RobotNamestd].data[0], RobotImageMap[RobotNamestd].data.size());
+}
+
+bool URobofleetBase::IsRobotImageCompressed(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotImageMap[RobotNamestd].format.find("compressed") != std::string::npos)
+	{
+		return true;
+	}
+	else return false;
+
+}
+
 
 TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 {
