@@ -46,6 +46,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
+	RegisterRobotSubscription("detected", "*");
 	bIsInitilized = true;
 }
 
@@ -117,27 +118,28 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	// If we're seeing this robot for the first time, create new data holder
 	if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
 		RobotMap[RobotNamespace] = MakeShared<RobotData>();
+		RobotsSeen.insert(RobotNamespace);
+		DecodeMsg(Data, TopicIsolated, RobotNamespace);
 		OnNewRobotSeen.Broadcast(RobotNamespace);
 	}
-	RobotsSeen.insert(RobotNamespace);
-
-	DecodeMsg(Data, TopicIsolated, RobotNamespace);
-
-	if (Verbosity)
-		PrintRobotsSeen();
-
+	else
+	{
+		RobotsSeen.insert(RobotNamespace);
+		DecodeMsg(Data, TopicIsolated, RobotNamespace);
+	}
 }
 
 void URobofleetBase::PrintRobotsSeen() {
 
-	UE_LOG(LogRobofleet, Warning, TEXT("Printing Existing Robots"));
+	UE_LOG(LogRobofleet, Warning, TEXT("\n\nPrinting Existing Robots"));
 	for (auto elem : RobotsSeen) {
 		UE_LOG(LogRobofleet, Warning, TEXT("---------------"));
 		UE_LOG(LogRobofleet, Warning, TEXT("Robot Name: %s"), *FString(elem));
 		UE_LOG(LogRobofleet, Warning, TEXT("Status: %s"), *FString(RobotMap[elem]->Status.status.c_str()));
 		UE_LOG(LogRobofleet, Warning, TEXT("Location String: %s"), *FString(RobotMap[elem]->Status.location.c_str()));
 		UE_LOG(LogRobofleet, Warning, TEXT("Battery Level: %f"), RobotMap[elem]->Status.battery_level);
-		UE_LOG(LogRobofleet, Warning, TEXT("Location, X: %f, Y: %f, Z: %f"), RobotMap[elem]->Location.x, RobotMap[elem]->Location.y, RobotMap[elem]->Location.z);
+		UE_LOG(LogRobofleet, Warning, TEXT("Location: X: %f, Y: %f, Z: %f"), RobotMap[elem]->Location.x, RobotMap[elem]->Location.y, RobotMap[elem]->Location.z);
+		UE_LOG(LogRobofleet, Warning, TEXT("Detection Details: Name: %s, X: %f, Y: %f, Z: %f"), *FString(DetectedItemMap[elem].name.c_str()), DetectedItemMap[elem].x, DetectedItemMap[elem].y, DetectedItemMap[elem].z);
 	}
 }
 
@@ -148,6 +150,7 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
+		RegisterRobotSubscription("detected", "*");
 		//PruneInactiveRobots();
 	}
 }
@@ -173,6 +176,16 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
 		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
 		RobotMap[RobotNamespace]->Location = rl;
+	}
+	else if (topic == "detected") {
+		DetectedItemMap[RobotNamespace] = DecodeMsg<DetectedItem>(Data);
+		OnDetectedItemReceived.Broadcast(RobotNamespace);
+	}
+	else if (topic == "image_raw/compressed") {
+		//call function to convert msg to bitmap
+		//return bitmap
+		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
+		OnImageReceived.Broadcast(RobotNamespace);
 	}
 }
 
@@ -212,6 +225,17 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
 }
 
+TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
+{
+	//needs to return type that Texture expects
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	TArray<uint8> imageData;
+	imageData.Append(&DetectedItemMap[RobotNamestd].cmpr_image.data[0], DetectedItemMap[RobotNamestd].cmpr_image.data.size());
+	// you may want an TArray<FColor>
+	// FColor pixelColor = {0, &RobotImageMap[Name].data[i] : i+3}
+	return imageData;
+}
+
 TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 {
 	TArray<FString> RobotsAtSite;
@@ -223,4 +247,39 @@ TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 		}
 	}
 	return RobotsAtSite;
+}
+
+FString URobofleetBase::GetDetectedName(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(DetectedItemMap[RobotNamestd].name.c_str());
+}
+
+FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(DetectedItemMap[RobotNamestd].repID.c_str());
+}
+
+FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(DetectedItemMap[RobotNamestd].anchorID.c_str());
+}
+
+FVector URobofleetBase::GetDetectedPositionRef(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1);
+	return FVector(DetectedItemMap[RobotNamestd].x, DetectedItemMap[RobotNamestd].y, DetectedItemMap[RobotNamestd].z);
+}
+
+FVector URobofleetBase::GetDetectedPositionGlobal(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1, -1, -1);
+	return FVector(DetectedItemMap[RobotNamestd].lat, DetectedItemMap[RobotNamestd].lon, DetectedItemMap[RobotNamestd].elv);
 }

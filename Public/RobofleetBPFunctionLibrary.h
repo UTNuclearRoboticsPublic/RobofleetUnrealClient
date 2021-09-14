@@ -38,10 +38,30 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 	static bool IsRobotOk(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static TArray<uint8> GetRobotImage(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PrintRobotsSeen();
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void RegisterRobotSubscription(FString TopicName, FString RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetDetectedName(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetDetectedRepIDRef(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetDetectedAnchorIDRef(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FVector GetDetectedPositionRef(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FVector GetDetectedPositionGlobal(const FString& RobotName);
+
+	// need to add detected image
 
 	// Use only for delegates
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
