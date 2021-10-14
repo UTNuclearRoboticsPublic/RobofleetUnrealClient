@@ -17,6 +17,9 @@
 #include "RobofleetClientBase.generated.h"
 
 struct RobotData {
+	FVector Translation;
+	FQuat Rotation;
+	// Location is going to be depreciated!!
 	RobotLocation Location;
 	RobotStatus Status;
 	//DetectedItem Detection;

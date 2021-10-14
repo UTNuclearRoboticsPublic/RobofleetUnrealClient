@@ -176,6 +176,13 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
 		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
 		RobotMap[RobotNamespace]->Location = rl;
+		RobotMap[RobotNamespace]->Translation = FVector(rl.x, rl.y, 0.0f);
+	}
+	else if (topic == "posestamped") {
+		PoseStamped ps = DecodeMsg<PoseStamped>(Data);
+		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
+		RobotMap[RobotNamespace]->Translation = FVector(ps.pose.point.x, ps.pose.point.y, ps.pose.point.z);
+		RobotMap[RobotNamespace]->Rotation = FQuat(ps.pose.quaternion.x, ps.pose.quaternion.y, ps.pose.quaternion.z, ps.pose.quaternion.w);
 	}
 	else if (topic == "detected") {
 		DetectedItemMap[RobotNamespace] = DecodeMsg<DetectedItem>(Data);
