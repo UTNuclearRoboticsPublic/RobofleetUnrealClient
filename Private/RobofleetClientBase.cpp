@@ -48,36 +48,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotSubscription("localization", "*");
 	RegisterRobotSubscription("detected", "*");
 	bIsInitilized = true;
-}
 
-/*
- * Used to track all robots currently on robofleet. 
- * Status messages are very low overhead, so subscribing to all is not a problem.
- */
-void URobofleetBase::RegisterRobotStatusSubscription() {
-	// STATUS messages
-	RobofleetSubscription msg;
-	msg.topic_regex = "/*/status";
-	msg.action = 1;
-	std::string topic = "amrl_msgs/RobofleetSubscription";
-	std::string subs = "/subscriptions";
-	EncodeRosMsg<RobofleetSubscription>(
-		msg, topic, subs, subs);
-}
-
-/*
- * Used to register a higher-overhead topic on-demand. 
- * Note that `MessageType` should be fully qualified with the message package name, i.e.
- * `amrl_msgs/Localization2D` 
- */
-void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName) {
-	RobofleetSubscription msg;
-	msg.topic_regex = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
-	msg.action = 1;
-	std::string topic = "amrl_msgs/RobofleetSubscription";
-	std::string subs = "/subscriptions";
-	EncodeRosMsg<RobofleetSubscription>(
-		msg, topic, subs, subs);
 }
 
 void URobofleetBase::RemoveObjectFromRoot()
@@ -155,16 +126,19 @@ void URobofleetBase::RefreshRobotList()
 	}
 }
 
+
 template <typename T>
-typename T URobofleetBase::DecodeMsg(const void* Data) {
+typename T URobofleetBase::DecodeMsg(const void* Data) 
+{ // Decoding Messages from Robofleet
+
 	const auto* root = flatbuffers::GetRoot<typename flatbuffers_type_for<T>::type>(Data);
 	const T msg = decode<T>(root);
 	return msg;
 }
 
 /*
- * This usage is unfortunate, but without std::any_cast and std::any, I can't see a way 
- * around switching on topic name, since we explicitly care about the returned type 
+ * This usage is unfortunate, but without std::any_cast and std::any, I can't see a way
+ * around switching on topic name, since we explicitly care about the returned type
  * (and aren't just sending it over the wire like in ROS)
  */
 void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNamespace) {
@@ -188,6 +162,75 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		OnImageReceived.Broadcast(RobotNamespace);
 	}
 }
+
+
+template <typename T>
+void URobofleetBase::EncodeRosMsg (const T& msg, const std::string& msg_type, std::string& from_topic, const std::string& to_topic) 
+{ // Encoding Messages for Robofleet as ROS Messages
+
+	flatbuffers::FlatBufferBuilder fbb;
+	auto metadata = encode_metadata(fbb, msg_type, to_topic);
+	auto root_offset = encode<T>(fbb, msg, metadata);
+	fbb.Finish(flatbuffers::Offset<void>(root_offset));
+
+	if (SocketClient->IsValidLowLevel())
+	{
+		SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
+		UE_LOG(LogRobofleet, Warning, TEXT("Message sent"));
+	}
+	else
+	{
+		UE_LOG(LogRobofleet, Warning, TEXT("Message not sent since socket is destroyed"));
+	}
+}
+
+/* TODO - CHECK IF NEEDED
+ * Used to track all robots currently on robofleet.
+ * Status messages are very low overhead, so subscribing to all is not a problem.
+ */
+void URobofleetBase::RegisterRobotStatusSubscription() {
+	// STATUS messages
+	RobofleetSubscription msg;
+	msg.topic_regex = "/*/status";
+	msg.action = 1;
+	std::string topic = "amrl_msgs/RobofleetSubscription";
+	std::string subs = "/subscriptions";
+	EncodeRosMsg<RobofleetSubscription>(
+		msg, topic, subs, subs);
+}
+
+/* TODO - CHECK IF NEEDED
+ * Used to register a higher-overhead topic on-demand.
+ * Note that `MessageType` should be fully qualified with the message package name, i.e.
+ * `amrl_msgs/Localization2D`
+ */
+void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName)
+{ // Publish a General Subscription Message to Robofleet
+	RobofleetSubscription msg;
+	msg.topic_regex = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	msg.action = 1;
+	std::string topic = "amrl_msgs/RobofleetSubscription";
+	std::string subs = "/subscriptions";
+	EncodeRosMsg<RobofleetSubscription>(
+		msg, topic, subs, subs);
+}
+
+void URobofleetBase::PublishStatusMsg(FString RobotName, RobotStatus& StatusMsg)
+{ // Publish a Status Message to Robofleet
+	std::string topic = "amrl_msgs/RobofleetStatus";
+	std::string from = "/status";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/status";
+	EncodeRosMsg<RobotStatus>(StatusMsg, topic, from, to);
+}
+
+void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg)
+{ // Publish a Location Message to Robofleet
+	std::string topic = "amrl_msgs/Localization2DMsg";
+	std::string from = "/localization";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/localization";
+	EncodeRosMsg<RobotLocationStamped>(LocationMsg, topic, from, to);
+}
+
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
