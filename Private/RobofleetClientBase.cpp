@@ -1,7 +1,6 @@
 #include "RobofleetClientBase.h"
 #include "GameFramework/Actor.h"
 
-
 URobofleetBase::URobofleetBase()
 {
 	MaxQueueBeforeWaiting = 1;

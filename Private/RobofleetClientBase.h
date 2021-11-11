@@ -143,8 +143,4 @@ public:
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
 	void RemoveObjectFromRoot();
-
-	// TEST - feature-robofleet-encode branch additions
-	void SendTextMsg(const FString& text);
-
 };
