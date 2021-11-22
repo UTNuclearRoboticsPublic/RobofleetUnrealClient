@@ -175,7 +175,7 @@ void URobofleetBase::EncodeRosMsg (const T& msg, const std::string& msg_type, st
 	if (SocketClient->IsValidLowLevel())
 	{
 		SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
-		UE_LOG(LogRobofleet, Warning, TEXT("Message sent"));
+		//UE_LOG(LogRobofleet, Warning, TEXT("Message sent"));
 	}
 	else
 	{
