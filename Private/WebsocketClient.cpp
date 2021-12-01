@@ -29,6 +29,7 @@ void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:808
 	Socket->OnConnected().AddUFunction(this, FName("OnConnected"));
 	Socket->OnConnectionError().AddUFunction(this, FName("OnConnectionError"));
 	Socket->OnMessageSent().AddUFunction(this, FName("OnMessageSent"));
+	Socket->OnClosed().AddUFunction(this, FName("OnClosed"));
 
 	// Unreal having a problem with binding to a raw function, and a UFUNCTION doesn't like having a void* as a arg
 	// For now, use lambda directly
@@ -55,6 +56,11 @@ void UWebsocketClient::OnConnected()
 	UE_LOG(LogTemp, Log, TEXT("Connected to websocket."))
 }
 
+void UWebsocketClient::OnClosed()
+{
+	UE_LOG(LogTemp, Log, TEXT("Websocket Closed."))
+}
+
 void UWebsocketClient::OnConnectionError()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Encountered error while trying to connect to websocket."))
@@ -62,11 +68,38 @@ void UWebsocketClient::OnConnectionError()
 
 void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
 {
-	
 	UE_LOG(LogTemp, Verbose, TEXT("Message Received"));
-
-	if (callbackRegistered) {
-		OnReceivedCB(Data);
+	// TODO: fix it frank, actually its not too terrible atm.
+	
+	if (BytesRemaining)
+	{
+		if (!bIsBuffering)
+		{
+			DataBuffer = new char[Size + BytesRemaining];
+			memcpy(DataBuffer, Data, Size);
+			PrevSize = Size;
+			bIsBuffering = true;
+		}
+		else
+		{
+			memcpy(DataBuffer+PrevSize, Data, Size);
+			PrevSize = Size;
+		}
+	}
+	else
+	{
+		if (bIsBuffering)
+		{
+			memcpy(DataBuffer + PrevSize, Data, Size);
+			PrevSize = 0;
+			bIsBuffering = false;
+			OnReceivedCB(DataBuffer);
+			delete DataBuffer;
+		}
+		else
+		{
+			OnReceivedCB(Data);
+		}
 	}
 }
 
@@ -77,7 +110,6 @@ void UWebsocketClient::OnMessageSent()
 
 void UWebsocketClient::Send(const void* ptr, uint32_t size, bool isBinary)
 {
-	
 	UE_LOG(LogTemp, Verbose, TEXT("Message Sending"));
 	Socket->Send(ptr, size, isBinary);
 }

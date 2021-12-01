@@ -42,6 +42,9 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 	static TArray<uint8> GetRobotImage(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static bool IsRobotImageCompressed(const FString& RobotName);
+	 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PrintRobotsSeen();
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")

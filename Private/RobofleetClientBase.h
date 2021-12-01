@@ -99,6 +99,8 @@ public:
 
 	TArray<uint8> GetRobotImage(const FString& RobotName);
 
+	bool IsRobotImageCompressed(const FString& RobotName);
+
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
 	FString GetDetectedName(const FString& RobotName);
