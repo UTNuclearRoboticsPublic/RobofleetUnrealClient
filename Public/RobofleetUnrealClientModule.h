@@ -5,7 +5,7 @@
 
 class URobofleetBase;
 
-class FRobofleetUnrealClientModule : public IModuleInterface
+class ROBOFLEETUNREALCLIENT_API FRobofleetUnrealClientModule : public IModuleInterface
 {
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;

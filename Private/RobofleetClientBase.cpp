@@ -93,7 +93,6 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
 	// If we're seeing this robot for the first time, create new data holder
 	if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
-		RobotMap[RobotNamespace] = MakeShared<RobotData>();
 		RobotsSeen.insert(RobotNamespace);
 		DecodeMsg(Data, TopicIsolated, RobotNamespace);
 		OnNewRobotSeen.Broadcast(RobotNamespace);
@@ -150,6 +149,14 @@ typename T URobofleetBase::DecodeMsg(const void* Data)
 void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNamespace) {
 	if (topic == "status") {
 		RobotStatus rs = DecodeMsg<RobotStatus>(Data);
+		if (!RobotMap[RobotNamespace]->Status.location.empty())
+		{
+			std::string OldLocation = RobotMap[RobotNamespace]->Status.location;
+			if (OldLocation != rs.location)
+			{
+				OnRobotLocationChanged.Broadcast(RobotNamespace, UTF8_TO_TCHAR(OldLocation.c_str()), UTF8_TO_TCHAR(rs.location.c_str()));
+			}
+		}
 		RobotMap[RobotNamespace]->Status = rs;
 	}
 	else if (topic == "localization") {
@@ -271,7 +278,7 @@ FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
 FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
+	if (RobotMap.count(RobotNamestd) == 0) return FVector( 0.0f, 0.0f, 0.0f );
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
 }
 

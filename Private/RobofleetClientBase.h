@@ -38,6 +38,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName
 //OnDetectedItemRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, RobotName);
 
+//OnRobotChangedLocation event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRobotLocationChanged, FString, RobotName, FString, OldSite, FString, NewSite);
+
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 {
@@ -141,6 +144,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedItemReceived OnDetectedItemReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnRobotLocationChanged OnRobotLocationChanged;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
