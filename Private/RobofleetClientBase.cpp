@@ -1,6 +1,6 @@
 #include "RobofleetClientBase.h"
 #include "GameFramework/Actor.h"
-
+#include <typeinfo>
 
 URobofleetBase::URobofleetBase()
 {
@@ -27,6 +27,7 @@ bool URobofleetBase::IsConnected()
 {
 	if (IsValid(SocketClient))
 	{
+		//UE_LOG(LogRobofleet, Warning, TEXT("Websocket is Valid"))
 		return SocketClient->Socket->IsConnected();
 	}
 	return false;
@@ -46,38 +47,12 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
+	//RegisterRobotSubscription("image_compressed/main", "*");
+	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 	RegisterRobotSubscription("detected", "*");
+
 	bIsInitilized = true;
-}
 
-/*
- * Used to track all robots currently on robofleet. 
- * Status messages are very low overhead, so subscribing to all is not a problem.
- */
-void URobofleetBase::RegisterRobotStatusSubscription() {
-	// STATUS messages
-	RobofleetSubscription msg;
-	msg.topic_regex = "/*/status";
-	msg.action = 1;
-	std::string topic = "amrl_msgs/RobofleetSubscription";
-	std::string subs = "/subscriptions";
-	EncodeRosMsg<RobofleetSubscription>(
-		msg, topic, subs, subs);
-}
-
-/*
- * Used to register a higher-overhead topic on-demand. 
- * Note that `MessageType` should be fully qualified with the message package name, i.e.
- * `amrl_msgs/Localization2D` 
- */
-void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName) {
-	RobofleetSubscription msg;
-	msg.topic_regex = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
-	msg.action = 1;
-	std::string topic = "amrl_msgs/RobofleetSubscription";
-	std::string subs = "/subscriptions";
-	EncodeRosMsg<RobofleetSubscription>(
-		msg, topic, subs, subs);
 }
 
 void URobofleetBase::RemoveObjectFromRoot()
@@ -107,11 +82,12 @@ void URobofleetBase::PruneInactiveRobots() {
 void URobofleetBase::WebsocketDataCB(const void* Data)
 {
 	const fb::MsgWithMetadata* msg = flatbuffers::GetRoot<fb::MsgWithMetadata>(Data);
+	
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
 
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
-	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex+2, MsgTopic.length()).c_str());
+	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
 
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
@@ -150,26 +126,38 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
+		//RegisterRobotSubscription("image_compressed/main", "*");
 		RegisterRobotSubscription("detected", "*");
 		//PruneInactiveRobots();
 	}
 }
 
+
 template <typename T>
-typename T URobofleetBase::DecodeMsg(const void* Data) {
+typename T URobofleetBase::DecodeMsg(const void* Data) 
+{ // Decoding Messages from Robofleet
+
 	const auto* root = flatbuffers::GetRoot<typename flatbuffers_type_for<T>::type>(Data);
 	const T msg = decode<T>(root);
 	return msg;
 }
 
 /*
- * This usage is unfortunate, but without std::any_cast and std::any, I can't see a way 
- * around switching on topic name, since we explicitly care about the returned type 
+ * This usage is unfortunate, but without std::any_cast and std::any, I can't see a way
+ * around switching on topic name, since we explicitly care about the returned type
  * (and aren't just sending it over the wire like in ROS)
  */
 void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNamespace) {
 	if (topic == "status") {
 		RobotStatus rs = DecodeMsg<RobotStatus>(Data);
+		if (!RobotMap[RobotNamespace]->Status.location.empty())
+		{
+			std::string OldLocation = RobotMap[RobotNamespace]->Status.location;
+			if (OldLocation != rs.location)
+			{
+				OnRobotLocationChanged.Broadcast(RobotNamespace, UTF8_TO_TCHAR(OldLocation.c_str()), UTF8_TO_TCHAR(rs.location.c_str()));
+			}
+		}
 		RobotMap[RobotNamespace]->Status = rs;
 	}
 	else if (topic == "localization") {
@@ -177,6 +165,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
 		RobotMap[RobotNamespace]->Location = rl;
 	}
+
 	else if (topic == "detected") {
 		DetectedItemMap[RobotNamespace] = DecodeMsg<DetectedItem>(Data);
 		OnDetectedItemReceived.Broadcast(RobotNamespace);
@@ -188,6 +177,75 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		OnImageReceived.Broadcast(RobotNamespace);
 	}
 }
+
+
+template <typename T>
+void URobofleetBase::EncodeRosMsg (const T& msg, const std::string& msg_type, std::string& from_topic, const std::string& to_topic) 
+{ // Encoding Messages for Robofleet as ROS Messages
+
+	flatbuffers::FlatBufferBuilder fbb;
+	auto metadata = encode_metadata(fbb, msg_type, to_topic);
+	auto root_offset = encode<T>(fbb, msg, metadata);
+	fbb.Finish(flatbuffers::Offset<void>(root_offset));
+
+	if (SocketClient->IsValidLowLevel())
+	{
+		SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
+		//UE_LOG(LogRobofleet, Warning, TEXT("Message sent"));
+	}
+	else
+	{
+		UE_LOG(LogRobofleet, Warning, TEXT("Message not sent since socket is destroyed"));
+	}
+}
+
+/* TODO - CHECK IF NEEDED
+ * Used to track all robots currently on robofleet.
+ * Status messages are very low overhead, so subscribing to all is not a problem.
+ */
+void URobofleetBase::RegisterRobotStatusSubscription() {
+	// STATUS messages
+	RobofleetSubscription msg;
+	msg.topic_regex = "/*/status";
+	msg.action = 1;
+	std::string topic = "amrl_msgs/RobofleetSubscription";
+	std::string subs = "/subscriptions";
+	EncodeRosMsg<RobofleetSubscription>(
+		msg, topic, subs, subs);
+}
+
+/* TODO - CHECK IF NEEDED
+ * Used to register a higher-overhead topic on-demand.
+ * Note that `MessageType` should be fully qualified with the message package name, i.e.
+ * `amrl_msgs/Localization2D`
+ */
+void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotName)
+{ // Publish a General Subscription Message to Robofleet
+	RobofleetSubscription msg;
+	msg.topic_regex = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	msg.action = 1;
+	std::string topic = "amrl_msgs/RobofleetSubscription";
+	std::string subs = "/subscriptions";
+	EncodeRosMsg<RobofleetSubscription>(
+		msg, topic, subs, subs);
+}
+
+void URobofleetBase::PublishStatusMsg(FString RobotName, RobotStatus& StatusMsg)
+{ // Publish a Status Message to Robofleet
+	std::string topic = "amrl_msgs/RobofleetStatus";
+	std::string from = "/status";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/status";
+	EncodeRosMsg<RobotStatus>(StatusMsg, topic, from, to);
+}
+
+void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg)
+{ // Publish a Location Message to Robofleet
+	std::string topic = "amrl_msgs/Localization2DMsg";
+	std::string from = "/localization";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/localization";
+	EncodeRosMsg<RobotLocationStamped>(LocationMsg, topic, from, to);
+}
+
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
@@ -221,13 +279,12 @@ FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
 FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1 );
+	if (RobotMap.count(RobotNamestd) == 0) return FVector( 0.0f, 0.0f, 0.0f );
 	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
 }
 
 TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 {
-	//needs to return type that Texture expects
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	TArray<uint8> imageData;
 	imageData.Append(&DetectedItemMap[RobotNamestd].cmpr_image.data[0], DetectedItemMap[RobotNamestd].cmpr_image.data.size());
@@ -235,6 +292,18 @@ TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 	// FColor pixelColor = {0, &RobotImageMap[Name].data[i] : i+3}
 	return imageData;
 }
+
+bool URobofleetBase::IsRobotImageCompressed(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotImageMap[RobotNamestd].format.find("compressed") != std::string::npos)
+	{
+		return true;
+	}
+	else return false;
+
+}
+
 
 TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 {

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "RobofleetBPMessageStructs.h"
 #include "RobofleetBPFunctionLibrary.generated.h"
 
 class URobofleetBase;
@@ -41,6 +42,9 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 	static TArray<uint8> GetRobotImage(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static bool IsRobotImageCompressed(const FString& RobotName);
+	 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PrintRobotsSeen();
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
@@ -60,6 +64,13 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FVector GetDetectedPositionGlobal(const FString& RobotName);
+
+	// Publish Messages to Robofleet
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishStatusMsg(const FString& RobotName, const FRobotStatus& StatusMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishLocationMsg(const FString& RobotName, const FRobotLocationStamped& LocationMsg);
 
 	// need to add detected image
 

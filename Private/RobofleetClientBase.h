@@ -38,6 +38,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName
 //OnDetectedItemRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, RobotName);
 
+//OnRobotChangedLocation event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRobotLocationChanged, FString, RobotName, FString, OldSite, FString, NewSite);
+
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 {
@@ -58,7 +61,6 @@ private:
 	UWebsocketClient* SocketClient;
 
 	FTimerHandle RefreshTimerHandle;
-
 	
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, CompressedImage> RobotImageMap;
@@ -66,28 +68,17 @@ private:
 	std::map<FString, DetectedItem> DetectedItemMap;
 	std::set<FString> RobotsSeen = {};
 
-	template <typename T> typename T DecodeMsg(const void* Data);
+	template <typename T> 
+	typename T DecodeMsg(const void* Data);
+
 	void DecodeMsg(const void* Data, FString topic, FString RobotNamespace);
 
-	template <typename T>
+	template <typename T> 
 	void EncodeRosMsg(
-		const T& msg, const std::string& msg_type, std::string& from_topic,
-		const std::string& to_topic) {
-
-		// encode message
-		flatbuffers::FlatBufferBuilder fbb;
-		auto metadata = encode_metadata(fbb, msg_type, to_topic);
-		auto root_offset = encode<T>(fbb, msg, metadata);
-		fbb.Finish(flatbuffers::Offset<void>(root_offset));
-		if (SocketClient->IsValidLowLevel())
-		{
-			SocketClient->Send(fbb.GetBufferPointer(), fbb.GetSize(), true);
-		}
-		else
-		{
-			UE_LOG(LogRobofleet, Warning, TEXT("Message not sent since socket is destroyed"));
-		}
-	}
+		const T& msg,
+		const std::string& msg_type,
+		std::string& from_topic,
+		const std::string& to_topic);
 
 	void WebsocketDataCB(const void* Data);
 
@@ -110,6 +101,8 @@ public:
 	FVector GetRobotPosition(const FString& RobotName);
 
 	TArray<uint8> GetRobotImage(const FString& RobotName);
+
+	bool IsRobotImageCompressed(const FString& RobotName);
 
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
@@ -136,6 +129,10 @@ public:
 
 	void RegisterRobotSubscription(FString TopicName, FString RobotName);
 
+	void PublishStatusMsg(FString Robotname, RobotStatus& RobotStatus);
+
+	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 
@@ -147,6 +144,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedItemReceived OnDetectedItemReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnRobotLocationChanged OnRobotLocationChanged;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
