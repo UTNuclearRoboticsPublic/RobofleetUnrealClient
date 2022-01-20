@@ -6,6 +6,7 @@ URobofleetBase::URobofleetBase()
 {
 	MaxQueueBeforeWaiting = 1;
 	Verbosity = 0;
+	bIsWorldGeoOriginSet = false;
 }
 
 
@@ -16,6 +17,12 @@ URobofleetBase::~URobofleetBase()
 
 void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();
+}
+
+void URobofleetBase::SetWorldGeoOrigin(GeoPose OriginPose)
+{
+	WorldGeoOrigin = OriginPose;
+	bIsWorldGeoOriginSet = true;
 }
 
 bool URobofleetBase::IsInitilized()
@@ -175,6 +182,15 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		//return bitmap
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
+	}
+	else if (topic == "NavSatFix") {
+		NavSatFixMap[RobotNamespace] = DecodeMsg<NavSatFix>(Data);
+		if (bIsWorldGeoOriginSet)
+		{
+			// TODO: Frank do it
+			// Convert navsatfix position to x,y,z w.r.t. the worldgeoorigin.
+			// set location in RobotMap eg. RobotMap[RobotNamespace]->Location.x ...
+		}
 	}
 }
 

@@ -66,7 +66,11 @@ private:
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
+	std::map<FString, NavSatFix> NavSatFixMap;
 	std::set<FString> RobotsSeen = {};
+
+	GeoPose WorldGeoOrigin;
+	bool bIsWorldGeoOriginSet;
 
 	template <typename T> 
 	typename T DecodeMsg(const void* Data);
@@ -91,6 +95,8 @@ public:
 	void Initialize(FString HostUrl, const UObject* WorldContextObject);
 
 	void Disconnect();
+
+	void SetWorldGeoOrigin(GeoPose OriginPose);
 
 	FString GetRobotStatus(const FString& RobotName);
 
