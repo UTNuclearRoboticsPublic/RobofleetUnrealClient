@@ -1,6 +1,8 @@
 #include "RobofleetClientBase.h"
 #include "GameFramework/Actor.h"
 #include <typeinfo>
+#include <math.h>
+#include <array>
 
 URobofleetBase::URobofleetBase()
 {
@@ -19,9 +21,11 @@ void URobofleetBase::Disconnect() {
 	SocketClient->Disconnect();
 }
 
-void URobofleetBase::SetWorldGeoOrigin(GeoPose OriginPose)
+void URobofleetBase::SetWorldGeoOrigin(NavSatFix OriginPose)
 {
 	WorldGeoOrigin = OriginPose;
+	PoseMap[FWorldOrigin] = Pose();
+	ConvertToCartesian(OriginPose, FWorldOrigin);
 	bIsWorldGeoOriginSet = true;
 }
 
@@ -101,6 +105,11 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	// If we're seeing this robot for the first time, create new data holder
 	if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
 		RobotMap[RobotNamespace] = MakeShared<RobotData>();
+
+		if (TopicIsolated == "NavSatFix") {
+			PoseMap[RobotNamespace] = Pose();
+		}
+
 		RobotsSeen.insert(RobotNamespace);
 		DecodeMsg(Data, TopicIsolated, RobotNamespace);
 		OnNewRobotSeen.Broadcast(RobotNamespace);
@@ -122,6 +131,7 @@ void URobofleetBase::PrintRobotsSeen() {
 		UE_LOG(LogRobofleet, Warning, TEXT("Location String: %s"), *FString(RobotMap[elem]->Status.location.c_str()));
 		UE_LOG(LogRobofleet, Warning, TEXT("Battery Level: %f"), RobotMap[elem]->Status.battery_level);
 		UE_LOG(LogRobofleet, Warning, TEXT("Location: X: %f, Y: %f, Z: %f"), RobotMap[elem]->Location.x, RobotMap[elem]->Location.y, RobotMap[elem]->Location.z);
+		UE_LOG(LogRobofleet, Warning, TEXT("Geo Location: Lat: %f, Long: %f, Alt: %f"), NavSatFixMap[elem].latitude, NavSatFixMap[elem].longitude, NavSatFixMap[elem].altitude);
 		UE_LOG(LogRobofleet, Warning, TEXT("Detection Details: Name: %s, X: %f, Y: %f, Z: %f"), *FString(DetectedItemMap[elem].name.c_str()), DetectedItemMap[elem].x, DetectedItemMap[elem].y, DetectedItemMap[elem].z);
 	}
 }
@@ -135,6 +145,7 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("localization", "*");
 		//RegisterRobotSubscription("image_compressed/main", "*");
 		RegisterRobotSubscription("detected", "*");
+		RegisterRobotSubscription("NavSatFix", "*");
 		//PruneInactiveRobots();
 	}
 }
@@ -185,13 +196,55 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 	else if (topic == "NavSatFix") {
 		NavSatFixMap[RobotNamespace] = DecodeMsg<NavSatFix>(Data);
+		
 		if (bIsWorldGeoOriginSet)
 		{
 			// TODO: Frank do it
 			// Convert navsatfix position to x,y,z w.r.t. the worldgeoorigin.
 			// set location in RobotMap eg. RobotMap[RobotNamespace]->Location.x ...
+			ConvertToCartesian(NavSatFixMap[RobotNamespace], RobotNamespace);
+
+			/*
+			Since no Orientation in NavSatFix there does not need to Be a Transformation Matrix calc between
+			GeoLocation of Origin and Robot because we are referencing the same orgin
+			*/
+			RobotMap[RobotNamespace]->Location.x = PoseMap[RobotNamespace].point.x - PoseMap[FWorldOrigin].point.x;
+			RobotMap[RobotNamespace]->Location.y = PoseMap[RobotNamespace].point.y - PoseMap[FWorldOrigin].point.y;
+			RobotMap[RobotNamespace]->Location.z = PoseMap[RobotNamespace].point.z - PoseMap[FWorldOrigin].point.z;
 		}
 	}
+}
+
+void URobofleetBase::ConvertToCartesian(const NavSatFix &GeoPose, const FString RobotNamespace)
+{
+	// degrees to radians
+	double lat_rad = GeoPose.latitude * (PI / 180);
+	double lon_rad = GeoPose.longitude * (PI / 180);
+
+	// Estimated earth radius 
+	double earth_radius = 6378137.0; // [m]
+
+	// Simple Conversion assuming earth is a sphere
+	PoseMap[RobotNamespace].point.x = earth_radius * cos(lat_rad) * cos(lon_rad);  
+	PoseMap[RobotNamespace].point.y = earth_radius * cos(lat_rad) * sin(lon_rad); 
+	PoseMap[RobotNamespace].point.z = earth_radius * sin(lat_rad);
+
+	/*
+	// Project Lat and Lon to flattened Sphere using a more apporiate approximation of the earths non-spherical shape
+	double lat_x = cos(lat_rad);
+	double lat_y = sin(lat_rad);
+	double lon_x = cos(lon_rad);
+	double lon_y = sin(lon_rad);
+	
+	double factor = 1.0 / 298.257224;
+	double C = 1.0 / sqrt(lat_x * (lat_x + (1 - factor)) * (1 - factor) * lat_y * lat_y);
+	double S = (1.0 - factor) * (1.0 - factor) * C;
+	double h = 0.0;
+
+	PoseMap[RobotNamespace].point.x = (earth_radius * C + h) * lat_x * lon_x;
+	PoseMap[RobotNamespace].point.y = (earth_radius * C + h) * lat_x * lon_y;
+	PoseMap[RobotNamespace].point.z = (earth_radius * S + h) * lat_y;
+	*/
 }
 
 

@@ -19,7 +19,6 @@
 struct RobotData {
 	RobotLocation Location;
 	RobotStatus Status;
-	//DetectedItem Detection;
 	bool IsAlive;
 };
 
@@ -67,9 +66,10 @@ private:
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
 	std::map<FString, NavSatFix> NavSatFixMap;
+	std::map<FString, Pose> PoseMap;
 	std::set<FString> RobotsSeen = {};
 
-	GeoPose WorldGeoOrigin;
+	NavSatFix WorldGeoOrigin;
 	bool bIsWorldGeoOriginSet;
 
 	template <typename T> 
@@ -86,7 +86,11 @@ private:
 
 	void WebsocketDataCB(const void* Data);
 
+	std::string WorldOrigin = "WorldOrigin";
+	FString FWorldOrigin = FString(WorldOrigin.c_str());
+
 public:
+	
 
 	bool IsInitilized();
 	bool IsConnected();
@@ -96,7 +100,7 @@ public:
 
 	void Disconnect();
 
-	void SetWorldGeoOrigin(GeoPose OriginPose);
+	void SetWorldGeoOrigin(NavSatFix OriginPose);
 
 	FString GetRobotStatus(const FString& RobotName);
 
@@ -157,4 +161,6 @@ public:
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
 	void RemoveObjectFromRoot();
+
+	void ConvertToCartesian(const NavSatFix& GeoPose, const FString RobotNamespace);
 };
