@@ -280,7 +280,7 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector( 0.0f, 0.0f, 0.0f );
-	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
+	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, RobotMap[RobotNamestd]->Location.theta);
 }
 
 TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
@@ -351,4 +351,11 @@ FVector URobofleetBase::GetDetectedPositionGlobal(const FString& RobotName)
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1, -1, -1);
 	return FVector(DetectedItemMap[RobotNamestd].lat, DetectedItemMap[RobotNamestd].lon, DetectedItemMap[RobotNamestd].elv);
+}
+
+FString URobofleetBase::GetLocationMsgFrameID(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (RobotMap.count(RobotNamestd) == 0) return FString("NaN");
+	return FString(RobotMap[RobotNamestd]->Location.frame.c_str());
 }

@@ -98,6 +98,8 @@ public:
 
 	FString GetRobotLocationString(const FString& RobotName);
 
+	FString GetLocationMsgFrameID(const FString& RobotName);
+
 	FVector GetRobotPosition(const FString& RobotName);
 
 	TArray<uint8> GetRobotImage(const FString& RobotName);
