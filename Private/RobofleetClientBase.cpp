@@ -357,5 +357,12 @@ FString URobofleetBase::GetLocationMsgFrameID(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FString("NaN");
-	return FString(RobotMap[RobotNamestd]->Location.frame.c_str());
+	return FString(RobotMap[RobotNamestd]->Location.frame.c_str()); //used for storing time stamp in latency study
 }
+
+
+void URobofleetBase::PublishReturnMessage(FString MsgTimeStamp, float TotalNumberOfRobots)
+{
+	OnLatencyMessageReceived.Broadcast(MsgTimeStamp, TotalNumberOfRobots);
+}
+
