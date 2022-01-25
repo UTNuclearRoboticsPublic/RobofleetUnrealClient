@@ -143,6 +143,8 @@ public:
 
 	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
 
+	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 

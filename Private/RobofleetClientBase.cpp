@@ -208,9 +208,9 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 			Since no Orientation in NavSatFix there does not need to Be a Transformation Matrix calc between
 			GeoLocation of Origin and Robot because we are referencing the same orgin
 			*/
-			RobotMap[RobotNamespace]->Location.x = PoseMap[RobotNamespace].point.x - PoseMap[FWorldOrigin].point.x;
-			RobotMap[RobotNamespace]->Location.y = PoseMap[RobotNamespace].point.y - PoseMap[FWorldOrigin].point.y;
-			RobotMap[RobotNamespace]->Location.z = PoseMap[RobotNamespace].point.z - PoseMap[FWorldOrigin].point.z;
+			RobotMap[RobotNamespace]->Location.x = PoseMap[RobotNamespace].position.x - PoseMap[FWorldOrigin].position.x;
+			RobotMap[RobotNamespace]->Location.y = PoseMap[RobotNamespace].position.y - PoseMap[FWorldOrigin].position.y;
+			RobotMap[RobotNamespace]->Location.z = PoseMap[RobotNamespace].position.z - PoseMap[FWorldOrigin].position.z;
 		}
 	}
 }
@@ -225,9 +225,9 @@ void URobofleetBase::ConvertToCartesian(const NavSatFix &GeoPose, const FString 
 	double earth_radius = 6378137.0; // [m]
 
 	// Simple Conversion assuming earth is a sphere
-	PoseMap[RobotNamespace].point.x = earth_radius * cos(lat_rad) * cos(lon_rad);  
-	PoseMap[RobotNamespace].point.y = earth_radius * cos(lat_rad) * sin(lon_rad); 
-	PoseMap[RobotNamespace].point.z = earth_radius * sin(lat_rad);
+	PoseMap[RobotNamespace].position.x = earth_radius * cos(lat_rad) * cos(lon_rad);  
+	PoseMap[RobotNamespace].position.y = earth_radius * cos(lat_rad) * sin(lon_rad); 
+	PoseMap[RobotNamespace].position.z = earth_radius * sin(lat_rad);
 
 	/*
 	// Project Lat and Lon to flattened Sphere using a more apporiate approximation of the earths non-spherical shape
@@ -315,6 +315,15 @@ void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped&
 	EncodeRosMsg<RobotLocationStamped>(LocationMsg, topic, from, to);
 }
 
+
+void URobofleetBase::PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg)
+{
+	// Publish a mo Message to Robofleet
+	std::string topic = "PoseStamped";
+	std::string from = "/PoseStamped";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/move_base_simple/goal";
+	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
+}
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {

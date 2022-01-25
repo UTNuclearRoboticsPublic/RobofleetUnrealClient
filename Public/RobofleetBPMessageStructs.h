@@ -79,3 +79,16 @@ struct FRobotLocationStamped
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	float theta;
 };
+
+
+USTRUCT(BlueprintType)
+struct FPoseStamped
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTransform Transform;
+};

@@ -183,5 +183,28 @@ void URobofleetBPFunctionLibrary::PublishLocationMsg(const FString& RobotName, c
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		PoseStamped Goal;
+		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
+		Goal.header.stamp._nsec = PoseStampedMsg.header.stamp._nsec;
+		Goal.header.stamp._sec = PoseStampedMsg.header.stamp._sec;
+		Goal.header.seq = PoseStampedMsg.header.seq;
+
+		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
+		Goal.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
+		Goal.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
+
+		Goal.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().X;
+		Goal.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Y;
+		Goal.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Z;
+		Goal.pose.orientation.w = PoseStampedMsg.Transform.GetRotation().W;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishMoveBaseSimpleGoal(RobotName, Goal);
+	}
+}
+
 
 // need to add detected image 
