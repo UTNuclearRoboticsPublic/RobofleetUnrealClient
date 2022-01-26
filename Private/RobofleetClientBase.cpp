@@ -360,9 +360,10 @@ FString URobofleetBase::GetLocationMsgFrameID(const FString& RobotName)
 	return FString(RobotMap[RobotNamestd]->Location.frame.c_str()); //used for storing time stamp in latency study
 }
 
-
+/*
 void URobofleetBase::PublishReturnMessage(FString MsgTimeStamp, float TotalNumberOfRobots)
 {
 	OnLatencyMessageReceived.Broadcast(MsgTimeStamp, TotalNumberOfRobots);
 }
+*/
 
