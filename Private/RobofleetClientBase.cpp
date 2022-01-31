@@ -407,7 +407,7 @@ FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(DetectedItemMap[RobotNamestd].repID.c_str());
+	return FString(DetectedItemMap[RobotNamestd].repID.c_str()); // Currently used to pass URL
 }
 
 FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
