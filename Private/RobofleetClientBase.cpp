@@ -76,7 +76,7 @@ void URobofleetBase::RemoveObjectFromRoot()
  */
 void URobofleetBase::PruneInactiveRobots() {
 	std::map<FString, FDateTime> newMap;
-	int CutoffTime = 10;
+	int CutoffTime = 5;
 	for (std::map<FString, FDateTime>::iterator it = RobotsSeenTime.begin(); it != RobotsSeenTime.end(); ++it) {
 		if (FDateTime::Now().GetSecond() - it->second.GetSecond() > CutoffTime) {
 			OnRobotPruned.Broadcast(it->first);
@@ -145,8 +145,8 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("localization", "*");
 		//RegisterRobotSubscription("image_compressed/main", "*");
 		RegisterRobotSubscription("detected", "*");
-		RegisterRobotSubscription("NavSatFix", "*");
-		//PruneInactiveRobots();
+		//RegisterRobotSubscription("NavSatFix", "*");
+		PruneInactiveRobots();
 	}
 }
 
@@ -170,7 +170,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotStatus rs = DecodeMsg<RobotStatus>(Data);
 		if (!RobotMap[RobotNamespace]->Status.location.empty())
 		{
-			std::string OldLocation = RobotMap[RobotNamespace]->Status.location;
+			std::string OldLocation = RobotMap[RobotNamespace]->Status.location; // Need to revisit. Should be frame_id from localization message.
 			if (OldLocation != rs.location)
 			{
 				OnRobotLocationChanged.Broadcast(RobotNamespace, UTF8_TO_TCHAR(OldLocation.c_str()), UTF8_TO_TCHAR(rs.location.c_str()));
