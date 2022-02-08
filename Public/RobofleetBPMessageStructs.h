@@ -92,3 +92,28 @@ struct FPoseStamped
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FTransform Transform;
 };
+
+USTRUCT(BlueprintType)
+struct FHttpDatabaseEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AugREDatabase")
+	FString AsaId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AugREDatabase")
+	FString RepresentationId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AugREDatabase")
+	FString AnchorType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AugREDatabase")
+	TArray<FString> Neighbors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AugREDatabase")
+	FString Namespace;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AugREDatabase")
+	FDateTime TimeStamp;
+
+};
