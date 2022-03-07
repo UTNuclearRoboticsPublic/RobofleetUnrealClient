@@ -194,6 +194,14 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
 	}
+	else if (topic == "GeoPoseWithCovariance") {
+		GeoPoseCovMap[RobotNamespace] = DecodeMsg<GeoPoseWithCovariance>(Data);
+		// TODO: Integrate UTM
+	}
+	else if (topic == "GeoPoseWithCovarianceStamped") {
+		GeoPoseCovStampMap[RobotNamespace] = DecodeMsg<GeoPoseWithCovarianceStamped>(Data);
+		// TODO: Integrate UTM
+	}
 	else if (topic == "NavSatFix") {
 		NavSatFixMap[RobotNamespace] = DecodeMsg<NavSatFix>(Data);
 		

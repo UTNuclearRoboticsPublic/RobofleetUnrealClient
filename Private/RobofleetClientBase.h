@@ -66,6 +66,8 @@ private:
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
 	std::map<FString, NavSatFix> NavSatFixMap;
+	std::map<FString, GeoPoseWithCovariance> GeoPoseCovMap;
+	std::map<FString, GeoPoseWithCovarianceStamped> GeoPoseCovStampMap;
 	std::map<FString, Pose> PoseMap;
 	std::set<FString> RobotsSeen = {};
 
