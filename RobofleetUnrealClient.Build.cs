@@ -19,7 +19,7 @@ public class RobofleetUnrealClient : ModuleRules
     {
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] {"Core", "CoreUObject", "Engine", "WebSockets" });
+		PublicDependencyModuleNames.AddRange(new string[] {"Core", "CoreUObject", "Engine", "WebSockets", "ImageWrapper" });
 		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Private/robofleet_client_lib/include"));
 		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Private/robofleet_client_lib"));
 		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Private"));

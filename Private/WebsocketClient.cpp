@@ -83,7 +83,7 @@ void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T B
 		else
 		{
 			memcpy(DataBuffer+PrevSize, Data, Size);
-			PrevSize = Size;
+			PrevSize += Size;
 		}
 	}
 	else

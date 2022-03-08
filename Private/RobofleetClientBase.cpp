@@ -177,6 +177,12 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotMap[RobotNamespace]->Location = rl;
 	}
 
+	// Missing flatbuffer definitions
+	//else if (topic == "image/main") {
+	//	RobotImageMap[RobotNamespace] = DecodeMsg<Image>(Data);
+	//	OnImageReceived.Broadcast(RobotNamespace);
+	//}
+
 	else if (topic == "image_compressed/main") {
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
@@ -223,6 +229,7 @@ TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	//returns the constructor/ init list: TArray<type>(arrayPtr, arraySize)
+	UE_LOG(LogTemp, Log, TEXT("Creating local image message of type TArray<uint8>."));
 	return TArray<uint8>(&RobotImageMap[RobotNamestd].data[0], RobotImageMap[RobotNamestd].data.size());
 }
 
