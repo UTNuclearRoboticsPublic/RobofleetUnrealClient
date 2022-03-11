@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "RobofleetBPMessageStructs.h"
 #include "RobofleetBPFunctionLibrary.generated.h"
 
 class URobofleetBase;
@@ -48,6 +49,30 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void RegisterRobotSubscription(FString TopicName, FString RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetDetectedName(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetDetectedRepIDRef(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetDetectedAnchorIDRef(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FVector GetDetectedPositionRef(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FVector GetDetectedPositionGlobal(const FString& RobotName);
+
+	// Publish Messages to Robofleet
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishStatusMsg(const FString& RobotName, const FRobotStatus& StatusMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishLocationMsg(const FString& RobotName, const FRobotLocationStamped& LocationMsg);
+
+	// need to add detected image
 
 	// Use only for delegates
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
