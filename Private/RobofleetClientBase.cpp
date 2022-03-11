@@ -149,7 +149,7 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
-		RegisterRobotSubscription("image_compressed/main", "*");
+		RegisterRobotSubscription("image_raw/compressed", "*");
 		//PruneInactiveRobots();
 	}
 }
@@ -183,7 +183,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	//	OnImageReceived.Broadcast(RobotNamespace);
 	//}
 
-	else if (topic == "image_compressed/main") {
+	else if (topic == "image_raw/compressed") {
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
 	}
