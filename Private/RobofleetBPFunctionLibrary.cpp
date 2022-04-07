@@ -183,6 +183,29 @@ void URobofleetBPFunctionLibrary::PublishLocationMsg(const FString& RobotName, c
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		PoseStamped Goal;
+		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
+		Goal.header.stamp._nsec = PoseStampedMsg.header.stamp._nsec;
+		Goal.header.stamp._sec = PoseStampedMsg.header.stamp._sec;
+		Goal.header.seq = PoseStampedMsg.header.seq;
+
+		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
+		Goal.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
+		Goal.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
+
+		Goal.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().Euler().X;
+		Goal.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Euler().Y;
+		Goal.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Euler().Z;
+		Goal.pose.orientation.w = 0; // PoseStampedMsg.Transform.GetRotation().W;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishHololensOdom(RobotName, Goal);
+	}
+}
+
 void URobofleetBPFunctionLibrary::PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

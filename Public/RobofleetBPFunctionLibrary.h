@@ -73,7 +73,12 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishLocationMsg(const FString& RobotName, const FRobotLocationStamped& LocationMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
+
+
 
 	// need to add detected image
 

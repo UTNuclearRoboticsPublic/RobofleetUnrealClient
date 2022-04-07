@@ -145,6 +145,8 @@ public:
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
+	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 

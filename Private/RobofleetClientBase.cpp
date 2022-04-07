@@ -315,13 +315,21 @@ void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped&
 	EncodeRosMsg<RobotLocationStamped>(LocationMsg, topic, from, to);
 }
 
+void URobofleetBase::PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg)
+{
+	// Publish a mo Message to Robofleet
+	std::string topic = "geometry_msgs/PoseStamped";
+	std::string from = "/HololensOdom";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/HololensOdom";
+	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
+}
 
 void URobofleetBase::PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg)
 {
 	// Publish a mo Message to Robofleet
-	std::string topic = "PoseStamped";
+	std::string topic = "geometry_msgs/PoseStamped";
 	std::string from = "/PoseStamped";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/move_base_simple/goal";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/PoseStamped";
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
 
