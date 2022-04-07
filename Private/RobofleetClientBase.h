@@ -9,6 +9,7 @@
 #include "message_structs.h"
 #include "MessageSchedulerLib.hpp"
 #include "WebsocketClient.h"
+#include "RobofleetBPMessageStructs.h"
 
 #include <cstdint>
 #include <map>
@@ -38,6 +39,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName
 //OnDetectedItemRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, RobotName);
 
+//OnPathRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPathReceived, FString, RobotName, FPath, RobotPath);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
+
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 {
@@ -63,6 +68,7 @@ private:
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
+	std::map<FString, Path> RobotPath;
 	std::set<FString> RobotsSeen = {};
 
 	template <typename T> 
@@ -113,6 +119,12 @@ public:
 
 	FVector GetDetectedPositionGlobal(const FString& RobotName);
 
+	Path GetPath(const FString& RobotName);
+
+	FPath GetFPath(const FString& RobotName);
+
+	
+
 	bool IsRobotOk(const FString& RobotName);
 
 	void PrintRobotsSeen();
@@ -130,6 +142,8 @@ public:
 
 	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
 
+	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 
@@ -141,6 +155,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedItemReceived OnDetectedItemReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnPathReceived OnPathReceived;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
