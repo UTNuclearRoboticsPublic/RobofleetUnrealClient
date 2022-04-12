@@ -62,6 +62,8 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 	RegisterRobotSubscription("detected", "*");
 
+	RegisterRobotSubscription("global_path", "*");
+
 	bIsInitilized = true;
 
 }
@@ -95,11 +97,11 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	const fb::MsgWithMetadata* msg = flatbuffers::GetRoot<fb::MsgWithMetadata>(Data);
 	
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
-
+	UE_LOG(LogRobofleet, Warning, TEXT("\n\n MsgTopic: %s \n"), MsgTopic.c_str());
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
 	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
-
+	UE_LOG(LogRobofleet, Warning, TEXT("\n\n TopicIsolated: %s \n"), *TopicIsolated);
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
 	// If we're seeing this robot for the first time, create new data holder
@@ -145,8 +147,13 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("localization", "*");
 		//RegisterRobotSubscription("image_compressed/main", "*");
 		RegisterRobotSubscription("detected", "*");
+
 		//RegisterRobotSubscription("NavSatFix", "*");
 		PruneInactiveRobots();
+
+		//PruneInactiveRobots();
+		RegisterRobotSubscription("global_path", "*");
+
 	}
 }
 
@@ -166,6 +173,8 @@ typename T URobofleetBase::DecodeMsg(const void* Data)
  * (and aren't just sending it over the wire like in ROS)
  */
 void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNamespace) {
+
+	UE_LOG(LogRobofleet, Warning, TEXT("\n\n Topic: %s \n"), *topic);
 	if (topic == "status") {
 		RobotStatus rs = DecodeMsg<RobotStatus>(Data);
 		if (!RobotMap[RobotNamespace]->Status.location.empty())
@@ -194,6 +203,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
 	}
+
 	else if (topic == "NavSatFix") {
 		NavSatFixMap[RobotNamespace] = DecodeMsg<NavSatFix>(Data);
 		
@@ -212,6 +222,14 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 			RobotMap[RobotNamespace]->Location.y = PoseMap[RobotNamespace].position.y - PoseMap[FWorldOrigin].position.y;
 			RobotMap[RobotNamespace]->Location.z = PoseMap[RobotNamespace].position.z - PoseMap[FWorldOrigin].position.z;
 		}
+	}
+
+	else if (topic == "global_path") {
+		RobotPath[RobotNamespace] = DecodeMsg<Path>(Data);
+		FPath p = GetFPath(RobotNamespace);
+		// convert from Path to FPath
+		OnPathReceived.Broadcast(RobotNamespace, p);
+		UE_LOG(LogRobofleet, Warning, TEXT(" \n === Path received ==== \n\n\n"));
 	}
 }
 
@@ -245,6 +263,7 @@ void URobofleetBase::ConvertToCartesian(const NavSatFix &GeoPose, const FString 
 	PoseMap[RobotNamespace].point.y = (earth_radius * C + h) * lat_x * lon_y;
 	PoseMap[RobotNamespace].point.z = (earth_radius * S + h) * lat_y;
 	*/
+
 }
 
 
@@ -315,6 +334,7 @@ void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped&
 	EncodeRosMsg<RobotLocationStamped>(LocationMsg, topic, from, to);
 }
 
+
 void URobofleetBase::PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg)
 {
 	// Publish a mo Message to Robofleet
@@ -332,6 +352,8 @@ void URobofleetBase::PublishMoveBaseSimpleGoal(const FString& RobotName, const P
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/PoseStamped";
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
+
+
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
@@ -437,4 +459,62 @@ FVector URobofleetBase::GetDetectedPositionGlobal(const FString& RobotName)
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1, -1, -1);
 	return FVector(DetectedItemMap[RobotNamestd].lat, DetectedItemMap[RobotNamestd].lon, DetectedItemMap[RobotNamestd].elv);
+}
+
+void URobofleetBase::PublishStartUMRFMsg(StartUMRF& StartUMRFMsg)
+{ // Publish a UMRF Message
+	std::string topic = "temoto_action_engine/BroadcastStartUMRGgrapgh";
+	std::string from = "/BroadcastStartUMRFgraph";
+	std::string to = "/BroadcastStartUMRFgraph";
+	EncodeRosMsg<StartUMRF>(StartUMRFMsg, topic, from, to);
+	UE_LOG(LogTemp, Warning, TEXT("Publishing UMRF - Broadcast"));
+}
+
+Path URobofleetBase::GetPath(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	return RobotPath[RobotNamestd];
+}
+
+FPath URobofleetBase::GetFPath(const FString& RobotName)
+{
+	// convert from Path to FPath
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	TArray<FPoseStamped> poses;
+	//poses.Append(&RobotPath[RobotNamestd].poses[0], RobotPath[RobotNamestd].poses.size());
+	
+	Path p = RobotPath[RobotNamestd];
+		FPath Fp;		
+		Fp.header.frame_id = (p.header.frame_id.c_str());
+		Fp.header.seq = p.header.seq;
+		Fp.header.stamp._nsec = p.header.stamp._nsec;
+		Fp.header.stamp._sec = p.header.stamp._sec;
+				
+		for (std::vector<PoseStamped>::iterator it = p.poses.begin(); it != p.poses.end(); ++it)
+		{
+			FPoseStamped fpose_;
+
+			fpose_.header.frame_id = (it->header.frame_id.c_str());
+			fpose_.header.seq = it->header.seq;
+			fpose_.header.stamp._nsec = it->header.stamp._nsec;
+			fpose_.header.stamp._sec = it->header.stamp._sec;
+			FVector location;
+			location.X = it->pose.position.x * 100;
+			location.Y = it->pose.position.y * -100;
+			location.Z = it->pose.position.z * 100;
+			fpose_.Transform.SetLocation(location);
+			FQuat rotation;
+
+			rotation.X = it->pose.orientation.x;
+			rotation.Y = it->pose.orientation.y;
+			rotation.Z = it->pose.orientation.z;
+			rotation.W = it->pose.orientation.w;
+			fpose_.Transform.SetRotation(rotation);
+
+			Fp.poses.Add(fpose_);
+		}
+
+		//return Fp;
+
+		return Fp;	
 }

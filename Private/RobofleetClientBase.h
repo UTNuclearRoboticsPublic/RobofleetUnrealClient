@@ -9,6 +9,7 @@
 #include "message_structs.h"
 #include "MessageSchedulerLib.hpp"
 #include "WebsocketClient.h"
+#include "RobofleetBPMessageStructs.h"
 
 #include <cstdint>
 #include <map>
@@ -40,6 +41,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, Ro
 //OnRobotChangedLocation event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRobotLocationChanged, FString, RobotName, FString, OldSite, FString, NewSite);
 
+//OnPathRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPathReceived, FString, RobotName, FPath, RobotPath);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
+
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
 {
@@ -67,6 +72,7 @@ private:
 	std::map<FString, DetectedItem> DetectedItemMap;
 	std::map<FString, NavSatFix> NavSatFixMap;
 	std::map<FString, Pose> PoseMap;
+	std::map<FString, Path> RobotPath;
 	std::set<FString> RobotsSeen = {};
 
 	NavSatFix WorldGeoOrigin;
@@ -91,7 +97,6 @@ private:
 
 public:
 	
-
 	bool IsInitilized();
 	bool IsConnected();
 	// TODO: Move the Blueprint exposure to the BP function library
@@ -126,6 +131,10 @@ public:
 
 	FVector GetDetectedPositionGlobal(const FString& RobotName);
 
+	Path GetPath(const FString& RobotName);
+
+	FPath GetFPath(const FString& RobotName);
+
 	bool IsRobotOk(const FString& RobotName);
 
 	void PrintRobotsSeen();
@@ -147,6 +156,8 @@ public:
 
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
+	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 
@@ -161,6 +172,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotLocationChanged OnRobotLocationChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnPathReceived OnPathReceived;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)

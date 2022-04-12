@@ -22,8 +22,6 @@ struct FTime
 	int32 _nsec;
 };
 
-
-
 USTRUCT(BlueprintType)
 struct FHeader
 {
@@ -37,7 +35,6 @@ struct FHeader
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FString frame_id;
-
 
 };
 
@@ -80,6 +77,60 @@ struct FRobotLocationStamped
 	float theta;
 };
 
+USTRUCT(BlueprintType)
+struct FUMRFgraphDiff
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString ADD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString SUBTRACT;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString operation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString umrf_json;
+};
+
+USTRUCT(BlueprintType)
+struct FStartUMRF
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString umrf_graph_name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	bool name_match_required;
+
+	//vector
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FString> targets;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString umrf_graph_json;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FUMRFgraphDiff> umrf_graph_diffs;
+
+}; 
+
+USTRUCT(BlueprintType)
+struct FStopUMRF
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString umrf_graph_name;
+
+	//vector
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString targets;
+
+};
 
 USTRUCT(BlueprintType)
 struct FPoseStamped
@@ -94,6 +145,7 @@ struct FPoseStamped
 };
 
 USTRUCT(BlueprintType)
+
 struct FHttpDatabaseEntry
 {
 	GENERATED_BODY()
@@ -115,5 +167,19 @@ struct FHttpDatabaseEntry
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AugREDatabase")
 	FDateTime TimeStamp;
+
+};
+
+USTRUCT(BlueprintType)
+struct FPath
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	//vector
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FPoseStamped> poses;
 
 };
