@@ -13,8 +13,7 @@ class URobofleetBase;
  * 
  */
 UCLASS()
-class 
-	URobofleetBPFunctionLibrary : public UBlueprintFunctionLibrary
+class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

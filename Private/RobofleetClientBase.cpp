@@ -97,11 +97,10 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	const fb::MsgWithMetadata* msg = flatbuffers::GetRoot<fb::MsgWithMetadata>(Data);
 	
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
-	UE_LOG(LogRobofleet, Warning, TEXT("\n\n MsgTopic: %s \n"), MsgTopic.c_str());
+	
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
 	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
-	UE_LOG(LogRobofleet, Warning, TEXT("\n\n TopicIsolated: %s \n"), *TopicIsolated);
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
 	// If we're seeing this robot for the first time, create new data holder
@@ -173,8 +172,6 @@ typename T URobofleetBase::DecodeMsg(const void* Data)
  * (and aren't just sending it over the wire like in ROS)
  */
 void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNamespace) {
-
-	UE_LOG(LogRobofleet, Warning, TEXT("\n\n Topic: %s \n"), *topic);
 	if (topic == "status") {
 		RobotStatus rs = DecodeMsg<RobotStatus>(Data);
 		if (!RobotMap[RobotNamespace]->Status.location.empty())
@@ -352,8 +349,6 @@ void URobofleetBase::PublishMoveBaseSimpleGoal(const FString& RobotName, const P
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/PoseStamped";
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
-
-
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
