@@ -3,6 +3,7 @@
 #include <typeinfo>
 #include <math.h>
 #include <array>
+#include "Misc/Char.h"
 
 URobofleetBase::URobofleetBase()
 {
@@ -63,6 +64,8 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotSubscription("detected", "*");
 
 	RegisterRobotSubscription("global_path", "*");
+	RegisterRobotSubscription("trail_path", "*");
+	RegisterRobotSubscription("twist_path", "*");
 
 	bIsInitilized = true;
 
@@ -101,6 +104,9 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
 	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
+
+	UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace: %s"), *RobotNamespace);
+	UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated: %s"), *TopicIsolated);
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
 	// If we're seeing this robot for the first time, create new data holder
@@ -152,6 +158,8 @@ void URobofleetBase::RefreshRobotList()
 
 		//PruneInactiveRobots();
 		RegisterRobotSubscription("global_path", "*");
+		RegisterRobotSubscription("trail_path", "*");
+		RegisterRobotSubscription("twist_path", "*");
 
 	}
 }
@@ -220,14 +228,55 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 			RobotMap[RobotNamespace]->Location.z = PoseMap[RobotNamespace].position.z - PoseMap[FWorldOrigin].position.z;
 		}
 	}
+	
+	else if (topic == "global_path" || topic == "trail_path" || topic == "twist_path") {
+		RobotPath[RobotNamespace] = DecodeMsg<Path>(Data);		
+		FPath path = GetFPath(RobotNamespace);
+		
+		std::map<FString, float>::iterator it;
+		it = ColorRobotPath.find(RobotNamespace);
+		if (it == ColorRobotPath.end())					//color_map does not exist
+		{
+			AssingBaseColor(RobotNamespace);
+		}
 
-	else if (topic == "global_path") {
-		RobotPath[RobotNamespace] = DecodeMsg<Path>(Data);
-		FPath p = GetFPath(RobotNamespace);
-		// convert from Path to FPath
-		OnPathReceived.Broadcast(RobotNamespace, p);
-		UE_LOG(LogRobofleet, Warning, TEXT(" \n === Path received ==== \n\n\n"));
+		//variations of base_color based on the topic
+		FVector4 color;
+		color.X = (float)ColorRobotPath[RobotNamespace];
+		if (topic == "global_path")
+		{
+			color.Y = 1.0;
+			color.Z = 0.2;
+			color.W = 1.0;
+		}
+		else if (topic == "twist_path")
+		{
+			color.Y = 0.65;
+			color.Z = 0.8;
+			color.W = 0.5;
+		}
+		else if (topic == "trail_path")
+		{
+			color.Y = 1.0;
+			color.Z = 1.0;
+			color.W = 1.0;
+		}		
+		FString Tag = RobotNamespace.Append(topic);
+		OnPathReceived.Broadcast(Tag, path, color);
 	}
+}
+
+void URobofleetBase::AssingBaseColor(const FString& RobotNamespace)
+{
+	UE_LOG(LogTemp, Warning, TEXT("AssingBaseColor"));
+	int num = 0;
+	FVector4 color;
+	for (int i = 0; i < RobotNamespace.Len(); i++)
+	{
+		num = num + (int)RobotNamespace.GetCharArray()[i];
+		UE_LOG(LogTemp, Warning, TEXT("value :%d"), (int)RobotNamespace.GetCharArray()[i]);
+	}	
+	ColorRobotPath[RobotNamespace] = ((num * 2) % 360);		// H  of hsva
 }
 
 void URobofleetBase::ConvertToCartesian(const NavSatFix &GeoPose, const FString RobotNamespace)
@@ -262,7 +311,6 @@ void URobofleetBase::ConvertToCartesian(const NavSatFix &GeoPose, const FString 
 	*/
 
 }
-
 
 template <typename T>
 void URobofleetBase::EncodeRosMsg (const T& msg, const std::string& msg_type, std::string& from_topic, const std::string& to_topic) 
@@ -330,7 +378,6 @@ void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped&
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/localization";
 	EncodeRosMsg<RobotLocationStamped>(LocationMsg, topic, from, to);
 }
-
 
 void URobofleetBase::PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg)
 {
@@ -407,7 +454,6 @@ bool URobofleetBase::IsRobotImageCompressed(const FString& RobotName)
 
 }
 
-
 TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 {
 	TArray<FString> RobotsAtSite;
@@ -476,40 +522,37 @@ FPath URobofleetBase::GetFPath(const FString& RobotName)
 	// convert from Path to FPath
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	TArray<FPoseStamped> poses;
-	//poses.Append(&RobotPath[RobotNamestd].poses[0], RobotPath[RobotNamestd].poses.size());
 	
 	Path p = RobotPath[RobotNamestd];
-		FPath Fp;		
-		Fp.header.frame_id = (p.header.frame_id.c_str());
-		Fp.header.seq = p.header.seq;
-		Fp.header.stamp._nsec = p.header.stamp._nsec;
-		Fp.header.stamp._sec = p.header.stamp._sec;
+	FPath Fp;		
+	Fp.header.frame_id = (p.header.frame_id.c_str());
+	Fp.header.seq = p.header.seq;
+	Fp.header.stamp._nsec = p.header.stamp._nsec;
+	Fp.header.stamp._sec = p.header.stamp._sec;
 				
-		for (std::vector<PoseStamped>::iterator it = p.poses.begin(); it != p.poses.end(); ++it)
-		{
-			FPoseStamped fpose_;
+	for (std::vector<PoseStamped>::iterator it = p.poses.begin(); it != p.poses.end(); ++it)
+	{
+		FPoseStamped fpose_;
+		fpose_.header.frame_id = (it->header.frame_id.c_str());
+		fpose_.header.seq = it->header.seq;
+		fpose_.header.stamp._nsec = it->header.stamp._nsec;
+		fpose_.header.stamp._sec = it->header.stamp._sec;
 
-			fpose_.header.frame_id = (it->header.frame_id.c_str());
-			fpose_.header.seq = it->header.seq;
-			fpose_.header.stamp._nsec = it->header.stamp._nsec;
-			fpose_.header.stamp._sec = it->header.stamp._sec;
-			FVector location;
-			location.X = it->pose.position.x * 100;
-			location.Y = it->pose.position.y * -100;
-			location.Z = it->pose.position.z * 100;
-			fpose_.Transform.SetLocation(location);
-			FQuat rotation;
+		FVector location;
+		location.X = it->pose.position.x * 100;
+		location.Y = it->pose.position.y * -100;
+		location.Z = it->pose.position.z * 100;
+		fpose_.Transform.SetLocation(location);
 
-			rotation.X = it->pose.orientation.x;
-			rotation.Y = it->pose.orientation.y;
-			rotation.Z = it->pose.orientation.z;
-			rotation.W = it->pose.orientation.w;
-			fpose_.Transform.SetRotation(rotation);
+		FQuat rotation;
+		rotation.X = it->pose.orientation.x;
+		rotation.Y = it->pose.orientation.y;
+		rotation.Z = it->pose.orientation.z;
+		rotation.W = it->pose.orientation.w;
+		fpose_.Transform.SetRotation(rotation);
 
-			Fp.poses.Add(fpose_);
-		}
-
-		//return Fp;
-
-		return Fp;	
+		Fp.poses.Add(fpose_);
+	}
+	return Fp;
 }
+

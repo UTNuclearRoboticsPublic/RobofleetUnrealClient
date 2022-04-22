@@ -42,7 +42,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, Ro
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRobotLocationChanged, FString, RobotName, FString, OldSite, FString, NewSite);
 
 //OnPathRecevied  event
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPathReceived, FString, RobotName, FPath, RobotPath);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPathReceived, FString, Tag, FPath, RobotPath, FVector4, Color);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
 
 UCLASS(Blueprintable)
@@ -73,6 +73,7 @@ private:
 	std::map<FString, NavSatFix> NavSatFixMap;
 	std::map<FString, Pose> PoseMap;
 	std::map<FString, Path> RobotPath;
+	std::map<FString, float> ColorRobotPath;
 	std::set<FString> RobotsSeen = {};
 
 	NavSatFix WorldGeoOrigin;
@@ -134,6 +135,8 @@ public:
 	Path GetPath(const FString& RobotName);
 
 	FPath GetFPath(const FString& RobotName);
+
+	void AssingBaseColor(const FString& RobotName);
 
 	bool IsRobotOk(const FString& RobotName);
 
