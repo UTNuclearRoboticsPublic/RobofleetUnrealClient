@@ -227,56 +227,79 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 			RobotMap[RobotNamespace]->Location.y = PoseMap[RobotNamespace].position.y - PoseMap[FWorldOrigin].position.y;
 			RobotMap[RobotNamespace]->Location.z = PoseMap[RobotNamespace].position.z - PoseMap[FWorldOrigin].position.z;
 		}
-	}
+	}	
 	
-	else if (topic == "global_path" || topic == "trail_path" || topic == "twist_path") {
-		RobotPath[RobotNamespace] = DecodeMsg<Path>(Data);		
+	else if (topic == "global_path") {
+		RobotPath[RobotNamespace] = DecodeMsg<Path>(Data);
 		FPath path = GetFPath(RobotNamespace);
-		
-		std::map<FString, float>::iterator it;
-		it = ColorRobotPath.find(RobotNamespace);
-		if (it == ColorRobotPath.end())					//color_map does not exist
+		std::map<FString, FLinearColor>::iterator it;
+		it = ColorGlobalPath.find(RobotNamespace);
+		if (it == ColorGlobalPath.end())					//color_map does not exist
 		{
 			AssingBaseColor(RobotNamespace);
 		}
+		FString Tag = RobotNamespace;
+		Tag = Tag.Append(topic);
+		OnPathReceived.Broadcast(Tag, path, ColorGlobalPath[RobotNamespace]);
+	}
 
-		//variations of base_color based on the topic
-		FVector4 color;
-		color.X = (float)ColorRobotPath[RobotNamespace];
-		if (topic == "global_path")
+	else if (topic == "trail_path") {
+		RobotPath[RobotNamespace] = DecodeMsg<Path>(Data);
+		FPath path = GetFPath(RobotNamespace);
+		std::map<FString, FLinearColor>::iterator it;
+		it = ColorTrailPath.find(RobotNamespace);
+		if (it == ColorTrailPath.end())					//color_map does not exist
 		{
-			color.Y = 1.0;
-			color.Z = 0.2;
-			color.W = 1.0;
+			AssingBaseColor(RobotNamespace);
 		}
-		else if (topic == "twist_path")
+		FString Tag = RobotNamespace;
+		Tag = Tag.Append(topic);
+		OnPathReceived.Broadcast(Tag, path, ColorTrailPath[RobotNamespace]);
+	}
+
+	else if (topic == "twist_path") {
+		RobotPath[RobotNamespace] = DecodeMsg<Path>(Data);
+		FPath path = GetFPath(RobotNamespace);
+		std::map<FString, FLinearColor>::iterator it;
+		it = ColorTwistPath.find(RobotNamespace);
+		if (it == ColorTwistPath.end())					//color_map does not exist
 		{
-			color.Y = 0.65;
-			color.Z = 0.8;
-			color.W = 0.5;
+			AssingBaseColor(RobotNamespace);
 		}
-		else if (topic == "trail_path")
-		{
-			color.Y = 1.0;
-			color.Z = 1.0;
-			color.W = 1.0;
-		}		
-		FString Tag = RobotNamespace.Append(topic);
-		OnPathReceived.Broadcast(Tag, path, color);
+		FString Tag = RobotNamespace;
+		Tag = Tag.Append(topic);
+		OnPathReceived.Broadcast(Tag, path, ColorTwistPath[RobotNamespace]);
 	}
 }
 
 void URobofleetBase::AssingBaseColor(const FString& RobotNamespace)
 {
-	UE_LOG(LogTemp, Warning, TEXT("AssingBaseColor"));
 	int num = 0;
-	FVector4 color;
+	FVector4 Color_HSVA;	
 	for (int i = 0; i < RobotNamespace.Len(); i++)
 	{
 		num = num + (int)RobotNamespace.GetCharArray()[i];
-		UE_LOG(LogTemp, Warning, TEXT("value :%d"), (int)RobotNamespace.GetCharArray()[i]);
-	}	
-	ColorRobotPath[RobotNamespace] = ((num * 2) % 360);		// H  of hsva
+	}
+	Color_HSVA.X = ((num * 2) % 360);		
+	Color_HSVA.Y = 1.0;
+	Color_HSVA.Z = 0.2;
+	Color_HSVA.W = 1.0;
+	FLinearColor hsva_gp(Color_HSVA);
+	ColorGlobalPath[RobotNamespace] = hsva_gp.HSVToLinearRGB();
+
+	Color_HSVA.X = ((num * 2) % 360);		
+	Color_HSVA.Y = 1.0;
+	Color_HSVA.Z = 1.0;
+	Color_HSVA.W = 1.0;
+	FLinearColor hsva_tp(Color_HSVA);
+	ColorTrailPath[RobotNamespace] = hsva_tp.HSVToLinearRGB();
+
+	Color_HSVA.X = ((num * 2) % 360);		
+	Color_HSVA.Y = 0.65;
+	Color_HSVA.Z = 0.8;
+	Color_HSVA.W = 0.5;
+	FLinearColor hsva_twp(Color_HSVA);
+	ColorTwistPath[RobotNamespace] = hsva_twp.HSVToLinearRGB();
 }
 
 void URobofleetBase::ConvertToCartesian(const NavSatFix &GeoPose, const FString RobotNamespace)
