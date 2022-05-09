@@ -105,8 +105,8 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
 	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
 
-	UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace: %s"), *RobotNamespace);
-	UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated: %s"), *TopicIsolated);
+	//UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace: %s"), *RobotNamespace);
+	//UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated: %s"), *TopicIsolated);
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
 	// If we're seeing this robot for the first time, create new data holder
