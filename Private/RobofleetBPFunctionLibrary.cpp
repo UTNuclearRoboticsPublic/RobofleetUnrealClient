@@ -183,5 +183,96 @@ void URobofleetBPFunctionLibrary::PublishLocationMsg(const FString& RobotName, c
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		PoseStamped Goal;
+		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
+		Goal.header.stamp._nsec = PoseStampedMsg.header.stamp._nsec;
+		Goal.header.stamp._sec = PoseStampedMsg.header.stamp._sec;
+		Goal.header.seq = PoseStampedMsg.header.seq;
+
+		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
+		Goal.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
+		Goal.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
+
+		Goal.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().Euler().X;
+		Goal.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Euler().Y;
+		Goal.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Euler().Z;
+		Goal.pose.orientation.w = 0; // PoseStampedMsg.Transform.GetRotation().W;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishHololensOdom(RobotName, Goal);
+	}
+}
+
+void URobofleetBPFunctionLibrary::PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		PoseStamped Goal;
+		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
+		Goal.header.stamp._nsec = PoseStampedMsg.header.stamp._nsec;
+		Goal.header.stamp._sec = PoseStampedMsg.header.stamp._sec;
+		Goal.header.seq = PoseStampedMsg.header.seq;
+
+		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
+		Goal.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
+		Goal.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
+
+		Goal.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().X;
+		Goal.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Y;
+		Goal.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Z;
+		Goal.pose.orientation.w = PoseStampedMsg.Transform.GetRotation().W;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishMoveBaseSimpleGoal(RobotName, Goal);
+	}
+}
 
 // need to add detected image 
+
+// Publish TeMoto msgs
+void URobofleetBPFunctionLibrary::PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		StartUMRF StartUMRF;		
+
+		StartUMRF.umrf_graph_name = std::string(TCHAR_TO_UTF8(*StartUMRFMsg.umrf_graph_name));
+		StartUMRF.name_match_required = StartUMRFMsg.name_match_required;
+		for (auto& Str : StartUMRFMsg.targets)
+		{
+			StartUMRF.targets.push_back(TCHAR_TO_UTF8(*Str));
+		}
+
+		StartUMRF.umrf_graph_json = std::string(TCHAR_TO_UTF8(*StartUMRFMsg.umrf_graph_json));
+
+		//Convert from FUMRFgraphDiff to UMRFgraphDiff
+		for (auto& umrfDiff : StartUMRFMsg.umrf_graph_diffs)
+		{
+			UMRFgraphDiff umrfTemp;
+			umrfTemp.ADD = std::string(TCHAR_TO_UTF8(*umrfDiff.ADD));
+			umrfTemp.SUBTRACT = std::string(TCHAR_TO_UTF8(*umrfDiff.SUBTRACT));
+			umrfTemp.operation = std::string(TCHAR_TO_UTF8(*umrfDiff.operation));
+			umrfTemp.umrf_json = std::string(TCHAR_TO_UTF8(*umrfDiff.umrf_json));				 
+			StartUMRF.umrf_graph_diffs.push_back(umrfTemp);
+		}
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishStartUMRFMsg(StartUMRF);
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RobofleetClient No running"));
+	}
+	
+}
+
+FPath URobofleetBPFunctionLibrary::GetRobotPath(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FPath Fp = FRobofleetUnrealClientModule::Get()->RobofleetClient->GetFPath(RobotName);
+		return Fp;
+	}
+	return FPath();
+}

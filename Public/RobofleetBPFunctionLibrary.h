@@ -13,7 +13,7 @@ class URobofleetBase;
  * 
  */
 UCLASS()
-class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintFunctionLibrary
+class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
@@ -72,10 +72,21 @@ class ROBOFLEETUNREALCLIENT_API URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishLocationMsg(const FString& RobotName, const FRobotLocationStamped& LocationMsg);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+
+	static void PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
+
+	static void PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg);
+
 	// need to add detected image
 
 	// Use only for delegates
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static URobofleetBase* GetClientReference();
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FPath GetRobotPath(const FString& RobotName);
 };

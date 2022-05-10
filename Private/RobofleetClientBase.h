@@ -9,6 +9,7 @@
 #include "message_structs.h"
 #include "MessageSchedulerLib.hpp"
 #include "WebsocketClient.h"
+#include "RobofleetBPMessageStructs.h"
 
 #include <cstdint>
 #include <map>
@@ -19,7 +20,6 @@
 struct RobotData {
 	RobotLocation Location;
 	RobotStatus Status;
-	//DetectedItem Detection;
 	bool IsAlive;
 };
 
@@ -40,6 +40,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, Ro
 
 //OnRobotChangedLocation event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRobotLocationChanged, FString, RobotName, FString, OldSite, FString, NewSite);
+
+//OnPathRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPathReceived, FString, Tag, FPath, RobotPath, FLinearColor, Color);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
 
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
@@ -66,7 +70,16 @@ private:
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
+	std::map<FString, NavSatFix> NavSatFixMap;
+	std::map<FString, Pose> PoseMap;
+	std::map<FString, Path> RobotPath;
+	std::map<FString, FLinearColor> ColorGlobalPath;
+	std::map<FString, FLinearColor> ColorTwistPath;
+	std::map<FString, FLinearColor> ColorTrailPath;
 	std::set<FString> RobotsSeen = {};
+
+	NavSatFix WorldGeoOrigin;
+	bool bIsWorldGeoOriginSet;
 
 	template <typename T> 
 	typename T DecodeMsg(const void* Data);
@@ -82,8 +95,11 @@ private:
 
 	void WebsocketDataCB(const void* Data);
 
-public:
+	std::string WorldOrigin = "WorldOrigin";
+	FString FWorldOrigin = FString(WorldOrigin.c_str());
 
+public:
+	
 	bool IsInitilized();
 	bool IsConnected();
 	// TODO: Move the Blueprint exposure to the BP function library
@@ -91,6 +107,8 @@ public:
 	void Initialize(FString HostUrl, const UObject* WorldContextObject);
 
 	void Disconnect();
+
+	void SetWorldGeoOrigin(NavSatFix OriginPose);
 
 	FString GetRobotStatus(const FString& RobotName);
 
@@ -116,6 +134,12 @@ public:
 
 	FVector GetDetectedPositionGlobal(const FString& RobotName);
 
+	Path GetPath(const FString& RobotName);
+
+	FPath GetFPath(const FString& RobotName);
+
+	void AssingBaseColor(const FString& RobotName);
+
 	bool IsRobotOk(const FString& RobotName);
 
 	void PrintRobotsSeen();
@@ -133,6 +157,12 @@ public:
 
 	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
 
+	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+
+	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+
+	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 
@@ -148,7 +178,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotLocationChanged OnRobotLocationChanged;
 
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnPathReceived OnPathReceived;
+
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
 	void RemoveObjectFromRoot();
+
+	void ConvertToCartesian(const NavSatFix& GeoPose, const FString RobotNamespace);
 };
