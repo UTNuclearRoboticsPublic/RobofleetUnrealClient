@@ -59,7 +59,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
-	//RegisterRobotSubscription("image_compressed/main", "*");
+	RegisterRobotSubscription("image_raw/compressed", "*");
 	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 	RegisterRobotSubscription("detected", "*");
 
@@ -101,12 +101,17 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
 	
+	// *********************************************************************************
+	// TODO: FIX THIS TO PARSE TOPICS WITH TWO OR MORE "/" SUCH AS /image_raw/compressed
+
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
 	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
-
 	//UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace: %s"), *RobotNamespace);
 	//UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated: %s"), *TopicIsolated);
+	
+	// *********************************************************************************
+
 
 	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
 	// If we're seeing this robot for the first time, create new data holder
@@ -150,7 +155,7 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
-		//RegisterRobotSubscription("image_compressed/main", "*");
+		RegisterRobotSubscription("image_raw/compressed", "*");
 		RegisterRobotSubscription("detected", "*");
 
 		//RegisterRobotSubscription("NavSatFix", "*");
@@ -180,6 +185,8 @@ typename T URobofleetBase::DecodeMsg(const void* Data)
  * (and aren't just sending it over the wire like in ROS)
  */
 void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNamespace) {
+	//UE_LOG(LogTemp, Warning, TEXT("In Decode Message"));
+	
 	if (topic == "status") {
 		RobotStatus rs = DecodeMsg<RobotStatus>(Data);
 		if (!RobotMap[RobotNamespace]->Status.location.empty())
@@ -205,6 +212,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	else if (topic == "image_raw/compressed") {
 		//call function to convert msg to bitmap
 		//return bitmap
+		//UE_LOG(LogTemp, Warning, TEXT("Found a compressed image"));
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
 	}
@@ -459,11 +467,7 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	TArray<uint8> imageData;
-	imageData.Append(&DetectedItemMap[RobotNamestd].cmpr_image.data[0], DetectedItemMap[RobotNamestd].cmpr_image.data.size());
-	// you may want an TArray<FColor>
-	// FColor pixelColor = {0, &RobotImageMap[Name].data[i] : i+3}
-	return imageData;
+	return 	TArray<uint8>(&RobotImageMap[RobotNamestd].data[0], RobotImageMap[RobotNamestd].data.size());
 }
 
 bool URobofleetBase::IsRobotImageCompressed(const FString& RobotName)
