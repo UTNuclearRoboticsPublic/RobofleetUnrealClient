@@ -183,6 +183,23 @@ void URobofleetBPFunctionLibrary::PublishLocationMsg(const FString& RobotName, c
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishAgentStatusMsg(const FString& RobotName, const FAgentStatus& StatusMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		AgentStatus agent_status;
+		agent_status.name = std::string(TCHAR_TO_UTF8(*StatusMsg.name));
+		agent_status.battery = StatusMsg.battery;
+		agent_status.owner = std::string(TCHAR_TO_UTF8(*StatusMsg.owner));
+		agent_status.anchor_localization = StatusMsg.anchor_localization;
+		agent_status.control_status = std::string(TCHAR_TO_UTF8(*StatusMsg.control_status));
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishAgentStatusMsg(RobotName, agent_status);
+	}
+}
+
+
+
 void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

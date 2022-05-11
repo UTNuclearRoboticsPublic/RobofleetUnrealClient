@@ -55,7 +55,8 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	SocketClient->IsCallbackRegistered(true);
 
 	UE_LOG(LogRobofleet, Warning, TEXT("Setting refresh timers"));
-	GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
+	GEngine->GetWorldFromContextObjectChecked(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
+	//GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
 	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
@@ -208,6 +209,12 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		DetectedItemMap[RobotNamespace] = DecodeMsg<DetectedItem>(Data);
 		OnDetectedItemReceived.Broadcast(RobotNamespace);
 	}
+
+	/*else if (topic == "detected_augre") {
+		DetectedItemAugreMap[RobotNamespace] = DecodeMsg<DetectedItem_augre>(Data);
+		OnDetectedItemReceived.Broadcast(RobotNamespace);
+	}*/
+
 	else if (topic == "image_raw/compressed") {
 		//call function to convert msg to bitmap
 		//return bitmap
@@ -409,6 +416,19 @@ void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped&
 	EncodeRosMsg<RobotLocationStamped>(LocationMsg, topic, from, to);
 }
 
+void URobofleetBase::PublishAgentStatusMsg(FString RobotName, AgentStatus& StatusMsg)
+{ // Publish a Status Message to Robofleet
+	
+	//**********************************************************
+	//TODO: ADD THE RIGHT TOPICS 
+	//**********************************************************
+	std::string topic = ".....";
+	std::string from = "/agent_status";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/agent_status";
+	EncodeRosMsg<AgentStatus>(StatusMsg, topic, from, to);
+
+}
+
 void URobofleetBase::PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg)
 {
 	// Publish a mo Message to Robofleet
@@ -581,4 +601,3 @@ FPath URobofleetBase::GetFPath(const FString& RobotName)
 	}
 	return Fp;
 }
-

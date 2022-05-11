@@ -70,6 +70,7 @@ private:
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
+	std::map<FString, DetectedItem_augre> DetectedItemAugreMap;
 	std::map<FString, NavSatFix> NavSatFixMap;
 	std::map<FString, Pose> PoseMap;
 	std::map<FString, Path> RobotPath;
@@ -156,6 +157,8 @@ public:
 	void PublishStatusMsg(FString Robotname, RobotStatus& RobotStatus);
 
 	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
+
+	void PublishAgentStatusMsg(FString Robotname, AgentStatus& AgentStatus);
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 

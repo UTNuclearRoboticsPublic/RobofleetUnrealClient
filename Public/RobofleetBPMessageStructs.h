@@ -78,6 +78,27 @@ struct FRobotLocationStamped
 };
 
 USTRUCT(BlueprintType)
+struct FAgentStatus
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float battery;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString owner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	bool anchor_localization;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString control_status;
+};
+
+USTRUCT(BlueprintType)
 struct FUMRFgraphDiff
 {
 	GENERATED_BODY()
@@ -145,7 +166,6 @@ struct FPoseStamped
 };
 
 USTRUCT(BlueprintType)
-
 struct FHttpDatabaseEntry
 {
 	GENERATED_BODY()
