@@ -158,14 +158,13 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("image_raw/compressed", "*");
 		RegisterRobotSubscription("detected", "*");
 
-		//RegisterRobotSubscription("NavSatFix", "*");
-		PruneInactiveRobots();
+		//RegisterRobotSubscription("NavSatFix", "*");		
 
-		//PruneInactiveRobots();
 		RegisterRobotSubscription("global_path", "*");
 		RegisterRobotSubscription("trail_path", "*");
 		RegisterRobotSubscription("twist_path", "*");
 
+		PruneInactiveRobots();
 	}
 }
 
