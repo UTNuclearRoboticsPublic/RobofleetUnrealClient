@@ -162,6 +162,8 @@ public:
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
+	void PublishPath(const FString& RobotName, const Path& PathMsg);
+
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
 	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);

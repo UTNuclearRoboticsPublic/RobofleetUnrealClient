@@ -81,6 +81,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishNavigationPath(const FString& RobotName, const FPath& PathMsg);
+
 	static void PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg);
 
 	// need to add detected image

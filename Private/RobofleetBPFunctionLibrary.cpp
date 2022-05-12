@@ -246,6 +246,37 @@ void URobofleetBPFunctionLibrary::PublishMoveBaseSimpleGoal(const FString& Robot
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName, const FPath& PathMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		Path navigation_path;
+
+		navigation_path.header.frame_id = std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
+		navigation_path.header.stamp._nsec = PathMsg.header.stamp._nsec;
+		navigation_path.header.stamp._sec = PathMsg.header.stamp._sec;
+		navigation_path.header.seq = PathMsg.header.seq;
+
+		for (auto& poses : PathMsg.poses)
+		{
+			PoseStamped poseTemp;
+			poseTemp.header.frame_id = std::string(TCHAR_TO_UTF8(*poses.header.frame_id));
+			poseTemp.header.stamp._nsec = poses.header.stamp._nsec;
+			poseTemp.header.stamp._sec = poses.header.stamp._sec;
+			poseTemp.header.seq = poses.header.seq;
+			poseTemp.pose.position.x = poses.Transform.GetTranslation().X;
+			poseTemp.pose.position.y = poses.Transform.GetTranslation().Y;
+			poseTemp.pose.position.z = poses.Transform.GetTranslation().Z;
+			poseTemp.pose.orientation.x = poses.Transform.GetRotation().X;
+			poseTemp.pose.orientation.y = poses.Transform.GetRotation().Y;
+			poseTemp.pose.orientation.z = poses.Transform.GetRotation().Z;
+			poseTemp.pose.orientation.w = poses.Transform.GetRotation().W;
+			navigation_path.poses.push_back(poseTemp);
+		}
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishPath(RobotName, navigation_path);
+	}
+}
+
 // need to add detected image 
 
 // Publish TeMoto msgs

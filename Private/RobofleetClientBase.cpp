@@ -422,7 +422,7 @@ void URobofleetBase::PublishAgentStatusMsg(FString RobotName, AgentStatus& Statu
 	//**********************************************************
 	//TODO: ADD THE RIGHT TOPICS 
 	//**********************************************************
-	std::string topic = ".....";
+	std::string topic = "augre_msgs/AgentStatus";
 	std::string from = "/agent_status";
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/agent_status";
 	EncodeRosMsg<AgentStatus>(StatusMsg, topic, from, to);
@@ -445,6 +445,15 @@ void URobofleetBase::PublishMoveBaseSimpleGoal(const FString& RobotName, const P
 	std::string from = "/PoseStamped";
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/PoseStamped";
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
+}
+
+void URobofleetBase::PublishPath(const FString& RobotName, const Path& PathMsg)
+{
+	// Publish a path message to Robofleet
+	std::string topic = "nav_msgs/path";
+	std::string from = "/PoseStamped";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation_path";
+	EncodeRosMsg<Path>(PathMsg, topic, from, to);
 }
 
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
