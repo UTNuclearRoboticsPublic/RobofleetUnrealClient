@@ -154,11 +154,13 @@ public:
 
 	void RegisterRobotSubscription(FString TopicName, FString RobotName);
 
-	void PublishStatusMsg(FString Robotname, RobotStatus& RobotStatus);
+	void PublishStatusMsg(FString RobotName, RobotStatus& RobotStatus);
 
 	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
 
-	void PublishAgentStatusMsg(FString Robotname, AgentStatus& AgentStatus);
+	void PublishAgentStatusMsg(FString RobotName, AgentStatus& AgentStatus);
+
+	void PublishTransformWithCovarianceStampedMsg(FString Robotname, TransformWithCovarianceStamped& TFwithCovStamped);
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 

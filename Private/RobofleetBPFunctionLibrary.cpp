@@ -183,6 +183,35 @@ void URobofleetBPFunctionLibrary::PublishLocationMsg(const FString& RobotName, c
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishTransformWithCovarianceStampedMsg(const FString& RobotName, const FTransformWithCovarianceStamped& FTfWithCovarianceStampedmsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		TransformWithCovarianceStamped TFwithCovStamped;
+		
+		TFwithCovStamped.transform.header.frame_id = std::string(TCHAR_TO_UTF8(*FTfWithCovarianceStampedmsg.transform.header.frame_id));
+		TFwithCovStamped.transform.header.stamp._nsec = FTfWithCovarianceStampedmsg.transform.header.stamp._nsec;
+		TFwithCovStamped.transform.header.stamp._sec = FTfWithCovarianceStampedmsg.transform.header.stamp._sec;
+		TFwithCovStamped.transform.header.seq = FTfWithCovarianceStampedmsg.transform.header.seq;		
+		TFwithCovStamped.transform.child_frame_id = std::string(TCHAR_TO_UTF8(*FTfWithCovarianceStampedmsg.transform.child_frame_id));
+		TFwithCovStamped.transform.transform.translation.x = FTfWithCovarianceStampedmsg.transform.Transform.GetTranslation().X;
+		TFwithCovStamped.transform.transform.translation.y = FTfWithCovarianceStampedmsg.transform.Transform.GetTranslation().Y;
+		TFwithCovStamped.transform.transform.translation.z = FTfWithCovarianceStampedmsg.transform.Transform.GetTranslation().Z;
+		TFwithCovStamped.transform.transform.rotation.x = FTfWithCovarianceStampedmsg.transform.Transform.GetRotation().X;
+		TFwithCovStamped.transform.transform.rotation.y = FTfWithCovarianceStampedmsg.transform.Transform.GetRotation().Y;
+		TFwithCovStamped.transform.transform.rotation.z = FTfWithCovarianceStampedmsg.transform.Transform.GetRotation().Z;
+		TFwithCovStamped.transform.transform.rotation.w = FTfWithCovarianceStampedmsg.transform.Transform.GetRotation().W;
+				
+		//Convert from TArray to std::vector		
+		for (auto& cov : FTfWithCovarianceStampedmsg.covariance)
+		{
+			TFwithCovStamped.covariance.push_back(cov);
+		}
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTransformWithCovarianceStampedMsg(RobotName, TFwithCovStamped);
+	}
+}
+
 void URobofleetBPFunctionLibrary::PublishAgentStatusMsg(const FString& RobotName, const FAgentStatus& StatusMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

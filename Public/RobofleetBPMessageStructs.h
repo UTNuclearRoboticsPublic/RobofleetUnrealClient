@@ -99,6 +99,33 @@ struct FAgentStatus
 };
 
 USTRUCT(BlueprintType)
+struct FTransformStamped
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString child_frame_id;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTransform Transform;
+};
+
+USTRUCT(BlueprintType)
+struct FTransformWithCovarianceStamped
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTransformStamped transform;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<float> covariance;
+};
+
+USTRUCT(BlueprintType)
 struct FUMRFgraphDiff
 {
 	GENERATED_BODY()

@@ -76,6 +76,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishAgentStatusMsg(const FString& RobotName, const FAgentStatus& StatusMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishTransformWithCovarianceStampedMsg(const FString& RobotName, const FTransformWithCovarianceStamped& FTfWithCovarianceStampedmsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")

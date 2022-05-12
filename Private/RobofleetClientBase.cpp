@@ -429,6 +429,18 @@ void URobofleetBase::PublishAgentStatusMsg(FString RobotName, AgentStatus& Statu
 
 }
 
+void URobofleetBase::PublishTransformWithCovarianceStampedMsg(FString RobotName, TransformWithCovarianceStamped& TFwithCovStamped)
+{
+	//**********************************************************
+	//TODO: ADD THE RIGHT TOPICS 
+	//**********************************************************
+	std::string topic = "augre_msgs/TransformWithCovarianceStamped";
+	std::string from = "/transform_with_covariance_stamped";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/transform_with_covariance_stamped";
+	EncodeRosMsg<TransformWithCovarianceStamped>(TFwithCovStamped, topic, from, to);
+}
+
+
 void URobofleetBase::PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg)
 {
 	// Publish a mo Message to Robofleet
