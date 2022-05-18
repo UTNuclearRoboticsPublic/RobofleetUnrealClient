@@ -121,7 +121,7 @@ public:
 	//AugRe_msgs
 	FString GetName(const FString& RobotName);
 
-	FString GetDisplayName(const FString& RobotName);
+	FString GetAgentDisplayName(const FString& RobotName);
 
 	FString GetAgentType(const FString& RobotName);
 
