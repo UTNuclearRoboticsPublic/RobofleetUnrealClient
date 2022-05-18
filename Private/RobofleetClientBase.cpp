@@ -104,15 +104,15 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	const fb::MsgWithMetadata* msg = flatbuffers::GetRoot<fb::MsgWithMetadata>(Data);
 	
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
-	
+	UE_LOG(LogRobofleet, Warning, TEXT("MsgTopic: %s"), *FString(MsgTopic.c_str()));
 	// *********************************************************************************
 	// TODO: FIX THIS TO PARSE TOPICS WITH TWO OR MORE "/" SUCH AS /image_raw/compressed
 
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
 	FString RobotNamespace = FString(MsgTopic.substr(1, NamespaceIndex).c_str());
 	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
-	//UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace: %s"), *RobotNamespace);
-	//UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated: %s"), *TopicIsolated);
+	UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace: %s"), *RobotNamespace);
+	UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated: %s"), *TopicIsolated);
 	
 	// *********************************************************************************
 
@@ -214,24 +214,33 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		}
 		AgentStatusMap[RobotNamespace] = rs;
 	}
-
+	
 	if (topic == "tf") {
 		TransformStamped rs = DecodeMsg<TransformStamped>(Data);
+		FString key;
 
 		std::string full_frame_id = rs.header.frame_id.c_str();		
 		if (full_frame_id.find("anchor") != std::string::npos)
 		{
 			// TransformStamped Message is for Anchor
-			FString key = FString(full_frame_id.substr(full_frame_id.find("_")+1).c_str());
-			*TransformStampedMap[key]=rs;
+			key = FString(full_frame_id.substr(full_frame_id.find("_")+1).c_str());
 		}
 		else
 		{
 			// TransformStamped Message is for Agent
-			FString key = FString(full_frame_id.substr(0, full_frame_id.find("/")).c_str());
-			*TransformStampedMap[key]=rs;
+			key = FString(full_frame_id.substr(0, full_frame_id.find("/")).c_str());
 		}
+
+		if (RobotsSeen.find(key) == RobotsSeen.end())
+		{
+			TransformStampedMap[key] = MakeShared<TransformStamped>();
+			RobotsSeen.insert(key);
+		}
+		*TransformStampedMap[key] = rs;
+		
+		
 	}
+	
 
 
 	else if (topic == "localization") {

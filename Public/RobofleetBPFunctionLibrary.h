@@ -28,7 +28,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static FString GetName(const FString& RobotName);	
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static FString GetDisplayName(const FString& RobotName);
+	static FString GetAgentDisplayName(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString GetAgentType(const FString& RobotName);

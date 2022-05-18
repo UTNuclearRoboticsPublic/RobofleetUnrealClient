@@ -32,7 +32,7 @@ FString URobofleetBPFunctionLibrary::GetName(const FString& RobotName)
 	return TEXT("");
 }
 
-FString URobofleetBPFunctionLibrary::GetDisplayName(const FString& RobotName)
+FString URobofleetBPFunctionLibrary::GetAgentDisplayName(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
