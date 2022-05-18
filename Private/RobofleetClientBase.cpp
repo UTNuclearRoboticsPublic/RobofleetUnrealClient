@@ -223,13 +223,13 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		{
 			// TransformStamped Message is for Anchor
 			FString key = FString(full_frame_id.substr(full_frame_id.find("_")+1).c_str());
-			TransformStampedMap[key]=rs;
+			*TransformStampedMap[key]=rs;
 		}
 		else
 		{
 			// TransformStamped Message is for Agent
 			FString key = FString(full_frame_id.substr(0, full_frame_id.find("/")).c_str());
-			TransformStampedMap[key]=rs;
+			*TransformStampedMap[key]=rs;
 		}
 	}
 
@@ -575,8 +575,16 @@ FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
 FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (RobotMap.count(RobotNamestd) == 0) return FVector( 0.0f, 0.0f, 0.0f );
-	return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
+
+	/* Depreciated
+	*if (RobotMap.count(RobotNamestd) == 0) return FVector( 0.0f, 0.0f, 0.0f );
+	*return FVector(RobotMap[RobotNamestd]->Location.x, RobotMap[RobotNamestd]->Location.y, 0);
+	*/
+
+	if (TransformStampedMap.count(RobotNamestd) == 0) return FVector(0.0f, 0.0f, 0.0f);
+	return FVector(	TransformStampedMap[RobotNamestd]->transform.translation.x, 
+					TransformStampedMap[RobotNamestd]->transform.translation.y,
+					TransformStampedMap[RobotNamestd]->transform.translation.z);
 }
 
 TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)

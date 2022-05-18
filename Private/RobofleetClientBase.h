@@ -71,7 +71,7 @@ private:
 	
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, AgentStatus> AgentStatusMap;
-	std::map<FString, TransformStamped> TransformStampedMap;
+	std::map<FString, TSharedPtr<TransformStamped>> TransformStampedMap;
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
