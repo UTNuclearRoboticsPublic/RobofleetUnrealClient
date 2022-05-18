@@ -68,6 +68,9 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotSubscription("trail_path", "*");
 	RegisterRobotSubscription("twist_path", "*");
 
+	RegisterRobotSubscription("agent_status", "*");
+	RegisterRobotSubscription("tf", "*");
+
 	bIsInitilized = true;
 
 }
@@ -159,6 +162,9 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("image_raw/compressed", "*");
 		RegisterRobotSubscription("detected", "*");
 
+		RegisterRobotSubscription("agent_status", "*");
+		RegisterRobotSubscription("tf", "*");
+
 		//RegisterRobotSubscription("NavSatFix", "*");		
 
 		RegisterRobotSubscription("global_path", "*");
@@ -199,6 +205,35 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		}
 		RobotMap[RobotNamespace]->Status = rs;
 	}
+
+	if (topic == "agent_status") {
+		AgentStatus rs = DecodeMsg<AgentStatus>(Data);
+		if (!AgentStatusMap[RobotNamespace].agent_type.empty() && AgentStatusMap[RobotNamespace].anchor_localization)
+		{				
+			OnAgentStatusUpdate.Broadcast(RobotNamespace);			
+		}
+		AgentStatusMap[RobotNamespace] = rs;
+	}
+
+	if (topic == "tf") {
+		TransformStamped rs = DecodeMsg<TransformStamped>(Data);
+
+		std::string full_frame_id = rs.header.frame_id.c_str();		
+		if (full_frame_id.find("anchor") != std::string::npos)
+		{
+			// TransformStamped Message is for Anchor
+			FString key = FString(full_frame_id.substr(full_frame_id.find("_")+1).c_str());
+			TransformStampedMap[key]=rs;
+		}
+		else
+		{
+			// TransformStamped Message is for Agent
+			FString key = FString(full_frame_id.substr(0, full_frame_id.find("/")).c_str());
+			TransformStampedMap[key]=rs;
+		}
+	}
+
+
 	else if (topic == "localization") {
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
 		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
@@ -416,7 +451,7 @@ void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped&
 	EncodeRosMsg<RobotLocationStamped>(LocationMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishAgentStatusMsg(FString RobotName, AgentStatus& StatusMsg)
+void URobofleetBase::PublishAgentStatusMsg(const FString& RobotName,const AgentStatus& StatusMsg)
 { // Publish a Status Message to Robofleet
 	
 	//**********************************************************
@@ -429,7 +464,7 @@ void URobofleetBase::PublishAgentStatusMsg(FString RobotName, AgentStatus& Statu
 
 }
 
-void URobofleetBase::PublishTransformWithCovarianceStampedMsg(FString RobotName, TransformWithCovarianceStamped& TFwithCovStamped)
+void URobofleetBase::PublishTransformWithCovarianceStampedMsg(const FString& RobotName, const TransformWithCovarianceStamped& TFwithCovStamped)
 {
 	//**********************************************************
 	//TODO: ADD THE RIGHT TOPICS 
@@ -468,6 +503,53 @@ void URobofleetBase::PublishPath(const FString& RobotName, const Path& PathMsg)
 	EncodeRosMsg<Path>(PathMsg, topic, from, to);
 }
 
+FString URobofleetBase::GetName(const FString& RobotName)
+{
+	// Check if robot exists
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(AgentStatusMap[RobotNamestd].name.c_str());
+}
+
+FString URobofleetBase::GetDisplayName(const FString& RobotName)
+{
+	// Check if robot exists
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(AgentStatusMap[RobotNamestd].display_name.c_str());
+}
+
+FString URobofleetBase::GetAgentType(const FString& RobotName)
+{
+	// Check if robot exists
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(AgentStatusMap[RobotNamestd].agent_type.c_str());
+}
+
+float URobofleetBase::GetRobotBatteryLevel(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (AgentStatusMap.count(RobotNamestd) == 0) return -1.0;
+	return AgentStatusMap[RobotNamestd].battery;
+}
+
+FString URobofleetBase::GetOwner(const FString& RobotName)
+{
+	// Check if robot exists
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(AgentStatusMap[RobotNamestd].owner.c_str());
+}
+
+FString URobofleetBase::GetControlStatus(const FString& RobotName)
+{
+	// Check if robot exists
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	return FString(AgentStatusMap[RobotNamestd].control_status.c_str());
+}
+
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
 	// Check if robot exists
@@ -481,13 +563,6 @@ bool URobofleetBase::IsRobotOk(const FString& RobotName)
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotMap.count(RobotNamestd) == 0) return false;
 	return RobotMap[RobotNamestd]->Status.is_ok;
-}
-
-float URobofleetBase::GetRobotBatteryLevel(const FString& RobotName)
-{
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (RobotMap.count(RobotNamestd) == 0) return -1.0;
-	return RobotMap[RobotNamestd]->Status.battery_level;
 }
 
 FString URobofleetBase::GetRobotLocationString(const FString& RobotName)

@@ -41,6 +41,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, Ro
 //OnRobotChangedLocation event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRobotLocationChanged, FString, RobotName, FString, OldSite, FString, NewSite);
 
+//OnAgentStatusUpdate event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAgentStatusUpdate, FString, RobotName);
+
 //OnPathRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPathReceived, FString, Tag, FPath, RobotPath, FLinearColor, Color);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
@@ -67,6 +70,8 @@ private:
 	FTimerHandle RefreshTimerHandle;
 	
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
+	std::map<FString, AgentStatus> AgentStatusMap;
+	std::map<FString, TransformStamped> TransformStampedMap;
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
@@ -113,7 +118,18 @@ public:
 
 	FString GetRobotStatus(const FString& RobotName);
 
+	//AugRe_msgs
+	FString GetName(const FString& RobotName);
+
+	FString GetDisplayName(const FString& RobotName);
+
+	FString GetAgentType(const FString& RobotName);
+
 	float GetRobotBatteryLevel(const FString& RobotName);
+
+	FString GetOwner(const FString& RobotName);
+
+	FString GetControlStatus(const FString& RobotName);	
 
 	FString GetRobotLocationString(const FString& RobotName);
 
@@ -158,9 +174,9 @@ public:
 
 	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
 
-	void PublishAgentStatusMsg(FString RobotName, AgentStatus& AgentStatus);
+	void PublishAgentStatusMsg(const FString& RobotName, const AgentStatus& AgentStatus);
 
-	void PublishTransformWithCovarianceStampedMsg(FString Robotname, TransformWithCovarianceStamped& TFwithCovStamped);
+	void PublishTransformWithCovarianceStampedMsg(const FString& Robotname, const TransformWithCovarianceStamped& TFwithCovStamped);
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
@@ -184,6 +200,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotLocationChanged OnRobotLocationChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnAgentStatusUpdate OnAgentStatusUpdate;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnPathReceived OnPathReceived;

@@ -20,6 +20,36 @@ FString URobofleetBPFunctionLibrary::GetRobotStatus(const FString& RobotName)
 	return TEXT("");
 }
 
+
+//augre_msgs
+
+FString URobofleetBPFunctionLibrary::GetName(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetName(RobotName);
+	}
+	return TEXT("");
+}
+
+FString URobofleetBPFunctionLibrary::GetDisplayName(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDisplayName(RobotName);
+	}
+	return TEXT("");
+}
+
+FString URobofleetBPFunctionLibrary::GetAgentType(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAgentType(RobotName);
+	}
+	return TEXT("");
+}
+
 float URobofleetBPFunctionLibrary::GetRobotBatteryLevel(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -27,6 +57,24 @@ float URobofleetBPFunctionLibrary::GetRobotBatteryLevel(const FString& RobotName
 		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetRobotBatteryLevel(RobotName);
 	}
 	return 0.0f;
+}
+
+FString URobofleetBPFunctionLibrary::GetOwner(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetOwner(RobotName);
+	}
+	return TEXT("");
+}
+
+FString URobofleetBPFunctionLibrary::GetControlStatus(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetControlStatus(RobotName);
+	}
+	return TEXT("");
 }
 
 FString URobofleetBPFunctionLibrary::GetRobotLocationString(const FString& RobotName)
@@ -218,6 +266,8 @@ void URobofleetBPFunctionLibrary::PublishAgentStatusMsg(const FString& RobotName
 	{
 		AgentStatus agent_status;
 		agent_status.name = std::string(TCHAR_TO_UTF8(*StatusMsg.name));
+		agent_status.display_name = std::string(TCHAR_TO_UTF8(*StatusMsg.display_name));
+		agent_status.agent_type = std::string(TCHAR_TO_UTF8(*StatusMsg.agent_type));
 		agent_status.battery = StatusMsg.battery;
 		agent_status.owner = std::string(TCHAR_TO_UTF8(*StatusMsg.owner));
 		agent_status.anchor_localization = StatusMsg.anchor_localization;

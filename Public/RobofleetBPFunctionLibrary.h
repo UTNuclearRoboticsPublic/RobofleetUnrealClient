@@ -23,8 +23,24 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString GetRobotStatus(const FString& RobotName);
 
+	// Augre_msgs
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetName(const FString& RobotName);	
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetDisplayName(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetAgentType(const FString& RobotName);
+
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static float GetRobotBatteryLevel(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetOwner(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetControlStatus(const FString& RobotName);	
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString GetRobotLocationString(const FString& RobotName);

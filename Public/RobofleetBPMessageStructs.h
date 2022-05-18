@@ -86,6 +86,12 @@ struct FAgentStatus
 	FString name;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString agent_type;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString display_name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	float battery;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
