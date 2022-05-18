@@ -511,7 +511,7 @@ FString URobofleetBase::GetName(const FString& RobotName)
 	return FString(AgentStatusMap[RobotNamestd].name.c_str());
 }
 
-FString URobofleetBase::GetDisplayName(const FString& RobotName)
+FString URobofleetBase::GetAgentDisplayName(const FString& RobotName)
 {
 	// Check if robot exists
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
