@@ -112,17 +112,18 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	FString TopicIsolated = FString(MsgTopic.substr(NamespaceIndex + 2, MsgTopic.length()).c_str());
 
 	// Print Out
-	//UE_LOG(LogRobofleet, Warning, TEXT("MsgTopic: %s"), *FString(MsgTopic.c_str()));
-	//UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace: %s"), *RobotNamespace);
-	//UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated: %s"), *TopicIsolated);
+	UE_LOG(LogRobofleet, Warning, TEXT("MsgTopic in: %s"), *FString(MsgTopic.c_str()));
+	//UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace in: %s"), *RobotNamespace);
+	//UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated in: %s"), *TopicIsolated);
 	
 	// *********************************************************************************
 
 	// If the message received is a tf message, we must handle differently	
 	if (TopicIsolated == "tf")
 	{
+		//UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace in: %s"), *RobotNamespace);
 		// TF Messages will have RobotNamespaces in the frame_id field in header, therefore need to parse first
-		DecodeTFMsg(Data, RobotNamespace); // Update RobotNamespace
+		DecodeTFMsg(Data); // Update RobotNamespace
 	}
 	// If we're seeing this robot for the first time, create new data holder
 	else if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) 
@@ -149,6 +150,7 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	else
 	{
 		RobotsSeenTime[RobotNamespace] = FDateTime::Now();
+		
 		RobotsSeen.insert(RobotNamespace); // Not sure if this is needed
 
 		DecodeMsg(Data, TopicIsolated, RobotNamespace);
@@ -159,6 +161,7 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 void URobofleetBase::PrintRobotsSeen() {
 
 	UE_LOG(LogRobofleet, Warning, TEXT("\n\nPrinting Existing Robots"));
+	UE_LOG(LogRobofleet, Warning, TEXT("Size of RobotsSeen Set: %s"), *FString(std::to_string(RobotsSeen.size()).c_str()));
 	for (auto elem : RobotsSeen) {
 		UE_LOG(LogRobofleet, Warning, TEXT("---------------"));
 		UE_LOG(LogRobofleet, Warning, TEXT("Robot Name: %s"), *FString(elem));
@@ -199,7 +202,7 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("trail_path", "*");
 		RegisterRobotSubscription("twist_path", "*");
 
-		PruneInactiveRobots();
+		//PruneInactiveRobots();
 	}
 }
 
@@ -337,11 +340,14 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 }
 
 // Grab namespace from the TF Message
-void URobofleetBase::DecodeTFMsg(const void* Data, FString& RobotNamespace) {
+void URobofleetBase::DecodeTFMsg(const void* Data) {
 	
 	TransformStamped rs = DecodeMsg<TransformStamped>(Data);
+	FString TFRobotNamespace;
 
 	std::string full_frame_id = rs.header.frame_id.c_str();
+	UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
+
 	if (full_frame_id.find("anchor") != std::string::npos)
 	{
 		// *** HOLOLENS SHOULD NOT NEED A TF ANCHOR MESSAGE ***
@@ -350,26 +356,37 @@ void URobofleetBase::DecodeTFMsg(const void* Data, FString& RobotNamespace) {
 		// Need a Broadcast Anchor is seen if using
 
 		// Return empty string
-		RobotNamespace = FString(std::string().c_str());
+		TFRobotNamespace = FString(std::string().c_str());
+		UE_LOG(LogRobofleet, Warning, TEXT("0. RobotNamespace from TF Parser: %s"), *TFRobotNamespace);
 	}
 	else
 	{
 		// If TransformStamped message is an AGENT transform
-		RobotNamespace = FString(full_frame_id.substr(0, full_frame_id.find("/")).c_str());
+		TFRobotNamespace = FString(full_frame_id.substr(0, full_frame_id.find("/")).c_str());
+		UE_LOG(LogRobofleet, Warning, TEXT("1. RobotNamespace from TF Parser: %s"), *TFRobotNamespace);
 	}
 
-	if (!RobotNamespace.IsEmpty())
+
+	UE_LOG(LogRobofleet, Warning, TEXT("2. RobotNamespace from TF Parser: %s"),*TFRobotNamespace);
+
+	if (!TFRobotNamespace.IsEmpty())
 	{
-		if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) {
+		if (RobotsSeen.find(TFRobotNamespace) == RobotsSeen.end()) {
 			
-			// Record the time that the robot was seen last
-			RobotsSeenTime[RobotNamespace] = FDateTime::Now();
+			
+
+			RobotsSeen.insert(TFRobotNamespace);
 
 			// Broadcast
-			OnNewRobotSeen.Broadcast(RobotNamespace);
+			OnNewRobotSeen.Broadcast(TFRobotNamespace);
 		}
-		//UE_LOG(LogRobofleet, Warning, TEXT("In DecodeTFMsg"));
-		TransformStampedMap[RobotNamespace] = rs;
+		UE_LOG(LogRobofleet, Warning, TEXT("Location from rs: X: %f, Y: %f, Z: %f"), rs.transform.translation.x,
+			rs.transform.translation.y,
+			rs.transform.translation.z);
+		TransformStampedMap[TFRobotNamespace] = rs;
+		// Record the time that the robot was seen last
+		RobotsSeenTime[TFRobotNamespace] = FDateTime::Now();
+		
 	}
 }
 
@@ -525,6 +542,15 @@ void URobofleetBase::PublishTransformWithCovarianceStampedMsg(const FString& Rob
 	std::string from = "/transform_with_covariance_stamped";
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/transform_with_covariance_stamped";
 	EncodeRosMsg<TransformWithCovarianceStamped>(TFwithCovStamped, topic, from, to);
+}
+
+void URobofleetBase::PublishAzureSpatialAnchorMsg(const FString& AnchorName, const AzureSpatialAnchor& RosAzureSpatialAnchor) {
+	
+	// Publish a mo Message to Robofleet
+	std::string topic = "asa_db_portal/AzureSpatialAnchor";
+	std::string from = "/add_anchor";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*AnchorName)) + "/add_anchor";
+	EncodeRosMsg<AzureSpatialAnchor>(RosAzureSpatialAnchor, topic, from, to);
 }
 
 

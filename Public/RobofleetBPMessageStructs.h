@@ -104,6 +104,8 @@ struct FAgentStatus
 	FString control_status;
 };
 
+// geometry_msgs
+
 USTRUCT(BlueprintType)
 struct FTransformStamped
 {
@@ -129,6 +131,82 @@ struct FTransformWithCovarianceStamped
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	TArray<float> covariance;
+};
+
+USTRUCT(BlueprintType)
+struct FPoseWithCovariance
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTransform pose;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<float> covariance;
+};
+
+USTRUCT(BlueprintType)
+struct FPoseWithCovarianceStamped
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoseWithCovariance pose;
+};
+
+USTRUCT(BlueprintType)
+struct FGeoPoseWithCovariance
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTransform pose;
+		
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<float> covariance;
+};
+
+USTRUCT(BlueprintType)
+struct FGeoPoseWithCovarianceStamped
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FGeoPoseWithCovariance pose;
+};
+
+
+
+USTRUCT(BlueprintType)
+struct FAzureSpatialAnchor
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString asa_id;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString rep_id;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString ns;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTime timestamp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoseWithCovarianceStamped pose;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FGeoPoseWithCovarianceStamped geopose;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FString> neighbors;
 };
 
 USTRUCT(BlueprintType)

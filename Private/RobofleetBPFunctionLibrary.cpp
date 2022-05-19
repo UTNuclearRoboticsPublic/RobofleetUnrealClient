@@ -260,6 +260,59 @@ void URobofleetBPFunctionLibrary::PublishTransformWithCovarianceStampedMsg(const
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& AnchorName, const FAzureSpatialAnchor& FAzureSpatialAnchorMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		AzureSpatialAnchor AzureSpatialAnchor;
+		AzureSpatialAnchor.asa_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.asa_id));
+		AzureSpatialAnchor.rep_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.rep_id));
+		AzureSpatialAnchor.ns = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.ns));
+		AzureSpatialAnchor.timestamp._nsec = FAzureSpatialAnchorMsg.timestamp._nsec;
+		AzureSpatialAnchor.timestamp._sec = FAzureSpatialAnchorMsg.timestamp._sec;
+		
+		// PoseWithCovarianceStamped
+		AzureSpatialAnchor.pose.header.frame_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.pose.header.frame_id));
+		AzureSpatialAnchor.pose.header.stamp._nsec = FAzureSpatialAnchorMsg.pose.header.stamp._nsec;
+		AzureSpatialAnchor.pose.header.stamp._sec = FAzureSpatialAnchorMsg.pose.header.stamp._sec;
+		AzureSpatialAnchor.pose.header.seq = FAzureSpatialAnchorMsg.pose.header.seq;
+		AzureSpatialAnchor.pose.pose.pose.position.x = FAzureSpatialAnchorMsg.pose.pose.pose.GetTranslation().X;
+		AzureSpatialAnchor.pose.pose.pose.position.y = FAzureSpatialAnchorMsg.pose.pose.pose.GetTranslation().Y;
+		AzureSpatialAnchor.pose.pose.pose.position.z = FAzureSpatialAnchorMsg.pose.pose.pose.GetTranslation().Z;
+		AzureSpatialAnchor.pose.pose.pose.orientation.x = FAzureSpatialAnchorMsg.pose.pose.pose.GetRotation().X;
+		AzureSpatialAnchor.pose.pose.pose.orientation.y = FAzureSpatialAnchorMsg.pose.pose.pose.GetRotation().Y;
+		AzureSpatialAnchor.pose.pose.pose.orientation.z = FAzureSpatialAnchorMsg.pose.pose.pose.GetRotation().Z;
+		AzureSpatialAnchor.pose.pose.pose.orientation.w = FAzureSpatialAnchorMsg.pose.pose.pose.GetRotation().W;
+		// TODO: ADD COVARIANCE
+
+		// GeoPoseWithCovarianceStamped
+		AzureSpatialAnchor.geopose.header.frame_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.geopose.header.frame_id));
+		AzureSpatialAnchor.geopose.header.stamp._nsec = FAzureSpatialAnchorMsg.geopose.header.stamp._nsec;
+		AzureSpatialAnchor.geopose.header.stamp._sec = FAzureSpatialAnchorMsg.geopose.header.stamp._sec;
+		AzureSpatialAnchor.geopose.header.seq = FAzureSpatialAnchorMsg.geopose.header.seq;
+		AzureSpatialAnchor.geopose.pose.pose.position.latitude = FAzureSpatialAnchorMsg.geopose.pose.pose.GetTranslation().X;
+		AzureSpatialAnchor.geopose.pose.pose.position.longitude = FAzureSpatialAnchorMsg.geopose.pose.pose.GetTranslation().Y;
+		AzureSpatialAnchor.geopose.pose.pose.position.altitude = FAzureSpatialAnchorMsg.geopose.pose.pose.GetTranslation().Z;
+		AzureSpatialAnchor.geopose.pose.pose.orientation.x = FAzureSpatialAnchorMsg.geopose.pose.pose.GetRotation().X;
+		AzureSpatialAnchor.geopose.pose.pose.orientation.y = FAzureSpatialAnchorMsg.geopose.pose.pose.GetRotation().Y;
+		AzureSpatialAnchor.geopose.pose.pose.orientation.z = FAzureSpatialAnchorMsg.geopose.pose.pose.GetRotation().Z;
+		AzureSpatialAnchor.geopose.pose.pose.orientation.w = FAzureSpatialAnchorMsg.geopose.pose.pose.GetRotation().W;
+		// TODO: ADD COVARIANCE
+
+
+
+
+
+		////Convert from TArray to std::vector		
+		//for (auto& cov : FTfWithCovarianceStampedmsg.covariance)
+		//{
+		//	TFwithCovStamped.covariance.push_back(cov);
+		//}
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishAzureSpatialAnchorMsg(AnchorName, AzureSpatialAnchor);
+	}
+}
+
 void URobofleetBPFunctionLibrary::PublishAgentStatusMsg(const FString& RobotName, const FAgentStatus& StatusMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

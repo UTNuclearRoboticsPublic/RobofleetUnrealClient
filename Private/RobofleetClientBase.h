@@ -92,7 +92,7 @@ private:
 
 	void DecodeMsg(const void* Data, FString topic, FString RobotNamespace);
 
-	void DecodeTFMsg(const void* Data, FString& RobotNamespace);
+	void DecodeTFMsg(const void* Data);
 
 	template <typename T> 
 	void EncodeRosMsg(
@@ -120,7 +120,8 @@ public:
 
 	FString GetRobotStatus(const FString& RobotName);
 
-	//AugRe_msgs
+	// ***********************************************************
+	// augre_msgs/agent_status getters
 	FString GetName(const FString& RobotName);
 
 	FString GetAgentDisplayName(const FString& RobotName);
@@ -132,6 +133,9 @@ public:
 	FString GetOwner(const FString& RobotName);
 
 	FString GetControlStatus(const FString& RobotName);	
+
+	// ***********************************************************
+	// geometry_msgs/TransformStamped getters
 
 	FString GetRobotLocationString(const FString& RobotName);
 
@@ -176,9 +180,13 @@ public:
 
 	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
 
+	// augre_msgs/agent_status
 	void PublishAgentStatusMsg(const FString& RobotName, const AgentStatus& AgentStatus);
 
+	// augre_msgs/TransformWithCovarianceStamped
 	void PublishTransformWithCovarianceStampedMsg(const FString& Robotname, const TransformWithCovarianceStamped& TFwithCovStamped);
+
+	void PublishAzureSpatialAnchorMsg(const FString& AnchorName, const AzureSpatialAnchor& RosAzureSpatialAnchor);
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
