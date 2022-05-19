@@ -539,8 +539,8 @@ void URobofleetBase::PublishTransformWithCovarianceStampedMsg(const FString& Rob
 	//TODO: ADD THE RIGHT TOPICS 
 	//**********************************************************
 	std::string topic = "augre_msgs/TransformWithCovarianceStamped";
-	std::string from = "/transform_with_covariance_stamped";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/transform_with_covariance_stamped";
+	std::string from = "/odometry";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/odometry";
 	EncodeRosMsg<TransformWithCovarianceStamped>(TFwithCovStamped, topic, from, to);
 }
 
@@ -552,7 +552,6 @@ void URobofleetBase::PublishAzureSpatialAnchorMsg(const FString& AnchorName, con
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*AnchorName)) + "/add_anchor";
 	EncodeRosMsg<AzureSpatialAnchor>(RosAzureSpatialAnchor, topic, from, to);
 }
-
 
 void URobofleetBase::PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg)
 {
