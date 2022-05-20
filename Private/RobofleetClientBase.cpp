@@ -544,12 +544,12 @@ void URobofleetBase::PublishTransformWithCovarianceStampedMsg(const FString& Rob
 	EncodeRosMsg<TransformWithCovarianceStamped>(TFwithCovStamped, topic, from, to);
 }
 
-void URobofleetBase::PublishAzureSpatialAnchorMsg(const FString& AnchorName, const AzureSpatialAnchor& RosAzureSpatialAnchor) {
+void URobofleetBase::PublishAzureSpatialAnchorMsg(const FString& RobotName, const AzureSpatialAnchor& RosAzureSpatialAnchor) {
 	
 	// Publish a mo Message to Robofleet
 	std::string topic = "asa_db_portal/AzureSpatialAnchor";
 	std::string from = "/add_anchor";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*AnchorName)) + "/add_anchor";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/add_anchor";
 	EncodeRosMsg<AzureSpatialAnchor>(RosAzureSpatialAnchor, topic, from, to);
 }
 

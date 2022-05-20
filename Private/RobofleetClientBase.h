@@ -186,7 +186,7 @@ public:
 	// augre_msgs/TransformWithCovarianceStamped
 	void PublishTransformWithCovarianceStampedMsg(const FString& Robotname, const TransformWithCovarianceStamped& TFwithCovStamped);
 
-	void PublishAzureSpatialAnchorMsg(const FString& AnchorName, const AzureSpatialAnchor& RosAzureSpatialAnchor);
+	void PublishAzureSpatialAnchorMsg(const FString& RobotName, const AzureSpatialAnchor& RosAzureSpatialAnchor);
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 

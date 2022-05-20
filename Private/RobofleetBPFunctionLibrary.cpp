@@ -271,7 +271,7 @@ void URobofleetBPFunctionLibrary::PublishTransformWithCovarianceStampedMsg(const
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& AnchorName, const FAzureSpatialAnchor& FAzureSpatialAnchorMsg)
+void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& RobotName, const FAzureSpatialAnchor& FAzureSpatialAnchorMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
@@ -294,7 +294,19 @@ void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& An
 		AzureSpatialAnchor.pose.pose.pose.orientation.y = FAzureSpatialAnchorMsg.pose.pose.pose.GetRotation().Y;
 		AzureSpatialAnchor.pose.pose.pose.orientation.z = FAzureSpatialAnchorMsg.pose.pose.pose.GetRotation().Z;
 		AzureSpatialAnchor.pose.pose.pose.orientation.w = FAzureSpatialAnchorMsg.pose.pose.pose.GetRotation().W;
-		// TODO: ADD COVARIANCE
+		
+		// TODO: GET ANCHOR COVARIANCES
+		//Convert from TArray to std::vector
+		std::vector<float> pose_anchor_cov = { 71.1655073735117,	3.45821576403310,	0.593090091521150,	1.30137103899806,	0.664337209474972,	15.3887697684447,
+										3.45821576403310,	2.17138180031235,	0.0889157579901040,	0.356811074478031, -1.54724979011027,	1.08088777296042,
+										0.593090091521150,	0.0889157579901040,	0.312597527415474, -0.0669388300717367,	1.34318992031335,	0.200723741020181,
+										1.30137103899806,	0.356811074478031, -0.0669388300717367,	0.770845292528924, -0.520578503254728,	0.245532369990909,
+										0.664337209474972, -1.54724979011027,	1.34318992031335, -0.520578503254728,	9.36524337618332,	0.0369266731945052,
+										15.3887697684447,	1.08088777296042,	0.200723741020181,	0.245532369990909,	0.0369266731945052,	4.16394130032915 };
+		for (auto& cov : pose_anchor_cov)
+		{
+			AzureSpatialAnchor.pose.pose.covariance.push_back(cov);
+		}
 
 		// GeoPoseWithCovarianceStamped
 		AzureSpatialAnchor.geopose.header.frame_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.geopose.header.frame_id));
@@ -308,19 +320,24 @@ void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& An
 		AzureSpatialAnchor.geopose.pose.pose.orientation.y = FAzureSpatialAnchorMsg.geopose.pose.pose.GetRotation().Y;
 		AzureSpatialAnchor.geopose.pose.pose.orientation.z = FAzureSpatialAnchorMsg.geopose.pose.pose.GetRotation().Z;
 		AzureSpatialAnchor.geopose.pose.pose.orientation.w = FAzureSpatialAnchorMsg.geopose.pose.pose.GetRotation().W;
-		// TODO: ADD COVARIANCE
+		
+		// TODO: GET GEOPOSE ANCHOR COVARIANCES
+		//Convert from TArray to std::vector
+		std::vector<float> geopose_anchor_cov = { 71.1655073735117,	3.45821576403310,	0.593090091521150,	1.30137103899806,	0.664337209474972,	15.3887697684447,
+										3.45821576403310,	2.17138180031235,	0.0889157579901040,	0.356811074478031, -1.54724979011027,	1.08088777296042,
+										0.593090091521150,	0.0889157579901040,	0.312597527415474, -0.0669388300717367,	1.34318992031335,	0.200723741020181,
+										1.30137103899806,	0.356811074478031, -0.0669388300717367,	0.770845292528924, -0.520578503254728,	0.245532369990909,
+										0.664337209474972, -1.54724979011027,	1.34318992031335, -0.520578503254728,	9.36524337618332,	0.0369266731945052,
+										15.3887697684447,	1.08088777296042,	0.200723741020181,	0.245532369990909,	0.0369266731945052,	4.16394130032915 };
+		for (auto& cov : geopose_anchor_cov)
+		{
+			AzureSpatialAnchor.geopose.pose.covariance.push_back(cov);
+		}
 
+		// BLANK FOR ANOTHER DAY
+		AzureSpatialAnchor.neighbors.push_back("");
 
-
-
-
-		////Convert from TArray to std::vector		
-		//for (auto& cov : FTfWithCovarianceStampedmsg.covariance)
-		//{
-		//	TFwithCovStamped.covariance.push_back(cov);
-		//}
-
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishAzureSpatialAnchorMsg(AnchorName, AzureSpatialAnchor);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishAzureSpatialAnchorMsg(RobotName, AzureSpatialAnchor);
 	}
 }
 

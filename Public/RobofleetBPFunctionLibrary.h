@@ -95,7 +95,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishTransformWithCovarianceStampedMsg(const FString& RobotName, const FTransformWithCovarianceStamped& FTfWithCovarianceStampedmsg);
 	
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishAzureSpatialAnchorMsg(const FString& AnchorName, const FAzureSpatialAnchor& FAzureSpatialAnchorMsg);
+	static void PublishAzureSpatialAnchorMsg(const FString& RobotName, const FAzureSpatialAnchor& FAzureSpatialAnchorMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
