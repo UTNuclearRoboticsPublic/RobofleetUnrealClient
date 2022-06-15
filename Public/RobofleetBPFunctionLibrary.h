@@ -92,7 +92,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishAgentStatusMsg(const FString& RobotName, const FAgentStatus& StatusMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishTransformWithCovarianceStampedMsg(const FString& RobotName, const FTransformWithCovarianceStamped& FTfWithCovarianceStampedmsg);
+	static void PublishTransformWithCovarianceStampedMsg(const FString& TopicName, const FTransformWithCovarianceStamped& FTfWithCovarianceStampedmsg);
 	
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishAzureSpatialAnchorMsg(const FString& RobotName, const FAzureSpatialAnchor& FAzureSpatialAnchorMsg);

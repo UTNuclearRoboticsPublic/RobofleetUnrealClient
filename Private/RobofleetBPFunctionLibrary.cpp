@@ -231,15 +231,17 @@ void URobofleetBPFunctionLibrary::PublishLocationMsg(const FString& RobotName, c
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishTransformWithCovarianceStampedMsg(const FString& RobotName, const FTransformWithCovarianceStamped& FTfWithCovarianceStampedmsg)
+void URobofleetBPFunctionLibrary::PublishTransformWithCovarianceStampedMsg(const FString& TopicName, const FTransformWithCovarianceStamped& FTfWithCovarianceStampedmsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
 		TransformWithCovarianceStamped TFwithCovStamped;
 		
 		TFwithCovStamped.transform.header.frame_id = std::string(TCHAR_TO_UTF8(*FTfWithCovarianceStampedmsg.transform.header.frame_id));
-		TFwithCovStamped.transform.header.stamp._nsec = FTfWithCovarianceStampedmsg.transform.header.stamp._nsec;
-		TFwithCovStamped.transform.header.stamp._sec = FTfWithCovarianceStampedmsg.transform.header.stamp._sec;
+		TFwithCovStamped.transform.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
+		//TFwithCovStamped.transform.header.stamp._nsec = FTfWithCovarianceStampedmsg.transform.header.stamp._nsec;
+		TFwithCovStamped.transform.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();		
+		//TFwithCovStamped.transform.header.stamp._sec = FTfWithCovarianceStampedmsg.transform.header.stamp._sec;
 		TFwithCovStamped.transform.header.seq = FTfWithCovarianceStampedmsg.transform.header.seq;		
 		TFwithCovStamped.transform.child_frame_id = std::string(TCHAR_TO_UTF8(*FTfWithCovarianceStampedmsg.transform.child_frame_id));
 		TFwithCovStamped.transform.transform.translation.x = FTfWithCovarianceStampedmsg.transform.Transform.GetTranslation().X;
@@ -267,7 +269,7 @@ void URobofleetBPFunctionLibrary::PublishTransformWithCovarianceStampedMsg(const
 			TFwithCovStamped.covariance.push_back(cov);
 		}
 
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTransformWithCovarianceStampedMsg(RobotName, TFwithCovStamped);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTransformWithCovarianceStampedMsg(TopicName, TFwithCovStamped);
 	}
 }
 
@@ -280,12 +282,14 @@ void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& Ro
 		AzureSpatialAnchor.rep_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.rep_id));
 		AzureSpatialAnchor.ns = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.ns));
 		AzureSpatialAnchor.timestamp._nsec = FAzureSpatialAnchorMsg.timestamp._nsec;
-		AzureSpatialAnchor.timestamp._sec = FAzureSpatialAnchorMsg.timestamp._sec;
+		AzureSpatialAnchor.timestamp._sec = FDateTime::Now().ToUnixTimestamp();
+		//AzureSpatialAnchor.timestamp._sec = FAzureSpatialAnchorMsg.timestamp._sec;
 		
 		// PoseWithCovarianceStamped
 		AzureSpatialAnchor.pose.header.frame_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.pose.header.frame_id));
 		AzureSpatialAnchor.pose.header.stamp._nsec = FAzureSpatialAnchorMsg.pose.header.stamp._nsec;
-		AzureSpatialAnchor.pose.header.stamp._sec = FAzureSpatialAnchorMsg.pose.header.stamp._sec;
+		AzureSpatialAnchor.pose.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
+		//AzureSpatialAnchor.pose.header.stamp._sec = FAzureSpatialAnchorMsg.pose.header.stamp._sec;
 		AzureSpatialAnchor.pose.header.seq = FAzureSpatialAnchorMsg.pose.header.seq;
 		AzureSpatialAnchor.pose.pose.pose.position.x = FAzureSpatialAnchorMsg.pose.pose.pose.GetTranslation().X;
 		AzureSpatialAnchor.pose.pose.pose.position.y = FAzureSpatialAnchorMsg.pose.pose.pose.GetTranslation().Y;
@@ -311,7 +315,8 @@ void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& Ro
 		// GeoPoseWithCovarianceStamped
 		AzureSpatialAnchor.geopose.header.frame_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.geopose.header.frame_id));
 		AzureSpatialAnchor.geopose.header.stamp._nsec = FAzureSpatialAnchorMsg.geopose.header.stamp._nsec;
-		AzureSpatialAnchor.geopose.header.stamp._sec = FAzureSpatialAnchorMsg.geopose.header.stamp._sec;
+		AzureSpatialAnchor.geopose.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
+		//AzureSpatialAnchor.geopose.header.stamp._sec = FAzureSpatialAnchorMsg.geopose.header.stamp._sec;
 		AzureSpatialAnchor.geopose.header.seq = FAzureSpatialAnchorMsg.geopose.header.seq;
 		AzureSpatialAnchor.geopose.pose.pose.position.latitude = FAzureSpatialAnchorMsg.geopose.pose.pose.GetTranslation().X;
 		AzureSpatialAnchor.geopose.pose.pose.position.longitude = FAzureSpatialAnchorMsg.geopose.pose.pose.GetTranslation().Y;
@@ -359,7 +364,7 @@ void URobofleetBPFunctionLibrary::PublishAgentStatusMsg(const FString& RobotName
 }
 
 
-
+// Odom Study
 void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

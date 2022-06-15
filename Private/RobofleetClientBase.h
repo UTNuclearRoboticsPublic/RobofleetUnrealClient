@@ -29,6 +29,9 @@ DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
 //OnNewRobotSeen event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewRobotSeen, FString, RobotName);
 
+//OnNewAnchorSeen event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewAnchorSeen, FString, AsaId);
+
 //OnRobotPruned event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
 
@@ -75,6 +78,7 @@ private:
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;
+	std::map<FString, FString> AnchorMap;
 	std::map<FString, DetectedItem_augre> DetectedItemAugreMap;
 	std::map<FString, NavSatFix> NavSatFixMap;
 	std::map<FString, Pose> PoseMap;
@@ -83,6 +87,7 @@ private:
 	std::map<FString, FLinearColor> ColorTwistPath;
 	std::map<FString, FLinearColor> ColorTrailPath;
 	std::set<FString> RobotsSeen = {};
+	std::set<FString> AnchorGTSAM = {};
 
 	NavSatFix WorldGeoOrigin;
 	bool bIsWorldGeoOriginSet;
@@ -184,7 +189,7 @@ public:
 	void PublishAgentStatusMsg(const FString& RobotName, const AgentStatus& AgentStatus);
 
 	// augre_msgs/TransformWithCovarianceStamped
-	void PublishTransformWithCovarianceStampedMsg(const FString& Robotname, const TransformWithCovarianceStamped& TFwithCovStamped);
+	void PublishTransformWithCovarianceStampedMsg(const FString& TopicName, const TransformWithCovarianceStamped& TFwithCovStamped);
 
 	void PublishAzureSpatialAnchorMsg(const FString& RobotName, const AzureSpatialAnchor& RosAzureSpatialAnchor);
 
@@ -198,6 +203,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnNewAnchorSeen OnNewAnchorSeen;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotPruned OnRobotPruned;
