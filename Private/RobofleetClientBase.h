@@ -77,7 +77,7 @@ private:
 	std::map<FString, TransformStamped> TransformStampedMap;
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
-	std::map<FString, DetectedItem> DetectedItemMap;
+	std::map<FString, DetectedItem> DetectedItemMap;		//TODO remove 
 	std::map<FString, FString> AnchorMap;
 	std::map<FString, DetectedItem_augre> DetectedItemAugreMap;
 	std::map<FString, NavSatFix> NavSatFixMap;
@@ -162,6 +162,8 @@ public:
 
 	FVector GetDetectedPositionGlobal(const FString& RobotName);
 
+	TArray<uint8> GetDetectedImage(const FString& RobotName);
+
 	Path GetPath(const FString& RobotName);
 
 	FPath GetFPath(const FString& RobotName);
@@ -196,6 +198,8 @@ public:
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
 	void PublishPath(const FString& RobotName, const Path& PathMsg);
+
+	void PublishTwistMsg(const FString& RobotName, const Twist& TwistMsg);
 
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 

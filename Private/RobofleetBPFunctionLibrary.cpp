@@ -197,6 +197,15 @@ FVector URobofleetBPFunctionLibrary::GetDetectedPositionGlobal(const FString& Ro
 	return FVector(0, 0, 0);
 }
 
+TArray<uint8> URobofleetBPFunctionLibrary::GetDetectedImage(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedImage(RobotName);
+	}
+	return TArray<uint8>();
+}
+
 // Publish Messages to Robofleet
 // *TODO: These need to be rate limited somewhere in the client as there is the potential to overload the server
 void URobofleetBPFunctionLibrary::PublishStatusMsg(const FString& RobotName, const FRobotStatus& StatusMsg)
@@ -441,6 +450,24 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishPath(RobotName, navigation_path);
 	}
 }
+
+void URobofleetBPFunctionLibrary::PublishTwistMsg(const FString& RobotName, const FTwist& TwistMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		Twist cmd_vel;
+		cmd_vel.linear.x = TwistMsg.linear.X;
+		cmd_vel.linear.y = -TwistMsg.linear.Y;
+		cmd_vel.linear.z = TwistMsg.linear.Z;
+		cmd_vel.angular.x = TwistMsg.angular.X;
+		cmd_vel.angular.y = TwistMsg.angular.Y;
+		cmd_vel.angular.z = TwistMsg.angular.Z;
+		
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTwistMsg(RobotName, cmd_vel);
+	}
+}
+
+
 
 // need to add detected image 
 

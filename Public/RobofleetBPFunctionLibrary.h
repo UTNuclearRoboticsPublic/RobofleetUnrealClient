@@ -81,6 +81,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FVector GetDetectedPositionGlobal(const FString& RobotName);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static TArray<uint8> GetDetectedImage(const FString& RobotName);
+
 	// Publish Messages to Robofleet
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishStatusMsg(const FString& RobotName, const FRobotStatus& StatusMsg);
@@ -105,6 +108,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishNavigationPath(const FString& RobotName, const FPath& PathMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishTwistMsg(const FString& RobotName, const FTwist& TwistMsg);
 
 	static void PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg);
 

@@ -314,3 +314,17 @@ struct FPath
 	TArray<FPoseStamped> poses;
 
 };
+
+USTRUCT(BlueprintType)
+struct FTwist
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FVector linear;
+
+	//vector
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FVector angular;
+
+};
