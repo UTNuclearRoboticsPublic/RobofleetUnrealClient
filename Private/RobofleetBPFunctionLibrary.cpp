@@ -161,6 +161,8 @@ FString URobofleetBPFunctionLibrary::GetDetectedName(const FString& RobotName)
 	return TEXT("");
 }
 
+
+// TODO: REMOVE REP ID
 FString URobofleetBPFunctionLibrary::GetDetectedRepIDRef(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -426,7 +428,10 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 	{
 		Path navigation_path;
 
-		navigation_path.header.frame_id = std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
+		std::string asa_header = std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
+		std::replace(asa_header.begin(), asa_header.end(), '-', '_');
+
+		navigation_path.header.frame_id = "anchor_" + std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
 		navigation_path.header.stamp._nsec = PathMsg.header.stamp._nsec;
 		navigation_path.header.stamp._sec = PathMsg.header.stamp._sec;
 		navigation_path.header.seq = PathMsg.header.seq;
@@ -434,13 +439,16 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 		for (auto& poses : PathMsg.poses)
 		{
 			PoseStamped poseTemp;
-			poseTemp.header.frame_id = std::string(TCHAR_TO_UTF8(*poses.header.frame_id));
+
+			std::string asa_poses = std::string(TCHAR_TO_UTF8(*poses.header.frame_id));				
+			std::replace(asa_poses.begin(), asa_poses.end(), '-', '_');
+			poseTemp.header.frame_id = "anchor_" + asa_poses;
 			poseTemp.header.stamp._nsec = poses.header.stamp._nsec;
 			poseTemp.header.stamp._sec = poses.header.stamp._sec;
 			poseTemp.header.seq = poses.header.seq;
-			poseTemp.pose.position.x = poses.Transform.GetTranslation().X;
-			poseTemp.pose.position.y = poses.Transform.GetTranslation().Y;
-			poseTemp.pose.position.z = poses.Transform.GetTranslation().Z;
+			poseTemp.pose.position.x = poses.Transform.GetTranslation().X / 100;
+			poseTemp.pose.position.y = -poses.Transform.GetTranslation().Y / 100;
+			poseTemp.pose.position.z = poses.Transform.GetTranslation().Z / 100;
 			poseTemp.pose.orientation.x = poses.Transform.GetRotation().X;
 			poseTemp.pose.orientation.y = poses.Transform.GetRotation().Y;
 			poseTemp.pose.orientation.z = poses.Transform.GetRotation().Z;
@@ -467,9 +475,6 @@ void URobofleetBPFunctionLibrary::PublishTwistMsg(const FString& RobotName, cons
 	}
 }
 
-
-
-// need to add detected image 
 
 // Publish TeMoto msgs
 void URobofleetBPFunctionLibrary::PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg)
