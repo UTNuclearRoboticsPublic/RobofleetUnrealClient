@@ -69,6 +69,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString GetDetectedName(const FString& RobotName);
 
+	//TODO: REMOVE REP ID
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString GetDetectedRepIDRef(const FString& RobotName);
 

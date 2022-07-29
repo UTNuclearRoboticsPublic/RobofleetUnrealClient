@@ -121,8 +121,6 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	// If the message received is a tf message, we must handle differently	
 	if (TopicIsolated == "tf" || TopicIsolated == "tf_static")
 	{
-		//UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace in: %s"), *RobotNamespace);
-		// TF Messages will have RobotNamespaces in the frame_id field in header, therefore need to parse first
 		DecodeTFMsg(Data); // Update RobotNamespace
 	}
 
@@ -359,6 +357,7 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 			//FString asa_id = FString(full_frame_id.substr(full_frame_id.find("_") + 1).c_str());
 			std::string asa = full_frame_id.substr(full_frame_id.find("_") + 1).c_str();
 			std::replace(asa.begin(), asa.end(), '_', '-');
+			rs.header.frame_id = asa;
 			FString asa_id = FString(asa.c_str());
 
 			if (AnchorGTSAM.find(asa_id) == AnchorGTSAM.end())
@@ -369,50 +368,45 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 				OnNewAnchorSeen.Broadcast(asa_id);
 			}
 
-			// Since this if statement is for anchors, TFRobotNamespace should be an empty string
-			TFRobotNamespace = FString(std::string().c_str());
-		}
-
-		// TransformStamped message is an AGENT transform
-		else
-		{
-			TFRobotNamespace = FString(full_frame_id.substr(0, full_frame_id.find("/")).c_str());
-		}
-
-		// If tf correspond to an agent and it's localized wrt an anchor 
-		if (!TFRobotNamespace.IsEmpty() && child_frame_id.find("anchor") != std::string::npos)
-		{
-			// New Robot Seen
-			if (RobotsSeen.find(TFRobotNamespace) == RobotsSeen.end())
+			// If tf correspond to an agent and it's localized wrt the anchor 
+			if (child_frame_id.find("base_link") != std::string::npos)
 			{
-				RobotsSeen.insert(TFRobotNamespace);
-				UE_LOG(LogTemp, Warning, TEXT("Broadcast OnNewRobotSeen  %s"), *TFRobotNamespace);
+				//Get the agent's name 
+				TFRobotNamespace = FString(child_frame_id.substr(0, child_frame_id.find("/")).c_str());
+
+				// New Robot Seen
+				if (RobotsSeen.find(TFRobotNamespace) == RobotsSeen.end())
+				{
+					RobotsSeen.insert(TFRobotNamespace);
+					UE_LOG(LogTemp, Warning, TEXT("Broadcast OnNewRobotSeen  %s"), *TFRobotNamespace);
+					TransformStampedMap[TFRobotNamespace] = rs;
+					OnNewRobotSeen.Broadcast(TFRobotNamespace);
+				}
+
+				// Robot location changed
+				std::string OldLocation = TransformStampedMap[TFRobotNamespace].header.frame_id;
+
+				if (OldLocation != rs.header.frame_id)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Robot location changed  %s"), *TFRobotNamespace);
+					UE_LOG(LogTemp, Warning, TEXT("OldLocation %s"), *FString(OldLocation.c_str()));
+					//UE_LOG(LogTemp, Warning, TEXT("OldLocation %s"), *FString(OldLocation.substr(OldLocation.find("_") + 1).c_str()));
+					UE_LOG(LogTemp, Warning, TEXT("NewLocation %s"), *FString(rs.header.frame_id.c_str()));
+					OnRobotLocationChanged.Broadcast(TFRobotNamespace,
+						UTF8_TO_TCHAR(OldLocation.c_str()),
+						UTF8_TO_TCHAR(rs.header.frame_id.c_str()));
+				}
+
+				UE_LOG(LogRobofleet, Warning, TEXT("Location from rs: X: %f, Y: %f, Z: %f"), rs.transform.translation.x,
+					rs.transform.translation.y,
+					rs.transform.translation.z);
 				TransformStampedMap[TFRobotNamespace] = rs;
-				OnNewRobotSeen.Broadcast(TFRobotNamespace);
+
+				// Record the time that the robot was seen last
+				RobotsSeenTime[TFRobotNamespace] = FDateTime::Now();
 			}
-
-			// Robot location changed
-			std::string OldLocation = TransformStampedMap[TFRobotNamespace].child_frame_id;
-
-			if (OldLocation != rs.child_frame_id)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Robot location changed  %s"), *TFRobotNamespace);
-				UE_LOG(LogTemp, Warning, TEXT("OldLocation %s"), *FString(OldLocation.substr(OldLocation.find("_") + 1).c_str()));
-				UE_LOG(LogTemp, Warning, TEXT("NewLocation %s"), *FString(rs.child_frame_id.c_str()));
-				OnRobotLocationChanged.Broadcast(TFRobotNamespace,
-					UTF8_TO_TCHAR(OldLocation.substr(OldLocation.find("_") + 1).c_str()),
-					UTF8_TO_TCHAR(rs.child_frame_id.substr(rs.child_frame_id.find("_") + 1).c_str()));
-			}
-
-			UE_LOG(LogRobofleet, Warning, TEXT("Location from rs: X: %f, Y: %f, Z: %f"), rs.transform.translation.x,
-				rs.transform.translation.y,
-				rs.transform.translation.z);
-			TransformStampedMap[TFRobotNamespace] = rs;
-
-			// Record the time that the robot was seen last
-			RobotsSeenTime[TFRobotNamespace] = FDateTime::Now();
 		}
-	}			
+	}
 }
 
 void URobofleetBase::AssingBaseColor(const FString& RobotNamespace)
@@ -609,6 +603,7 @@ void URobofleetBase::PublishTwistMsg(const FString& RobotName, const Twist& Twis
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/hololens/cmd_vel";
 	UE_LOG(LogTemp, Warning, TEXT("[PublishTwistMsg : ... %s"), *RobotName);
 	EncodeRosMsg<Twist>(TwistMsg, topic, from, to);
+
 }
 
 FString URobofleetBase::GetName(const FString& RobotName)
@@ -678,8 +673,8 @@ FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (TransformStampedMap.count(RobotNamestd) == 0) return "Anchor unavailable";
-	std::string origin_anchor =TransformStampedMap[RobotNamestd].child_frame_id.c_str();
-	return FString(origin_anchor.substr(origin_anchor.find("_") + 1).c_str());	
+	std::string origin_anchor =TransformStampedMap[RobotNamestd].header.frame_id.c_str();
+	return FString(origin_anchor.c_str());	
 }
 
 //FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
@@ -748,11 +743,14 @@ FString URobofleetBase::GetDetectedName(const FString& RobotName)
 	//return FString(DetectedItemMap[RobotNamestd].name.c_str());
 }
 
+
+//TODO: REMOVE.... rep_id FIELD DOESNT EXIST ANYMORE
+
 FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(DetectedItemAugreMap[RobotNamestd].rep_id.c_str()); 
+	return FString(DetectedItemAugreMap[RobotNamestd].asa_id.c_str());
 	//return FString(DetectedItemMap[RobotNamestd].repID.c_str()); // Currently used to pass URL
 }
 
@@ -760,7 +758,11 @@ FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(DetectedItemAugreMap[RobotNamestd].asa_id.c_str());
+
+	std::string asa_id = DetectedItemAugreMap[RobotNamestd].asa_id.c_str();
+	std::replace(asa_id.begin(), asa_id.end(), '_', '-');
+
+	return FString(asa_id.c_str());
 	//return FString(DetectedItemMap[RobotNamestd].anchorID.c_str());
 }
 
@@ -820,8 +822,13 @@ FPath URobofleetBase::GetFPath(const FString& RobotName)
 	TArray<FPoseStamped> poses;
 	
 	Path p = RobotPath[RobotNamestd];
-	FPath Fp;		
-	Fp.header.frame_id = (p.header.frame_id.c_str());
+	FPath Fp;
+
+	std::string frame_id = p.header.frame_id.substr(p.header.frame_id.find("_") + 1).c_str();
+	std::replace(frame_id.begin(), frame_id.end(), '_', '-');
+	Fp.header.frame_id = frame_id.c_str();
+
+	//Fp.header.frame_id = (p.header.frame_id.c_str());
 	Fp.header.seq = p.header.seq;
 	Fp.header.stamp._nsec = p.header.stamp._nsec;
 	Fp.header.stamp._sec = p.header.stamp._sec;
@@ -829,6 +836,11 @@ FPath URobofleetBase::GetFPath(const FString& RobotName)
 	for (std::vector<PoseStamped>::iterator it = p.poses.begin(); it != p.poses.end(); ++it)
 	{
 		FPoseStamped fpose_;
+
+		std::string frame_id_pose = it->header.frame_id.substr(it->header.frame_id.find("_") + 1).c_str();
+		std::replace(frame_id_pose.begin(), frame_id_pose.end(), '_', '-');
+		Fp.header.frame_id = frame_id_pose.c_str();
+
 		fpose_.header.frame_id = (it->header.frame_id.c_str());
 		fpose_.header.seq = it->header.seq;
 		fpose_.header.stamp._nsec = it->header.stamp._nsec;
