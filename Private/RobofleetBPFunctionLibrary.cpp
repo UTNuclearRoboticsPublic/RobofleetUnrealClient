@@ -248,13 +248,20 @@ void URobofleetBPFunctionLibrary::PublishTransformWithCovarianceStampedMsg(const
 	{
 		TransformWithCovarianceStamped TFwithCovStamped;
 		
-		TFwithCovStamped.transform.header.frame_id = std::string(TCHAR_TO_UTF8(*FTfWithCovarianceStampedmsg.transform.header.frame_id));
+		std::string asa_header = std::string(TCHAR_TO_UTF8(*FTfWithCovarianceStampedmsg.transform.header.frame_id));
+		std::replace(asa_header.begin(), asa_header.end(), '-', '_');
+
+		TFwithCovStamped.transform.header.frame_id = asa_header;
 		TFwithCovStamped.transform.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
 		//TFwithCovStamped.transform.header.stamp._nsec = FTfWithCovarianceStampedmsg.transform.header.stamp._nsec;
 		TFwithCovStamped.transform.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();		
 		//TFwithCovStamped.transform.header.stamp._sec = FTfWithCovarianceStampedmsg.transform.header.stamp._sec;
-		TFwithCovStamped.transform.header.seq = FTfWithCovarianceStampedmsg.transform.header.seq;		
-		TFwithCovStamped.transform.child_frame_id = std::string(TCHAR_TO_UTF8(*FTfWithCovarianceStampedmsg.transform.child_frame_id));
+		TFwithCovStamped.transform.header.seq = FTfWithCovarianceStampedmsg.transform.header.seq;
+
+		std::string child_frame_id = std::string(TCHAR_TO_UTF8(*FTfWithCovarianceStampedmsg.transform.child_frame_id));
+		std::replace(child_frame_id.begin(), child_frame_id.end(), '-', '_');
+
+		TFwithCovStamped.transform.child_frame_id = child_frame_id;
 		TFwithCovStamped.transform.transform.translation.x = FTfWithCovarianceStampedmsg.transform.Transform.GetTranslation().X;
 		TFwithCovStamped.transform.transform.translation.y = FTfWithCovarianceStampedmsg.transform.Transform.GetTranslation().Y;
 		TFwithCovStamped.transform.transform.translation.z = FTfWithCovarianceStampedmsg.transform.Transform.GetTranslation().Z;
@@ -431,7 +438,7 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 		std::string asa_header = std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
 		std::replace(asa_header.begin(), asa_header.end(), '-', '_');
 
-		navigation_path.header.frame_id = "anchor_" + std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
+		navigation_path.header.frame_id = "anchor_" + asa_header;
 		navigation_path.header.stamp._nsec = PathMsg.header.stamp._nsec;
 		navigation_path.header.stamp._sec = PathMsg.header.stamp._sec;
 		navigation_path.header.seq = PathMsg.header.seq;
