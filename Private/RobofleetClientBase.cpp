@@ -571,15 +571,13 @@ void URobofleetBase::PublishPath(const FString& RobotName, const Path& PathMsg)
 	EncodeRosMsg<Path>(PathMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishTwistMsg(const FString& RobotName, const Twist& TwistMsg)
+void URobofleetBase::PublishTwistMsg(const FString& RobotName, const FString& TopicName, const Twist& TwistMsg)
 {
-	// Publish a path message to Robofleet
 	std::string topic = "geometry_msgs/Twist";
-	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/hololens/cmd_vel";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/hololens/cmd_vel";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	UE_LOG(LogTemp, Warning, TEXT("[PublishTwistMsg : ... %s"), *RobotName);
 	EncodeRosMsg<Twist>(TwistMsg, topic, from, to);
-
 }
 
 FString URobofleetBase::GetName(const FString& RobotName)

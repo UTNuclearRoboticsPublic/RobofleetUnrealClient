@@ -271,21 +271,29 @@ void URobofleetBPFunctionLibrary::PublishTransformWithCovarianceStampedMsg(const
 		TFwithCovStamped.transform.transform.rotation.w = FTfWithCovarianceStampedmsg.transform.Transform.GetRotation().W;
 				
 		//Convert from TArray to std::vector
-		std::vector<float> fake_cov = { 71.1655073735117,	3.45821576403310,	0.593090091521150,	1.30137103899806,	0.664337209474972,	15.3887697684447,
-										3.45821576403310,	2.17138180031235,	0.0889157579901040,	0.356811074478031, -1.54724979011027,	1.08088777296042,
-										0.593090091521150,	0.0889157579901040,	0.312597527415474, -0.0669388300717367,	1.34318992031335,	0.200723741020181,
-										1.30137103899806,	0.356811074478031, -0.0669388300717367,	0.770845292528924, -0.520578503254728,	0.245532369990909,
-										0.664337209474972, -1.54724979011027,	1.34318992031335, -0.520578503254728,	9.36524337618332,	0.0369266731945052,
-										15.3887697684447,	1.08088777296042,	0.200723741020181,	0.245532369990909,	0.0369266731945052,	4.16394130032915 };
-		/*for (auto& cov : FTfWithCovarianceStampedmsg.covariance)
-		{
-			TFwithCovStamped.covariance.push_back(cov);
-		}*/
-
-		for (auto& cov : fake_cov)
+		/*std::vector<float> stdev = { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 };
+		
+		float varXX = 0;
+		float varYY = 0;
+		float varZZ = 0;
+		float varRR = 0;
+		float varPP = 0;
+		float varYwYw = 0;
+		std::vector<float> fake_cov = { varXX,	0,		0,		0,		0,		0,
+										0,		varYY,	0,		0,		0,		0,
+										0,		0,		varZZ,  0,		0,		0,
+										0,		0,		0,		varRR,	0,		0,
+										0,		0,		0,		0,		varPP,	0,
+										0,		0,		0,		0,		0,		varYwYw };*/
+		for (auto& cov : FTfWithCovarianceStampedmsg.covariance)
 		{
 			TFwithCovStamped.covariance.push_back(cov);
 		}
+
+		/*for (auto& cov : fake_cov)
+		{
+			TFwithCovStamped.covariance.push_back(cov);
+		}*/
 
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTransformWithCovarianceStampedMsg(TopicName, TFwithCovStamped);
 	}
@@ -466,7 +474,7 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishTwistMsg(const FString& RobotName, const FTwist& TwistMsg)
+void URobofleetBPFunctionLibrary::PublishTwistMsg(const FString& RobotName, const FString& TopicName, const FTwist& TwistMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
@@ -478,7 +486,7 @@ void URobofleetBPFunctionLibrary::PublishTwistMsg(const FString& RobotName, cons
 		cmd_vel.angular.y = TwistMsg.angular.Y;
 		cmd_vel.angular.z = TwistMsg.angular.Z;
 		
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTwistMsg(RobotName, cmd_vel);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTwistMsg(RobotName, TopicName, cmd_vel);
 	}
 }
 
