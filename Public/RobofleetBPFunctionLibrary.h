@@ -123,9 +123,14 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishNavigationPath(const FString& RobotName, const FPath& PathMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishTwistMsg(const FString& RobotName, const FTwist& TwistMsg);
+	static void PublishTwistMsg(const FString& RobotName, const FString& TopicName, const FTwist& TwistMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishTwistStampedMsg(const FString& RobotName, const FString& TopicName, const FTwistStamped& TwistStampedMsg);
 
 	static void PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg);
+
+	static void PublishStopUMRFMsg(const FStopUMRF& StopUMRFMsg);
 
 	// need to add detected image
 

@@ -106,7 +106,6 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	const fb::MsgWithMetadata* msg = flatbuffers::GetRoot<fb::MsgWithMetadata>(Data);
 	// Grab Full RobotNamespace/Topic
 	std::string MsgTopic = msg->__metadata()->topic()->c_str();
-	// UE_LOG(LogRobofleet, Warning, TEXT("MsgTopic in: %s"), *FString(MsgTopic.c_str()));
 
 	// Parce Topic into Namespace & Topic Name
 	int NamespaceIndex = MsgTopic.substr(1, MsgTopic.length()).find('/');
@@ -124,30 +123,7 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	if (TopicIsolated == "tf" || TopicIsolated == "tf_static")
 	{
 		DecodeTFMsg(Data); // Update RobotNamespace
-	}
-
-	// If we're seeing this robot for the first time, create new data holder
-	//else if (RobotsSeen.find(RobotNamespace) == RobotsSeen.end()) 
-	//{
-	//	// Record the time that the robot was seen last
-	//	RobotsSeenTime[RobotNamespace] = FDateTime::Now();
-
-	//	// Create a Robot Map (Should not be used moving forward with GTSAM Updates)
-	//	RobotMap[RobotNamespace] = MakeShared<RobotData>();
-
-	//	// Parse out Certain Messages
-	//	if (TopicIsolated == "NavSatFix") {
-	//		PoseMap[RobotNamespace] = Pose();
-	//	}
-
-	//	// Put the RobotNamespace in the RobotsSeen Set
-	//	// RobotsSeen.insert(RobotNamespace);
-
- //    	DecodeMsg(Data, TopicIsolated, RobotNamespace);
-
-	//	// Broadcast
-	//	// OnNewRobotSeen.Broadcast(RobotNamespace);   /// Remove from here... now just when tf received 
-	//}
+	}	
 	else
 	{
 		RobotsSeenTime[RobotNamespace] = FDateTime::Now();
@@ -358,8 +334,8 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 
 		std::string full_frame_id = rs.header.frame_id.c_str();
 		std::string child_frame_id = rs.child_frame_id.c_str();
-		UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
-		UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
+		// UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
+		//UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
 
 		// If TransformStamped message is an ANCHOR transform 
 		if (full_frame_id.find("anchor") != std::string::npos)
@@ -562,8 +538,8 @@ void URobofleetBase::PublishTransformWithCovarianceStampedMsg(const FString& Top
 {
 	//Topic can be odometry or measurements. Comes from the BP_Robofleet_Pub
 	std::string topic = "augre_msgs/TransformWithCovarianceStamped";
-	std::string from = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string from = "multiagent_demo/gtsam/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "multiagent_demo/gtsam/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	EncodeRosMsg<TransformWithCovarianceStamped>(TFwithCovStamped, topic, from, to);
 }
 
@@ -614,15 +590,22 @@ void URobofleetBase::PublishPath(const FString& RobotName, const Path& PathMsg)
 	EncodeRosMsg<Path>(PathMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishTwistMsg(const FString& RobotName, const Twist& TwistMsg)
+void URobofleetBase::PublishTwistMsg(const FString& RobotName, const FString& TopicName, const Twist& TwistMsg)
 {
-	// Publish a path message to Robofleet
 	std::string topic = "geometry_msgs/Twist";
-	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/hololens/cmd_vel";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/hololens/cmd_vel";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	UE_LOG(LogTemp, Warning, TEXT("[PublishTwistMsg : ... %s"), *RobotName);
 	EncodeRosMsg<Twist>(TwistMsg, topic, from, to);
+}
 
+void URobofleetBase::PublishTwistStampedMsg(const FString& RobotName, const FString& TopicName, const TwistStamped& TwistStampedMsg)
+{
+	std::string topic = "geometry_msgs/TwistStamped";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	UE_LOG(LogTemp, Warning, TEXT("[PublishTwistStampedMsg : ... %s"), *RobotName);
+	EncodeRosMsg<TwistStamped>(TwistStampedMsg, topic, from, to);
 }
 
 FString URobofleetBase::GetName(const FString& RobotName)
@@ -718,12 +701,10 @@ TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (RobotImageMap.count(RobotNamestd) == 0)
 	{
-		UE_LOG(LogRobofleet, Warning, TEXT(" ================== // RobotImageMap count 0 //  ============"));
 		return TArray<uint8>();
 	}
 	else
 	{
-		UE_LOG(LogRobofleet, Warning, TEXT(" ================== // else //  ============"));
 		return 	TArray<uint8>(&RobotImageMap[RobotNamestd].data[0], RobotImageMap[RobotNamestd].data.size());
 	}
 	
@@ -809,11 +790,9 @@ TArray<uint8> URobofleetBase::GetDetectedImage(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (DetectedItemAugreMap.count(RobotNamestd) == 0) {
-		UE_LOG(LogRobofleet, Warning, TEXT(" ================== // GetDetectedImage count 0 //  ============"));
 		return TArray<uint8>();
 	}
 	else {
-		UE_LOG(LogRobofleet, Warning, TEXT(" ================== // GetDetectedImage count > 0 //  ============"));
 		UE_LOG(LogRobofleet, Warning, TEXT("size %d") , DetectedItemAugreMap[RobotNamestd].cmpr_image.data.size());
 		return 	TArray<uint8>(&DetectedItemAugreMap[RobotNamestd].cmpr_image.data[0], DetectedItemAugreMap[RobotNamestd].cmpr_image.data.size());
 	}	
@@ -856,6 +835,15 @@ void URobofleetBase::PublishStartUMRFMsg(StartUMRF& StartUMRFMsg)
 	std::string from = "/BroadcastStartUMRFgraph";
 	std::string to = "/BroadcastStartUMRFgraph";
 	EncodeRosMsg<StartUMRF>(StartUMRFMsg, topic, from, to);
+	UE_LOG(LogTemp, Warning, TEXT("Publishing UMRF - Broadcast"));
+}
+
+void URobofleetBase::PublishStopUMRFMsg(StopUMRF& StopUMRFMsg)
+{ // Publish a UMRF Message
+	std::string topic = "temoto_action_engine/BroadcastStopUMRGgrapgh";
+	std::string from = "/BroadcastStopUMRFgraph";
+	std::string to = "/BroadcastStopUMRFgraph";
+	EncodeRosMsg<StopUMRF>(StopUMRFMsg, topic, from, to);
 	UE_LOG(LogTemp, Warning, TEXT("Publishing UMRF - Broadcast"));
 }
 

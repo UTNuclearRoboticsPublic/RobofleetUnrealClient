@@ -260,7 +260,7 @@ struct FStopUMRF
 
 	//vector
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString targets;
+	TArray<FString> targets;
 
 };
 
@@ -327,4 +327,53 @@ struct FTwist
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FVector angular;
 
+};
+
+USTRUCT(BlueprintType)
+struct FTwistStamped
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTwist twist;
+
+};
+
+USTRUCT(BlueprintType)
+struct FScrew
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString action_name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString ee_name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString is_pure_translation;
+		
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FVector screw_axis;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FVector screw_origin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float screw_distance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float screw_pitch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float task_impedance_rotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float task_impedance_translation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float theta_dot;
 };

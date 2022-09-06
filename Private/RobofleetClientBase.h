@@ -211,11 +211,15 @@ public:
 
 	void PublishPath(const FString& RobotName, const Path& PathMsg);
 
-	void PublishTwistMsg(const FString& RobotName, const Twist& TwistMsg);
+	void PublishTwistMsg(const FString& RobotName, const FString& TopicName, const Twist& TwistMsg);
+
+	void PublishTwistStampedMsg(const FString& RobotName, const FString& TopicName, const TwistStamped& TwistStampedMsg);
 
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
 	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);
+	
+	void PublishStopUMRFMsg(StopUMRF& StopUMRFMsg);
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
