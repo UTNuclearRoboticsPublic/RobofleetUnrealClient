@@ -580,6 +580,15 @@ void URobofleetBase::PublishTwistMsg(const FString& RobotName, const FString& To
 	EncodeRosMsg<Twist>(TwistMsg, topic, from, to);
 }
 
+void URobofleetBase::PublishTwistStampedMsg(const FString& RobotName, const FString& TopicName, const TwistStamped& TwistStampedMsg)
+{
+	std::string topic = "geometry_msgs/TwistStamped";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	UE_LOG(LogTemp, Warning, TEXT("[PublishTwistStampedMsg : ... %s"), *RobotName);
+	EncodeRosMsg<TwistStamped>(TwistStampedMsg, topic, from, to);
+}
+
 FString URobofleetBase::GetName(const FString& RobotName)
 {
 	// Check if robot exists
@@ -776,6 +785,15 @@ void URobofleetBase::PublishStartUMRFMsg(StartUMRF& StartUMRFMsg)
 	std::string from = "/BroadcastStartUMRFgraph";
 	std::string to = "/BroadcastStartUMRFgraph";
 	EncodeRosMsg<StartUMRF>(StartUMRFMsg, topic, from, to);
+	UE_LOG(LogTemp, Warning, TEXT("Publishing UMRF - Broadcast"));
+}
+
+void URobofleetBase::PublishStopUMRFMsg(StopUMRF& StopUMRFMsg)
+{ // Publish a UMRF Message
+	std::string topic = "temoto_action_engine/BroadcastStopUMRGgrapgh";
+	std::string from = "/BroadcastStopUMRFgraph";
+	std::string to = "/BroadcastStopUMRFgraph";
+	EncodeRosMsg<StopUMRF>(StopUMRFMsg, topic, from, to);
 	UE_LOG(LogTemp, Warning, TEXT("Publishing UMRF - Broadcast"));
 }
 

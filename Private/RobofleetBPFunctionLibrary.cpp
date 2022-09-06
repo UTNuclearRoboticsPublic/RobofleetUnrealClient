@@ -455,7 +455,7 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 		{
 			PoseStamped poseTemp;
 
-			std::string asa_poses = std::string(TCHAR_TO_UTF8(*poses.header.frame_id));				
+			std::string asa_poses = std::string(TCHAR_TO_UTF8(*poses.header.frame_id));
 			std::replace(asa_poses.begin(), asa_poses.end(), '-', '_');
 			poseTemp.header.frame_id = "anchor_" + asa_poses;
 			poseTemp.header.stamp._nsec = poses.header.stamp._nsec;
@@ -490,6 +490,26 @@ void URobofleetBPFunctionLibrary::PublishTwistMsg(const FString& RobotName, cons
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishTwistStampedMsg(const FString& RobotName, const FString& TopicName, const FTwistStamped& TwistStampedMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		TwistStamped twistStpd;
+		
+		twistStpd.header.frame_id = std::string(TCHAR_TO_UTF8(*TwistStampedMsg.header.frame_id));
+		twistStpd.header.stamp._nsec = TwistStampedMsg.header.stamp._nsec;
+		twistStpd.header.stamp._sec = TwistStampedMsg.header.stamp._sec;
+		twistStpd.header.seq = TwistStampedMsg.header.seq;
+		twistStpd.twist.linear.x = TwistStampedMsg.twist.linear.X;
+		twistStpd.twist.linear.y = -TwistStampedMsg.twist.linear.Y;
+		twistStpd.twist.linear.z = TwistStampedMsg.twist.linear.Z;
+		twistStpd.twist.angular.x = TwistStampedMsg.twist.angular.X;
+		twistStpd.twist.angular.y = TwistStampedMsg.twist.angular.Y;
+		twistStpd.twist.angular.z = TwistStampedMsg.twist.angular.Z;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTwistStampedMsg(RobotName, TopicName, twistStpd);
+	}
+}
 
 // Publish TeMoto msgs
 void URobofleetBPFunctionLibrary::PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg)
@@ -525,6 +545,24 @@ void URobofleetBPFunctionLibrary::PublishStartUMRFMsg(const FStartUMRF& StartUMR
 		UE_LOG(LogTemp, Warning, TEXT("RobofleetClient No running"));
 	}
 	
+}
+
+void URobofleetBPFunctionLibrary::PublishStopUMRFMsg(const FStopUMRF& StopUMRFMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		StopUMRF StopUMRF;		
+		StopUMRF.umrf_graph_name = std::string(TCHAR_TO_UTF8(*StopUMRFMsg.umrf_graph_name));		
+		for (auto& Str : StopUMRFMsg.targets)
+		{
+			StopUMRF.targets.push_back(TCHAR_TO_UTF8(*Str));
+		}
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishStopUMRFMsg(StopUMRF);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RobofleetClient No running"));
+	}
 }
 
 FPath URobofleetBPFunctionLibrary::GetRobotPath(const FString& RobotName)
