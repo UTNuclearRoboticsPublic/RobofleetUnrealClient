@@ -61,8 +61,9 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
 	RegisterRobotSubscription("image_raw/compressed", "*");
-	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
+	
 	RegisterRobotSubscription("detected", "*");
+	RegisterRobotSubscription("TempScrewParameters", "*");
 
 	RegisterRobotSubscription("global_path", "*");
 	RegisterRobotSubscription("trail_path", "*");
@@ -70,6 +71,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 
 	RegisterRobotSubscription("agent_status", "*");
 	RegisterRobotSubscription("tf", "*");
+	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 
 	bIsInitilized = true;
 
@@ -191,7 +193,7 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("localization", "*");
 		RegisterRobotSubscription("image_raw/compressed", "*");
 		RegisterRobotSubscription("detected", "*");
-
+		RegisterRobotSubscription("TempScrewParameters", "*");
 		RegisterRobotSubscription("agent_status", "*");
 		RegisterRobotSubscription("tf", "*");
 
@@ -260,6 +262,13 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	else if (topic == "detected") {
 		DetectedItemAugreMap[RobotNamespace] = DecodeMsg<DetectedItem_augre>(Data);
 		OnDetectedItemReceived.Broadcast(RobotNamespace);
+	}
+
+	//Detected Item AugRe_msgs
+	else if (topic == "TempScrewParameters") {
+		ScrewParametersMap[RobotNamespace] = DecodeMsg<PoseStamped>(Data);
+		OnTempScrewParametersReceived.Broadcast(RobotNamespace);
+		UE_LOG(LogRobofleet, Warning, TEXT("BroadCasted!"));
 	}
 
 	else if (topic == "image_raw/compressed") {
@@ -331,6 +340,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		Tag = Tag.Append(topic);
 		OnPathReceived.Broadcast(Tag, path, ColorTwistPath[RobotNamespace]);
 	}
+
 }
 
 // Grab namespace from the TF Message
@@ -586,6 +596,15 @@ void URobofleetBase::PublishMoveBaseSimpleGoal(const FString& RobotName, const P
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
 
+void URobofleetBase::PublishHandPose(const FString& RobotName, const PoseStamped& PoseStampedMsg)
+{
+	// Publish a mo Message to Robofleet
+	std::string topic = "geometry_msgs/PoseStamped";
+	std::string from = "/HandPose";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/HandPose";
+	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
+}
+
 void URobofleetBase::PublishPath(const FString& RobotName, const Path& PathMsg)
 {
 	// Publish a path message to Robofleet
@@ -799,6 +818,37 @@ TArray<uint8> URobofleetBase::GetDetectedImage(const FString& RobotName)
 		return 	TArray<uint8>(&DetectedItemAugreMap[RobotNamestd].cmpr_image.data[0], DetectedItemAugreMap[RobotNamestd].cmpr_image.data.size());
 	}	
 }
+
+// TODO NEED TO UPDATE WITH NEW MESSAGE TYPE
+// /////////////////////////////////////////
+// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+FVector URobofleetBase::GetScrewAxisPoint(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	//if (RobotMap.count(RobotNamestd) == 0) return FVector(0, 0, 0);
+	return FVector(ScrewParametersMap[RobotNamestd].pose.position.x,
+		ScrewParametersMap[RobotNamestd].pose.position.y,
+		ScrewParametersMap[RobotNamestd].pose.position.z);
+}
+
+FVector URobofleetBase::GetScrewAxis(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	//if (RobotMap.count(RobotNamestd) == 0) return FVector(0, 0, 0);
+	return FVector(ScrewParametersMap[RobotNamestd].pose.orientation.x,
+		ScrewParametersMap[RobotNamestd].pose.orientation.y,
+		ScrewParametersMap[RobotNamestd].pose.orientation.z);
+}
+
+float URobofleetBase::GetScrewAxisPitch(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	//if (RobotMap.count(RobotNamestd) == 0) return float{ 0 };
+	return float(ScrewParametersMap[RobotNamestd].pose.orientation.w);
+}
+// /////////////////////////////////////////
+// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 void URobofleetBase::PublishStartUMRFMsg(StartUMRF& StartUMRFMsg)
 { // Publish a UMRF Message

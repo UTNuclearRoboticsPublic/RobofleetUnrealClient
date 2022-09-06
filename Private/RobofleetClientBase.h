@@ -41,6 +41,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName
 //OnDetectedItemRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, RobotName);
 
+//OnDetectedItemRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTempScrewParametersReceived, FString, RobotName);
+
 //OnRobotChangedLocation event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRobotLocationChanged, FString, RobotName, FString, OldSite, FString, NewSite);
 
@@ -80,6 +83,7 @@ private:
 	std::map<FString, DetectedItem> DetectedItemMap;		//TODO remove 
 	std::map<FString, FString> AnchorMap;
 	std::map<FString, DetectedItem_augre> DetectedItemAugreMap;
+	std::map<FString, PoseStamped> ScrewParametersMap;
 	std::map<FString, NavSatFix> NavSatFixMap;
 	std::map<FString, Pose> PoseMap;
 	std::map<FString, Path> RobotPath;
@@ -164,6 +168,12 @@ public:
 
 	TArray<uint8> GetDetectedImage(const FString& RobotName);
 
+	FVector GetScrewAxisPoint(const FString& RobotName);
+
+	FVector GetScrewAxis(const FString& RobotName);
+
+	float GetScrewAxisPitch(const FString& RobotName);
+
 	Path GetPath(const FString& RobotName);
 
 	FPath GetFPath(const FString& RobotName);
@@ -197,6 +207,8 @@ public:
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
+	void PublishHandPose(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+
 	void PublishPath(const FString& RobotName, const Path& PathMsg);
 
 	void PublishTwistMsg(const FString& RobotName, const Twist& TwistMsg);
@@ -219,6 +231,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedItemReceived OnDetectedItemReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnTempScrewParametersReceived OnTempScrewParametersReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotLocationChanged OnRobotLocationChanged;

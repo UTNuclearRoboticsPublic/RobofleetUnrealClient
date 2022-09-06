@@ -208,6 +208,34 @@ TArray<uint8> URobofleetBPFunctionLibrary::GetDetectedImage(const FString& Robot
 	return TArray<uint8>();
 }
 
+FVector URobofleetBPFunctionLibrary::GetScrewAxisPoint(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetScrewAxisPoint(RobotName);
+	}
+	return FVector(0, 0, 0);
+}
+
+FVector URobofleetBPFunctionLibrary::GetScrewAxis(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetScrewAxis(RobotName);
+	}
+	return FVector(0, 0, 0);
+}
+
+float URobofleetBPFunctionLibrary::GetScrewAxisPitch(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetScrewAxisPitch(RobotName);
+	}
+	return float{ 0 };
+}
+
+
 // Publish Messages to Robofleet
 // *TODO: These need to be rate limited somewhere in the client as there is the potential to overload the server
 void URobofleetBPFunctionLibrary::PublishStatusMsg(const FString& RobotName, const FRobotStatus& StatusMsg)
@@ -419,6 +447,29 @@ void URobofleetBPFunctionLibrary::PublishMoveBaseSimpleGoal(const FString& Robot
 		Goal.pose.orientation.w = PoseStampedMsg.Transform.GetRotation().W;
 
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishMoveBaseSimpleGoal(RobotName, Goal);
+	}
+}
+
+void URobofleetBPFunctionLibrary::PublishHandPose(const FString& RobotName, const FPoseStamped& PoseStampedMsg, FDateTime CurTimeStamp)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		PoseStamped Goal;
+		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
+		Goal.header.stamp._nsec = PoseStampedMsg.header.stamp._nsec;
+		Goal.header.stamp._sec = (int)CurTimeStamp.ToUnixTimestamp();
+		Goal.header.seq = PoseStampedMsg.header.seq;
+
+		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
+		Goal.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
+		Goal.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
+
+		Goal.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().X;
+		Goal.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Y;
+		Goal.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Z;
+		Goal.pose.orientation.w = PoseStampedMsg.Transform.GetRotation().W;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishHandPose(RobotName, Goal);
 	}
 }
 

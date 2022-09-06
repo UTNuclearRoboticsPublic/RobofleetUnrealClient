@@ -85,6 +85,15 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static TArray<uint8> GetDetectedImage(const FString& RobotName);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FVector GetScrewAxisPoint(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FVector GetScrewAxis(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static float GetScrewAxisPitch(const FString& RobotName);
+
 	// Publish Messages to Robofleet
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishStatusMsg(const FString& RobotName, const FRobotStatus& StatusMsg);
@@ -106,6 +115,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishHandPose(const FString& RobotName, const FPoseStamped& PoseStampedMsg, FDateTime CurTimeStamp);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishNavigationPath(const FString& RobotName, const FPath& PathMsg);
