@@ -41,7 +41,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName
 //OnDetectedItemRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, RobotName);
 
-//OnDetectedItemRecevied  event
+//OnScrewParametersReceived  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTempScrewParametersReceived, FString, RobotName);
 
 //OnRobotChangedLocation event

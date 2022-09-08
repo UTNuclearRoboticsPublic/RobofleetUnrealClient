@@ -824,7 +824,7 @@ float URobofleetBase::GetScrewAxisPitch(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	//if (RobotMap.count(RobotNamestd) == 0) return float{ 0 };
-	return float(ScrewParametersMap[RobotNamestd].pose.orientation.w);
+	return ScrewParametersMap[RobotNamestd].pose.orientation.w;
 }
 // /////////////////////////////////////////
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
