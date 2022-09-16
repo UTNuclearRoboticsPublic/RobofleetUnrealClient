@@ -4,6 +4,8 @@
 #include <math.h>
 #include <array>
 #include "Misc/Char.h"
+#include "IImageWrapperModule.h"
+#include "IImageWrapper.h"
 
 URobofleetBase::URobofleetBase()
 {
@@ -216,12 +218,13 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	//}
 
 	if (topic == "agent_status") {
-		AgentStatus rs = DecodeMsg<AgentStatus>(Data);
-		if (!AgentStatusMap[RobotNamespace].agent_type.empty() && AgentStatusMap[RobotNamespace].anchor_localization)
+		AgentStatus agent_status = DecodeMsg<AgentStatus>(Data);
+		FString AgentNameSpace = FString(agent_status.name.c_str());
+		if (!AgentStatusMap[AgentNameSpace].agent_type.empty() && AgentStatusMap[AgentNameSpace].anchor_localization)
 		{				
-			OnAgentStatusUpdate.Broadcast(RobotNamespace);			
+			OnAgentStatusUpdate.Broadcast(AgentNameSpace);
 		}
-		AgentStatusMap[RobotNamespace] = rs;
+		AgentStatusMap[AgentNameSpace] = agent_status;
 	}
 	
 	else if (topic == "tf") {		
@@ -323,7 +326,6 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 void URobofleetBase::DecodeTFMsg(const void* Data) {
 	
 	TFMessage tf_msg = DecodeMsg<TFMessage>(Data);
-	//TransformStamped rs = DecodeMsg<TransformStamped>(Data);
 
 	for (auto tf_msg_iter = tf_msg.transforms.begin();
 		tf_msg_iter != tf_msg.transforms.end();
@@ -334,7 +336,7 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 
 		std::string full_frame_id = rs.header.frame_id.c_str();
 		std::string child_frame_id = rs.child_frame_id.c_str();
-		// UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
+		//UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
 		//UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
 
 		// If TransformStamped message is an ANCHOR transform 
@@ -735,6 +737,16 @@ TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 	return RobotsAtSite;
 }
 
+TArray<FString> URobofleetBase::GetAllAgents()
+{
+	TArray<FString> ListOfAgents;
+	for (auto AgentName : RobotsSeen)
+	{
+		ListOfAgents.Add(AgentName);
+	}
+	return ListOfAgents;
+}
+
 FString URobofleetBase::GetDetectedName(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
@@ -796,6 +808,26 @@ TArray<uint8> URobofleetBase::GetDetectedImage(const FString& RobotName)
 		UE_LOG(LogRobofleet, Warning, TEXT("size %d") , DetectedItemAugreMap[RobotNamestd].cmpr_image.data.size());
 		return 	TArray<uint8>(&DetectedItemAugreMap[RobotNamestd].cmpr_image.data[0], DetectedItemAugreMap[RobotNamestd].cmpr_image.data.size());
 	}	
+}
+
+FVector URobofleetBase::GetDetectedImageSize(const FString& ObjectName)
+{
+	FString object_name = FString(TCHAR_TO_UTF8(*ObjectName));
+	if (DetectedItemAugreMap.count(object_name) == 0 || !(DetectedItemAugreMap[ObjectName].cmpr_image.data.size() >= 0.0)) {
+		return FVector();
+	}
+	else {
+		TArray<uint8> image = TArray<uint8>(&DetectedItemAugreMap[ObjectName].cmpr_image.data[0], DetectedItemAugreMap[ObjectName].cmpr_image.data.size());
+		IImageWrapperModule& imageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+		TSharedPtr<IImageWrapper> imageWrapper = imageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
+		imageWrapper->SetCompressed(image.GetData(), image.Num());
+		float height = imageWrapper->GetHeight();
+		float width = imageWrapper->GetWidth();
+		FVector size;
+		size.X = height;
+		size.Y = width;
+		return 	size;
+	}
 }
 
 // TODO NEED TO UPDATE WITH NEW MESSAGE TYPE

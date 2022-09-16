@@ -52,6 +52,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static TArray<FString> GetAllAgents();
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static bool IsRobotOk(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
@@ -84,6 +87,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static TArray<uint8> GetDetectedImage(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FVector GetDetectedImageSize(const FString& ObjectName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FVector GetScrewAxisPoint(const FString& RobotName);

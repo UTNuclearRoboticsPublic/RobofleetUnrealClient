@@ -156,6 +156,8 @@ public:
 
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
+	TArray<FString> GetAllAgents();
+
 	FString GetDetectedName(const FString& RobotName);
 
 	FString GetDetectedRepIDRef(const FString& RobotName);
@@ -167,6 +169,8 @@ public:
 	FVector GetDetectedPositionGlobal(const FString& RobotName);
 
 	TArray<uint8> GetDetectedImage(const FString& RobotName);
+
+	FVector GetDetectedImageSize(const FString& ObjectName);
 
 	FVector GetScrewAxisPoint(const FString& RobotName);
 
