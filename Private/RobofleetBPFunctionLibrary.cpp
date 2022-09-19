@@ -104,6 +104,15 @@ TArray<FString> URobofleetBPFunctionLibrary::GetAllRobotsAtSite(const FString& L
 	return TArray<FString>();
 }
 
+TArray<FString> URobofleetBPFunctionLibrary::GetAllAgents()
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAllAgents();
+	}
+	return TArray<FString>();
+}
+
 bool URobofleetBPFunctionLibrary::IsRobotOk(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -206,6 +215,18 @@ TArray<uint8> URobofleetBPFunctionLibrary::GetDetectedImage(const FString& Robot
 		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedImage(RobotName);
 	}
 	return TArray<uint8>();
+}
+
+FVector URobofleetBPFunctionLibrary::GetDetectedImageSize(const FString& ObjectName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedImageSize(ObjectName);
+	}
+	return FVector(0, 0, 0);
+	// FVector.X = height
+	// FVector.Y = width
+	// FVector.Z = Not used
 }
 
 FVector URobofleetBPFunctionLibrary::GetScrewAxisPoint(const FString& RobotName)
