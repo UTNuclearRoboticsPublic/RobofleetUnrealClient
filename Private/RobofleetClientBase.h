@@ -42,7 +42,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, RobotName);
 
 //OnScrewParametersReceived  event
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTempScrewParametersReceived, FString, RobotName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScrewParametersReceived, FString, RobotName);
 
 //OnRobotChangedLocation event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRobotLocationChanged, FString, RobotName, FString, OldSite, FString, NewSite);
@@ -237,7 +237,7 @@ public:
 	FOnDetectedItemReceived OnDetectedItemReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnTempScrewParametersReceived OnTempScrewParametersReceived;
+	FOnScrewParametersReceived OnScrewParametersReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnRobotLocationChanged OnRobotLocationChanged;

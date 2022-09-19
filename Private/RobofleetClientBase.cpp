@@ -63,7 +63,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotSubscription("image_raw/compressed", "*");
 	
 	RegisterRobotSubscription("detected", "*");
-	RegisterRobotSubscription("TempScrewParameters", "*");
+	RegisterRobotSubscription("ScrewParameters", "*");
 
 	RegisterRobotSubscription("global_path", "*");
 	RegisterRobotSubscription("trail_path", "*");
@@ -114,8 +114,8 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 
 	// Print Out
 	
-	UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace in: %s"), *RobotNamespace);
-	UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated in: %s"), *TopicIsolated);
+	//UE_LOG(LogRobofleet, Warning, TEXT("RobotNamespace in: %s"), *RobotNamespace);
+	//UE_LOG(LogRobofleet, Warning, TEXT("TopicIsolated in: %s"), *TopicIsolated);
 	
 	// *********************************************************************************
 
@@ -154,9 +154,6 @@ void URobofleetBase::PrintRobotsSeen() {
 		//UE_LOG(LogRobofleet, Warning, TEXT("Location: X: %f, Y: %f, Z: %f"), RobotMap[elem]->Location.x, RobotMap[elem]->Location.y, RobotMap[elem]->Location.z);
 		//UE_LOG(LogRobofleet, Warning, TEXT("Geo Location: Lat: %f, Long: %f, Alt: %f"), NavSatFixMap[elem].latitude, NavSatFixMap[elem].longitude, NavSatFixMap[elem].altitude);
 		//UE_LOG(LogRobofleet, Warning, TEXT("Detection Details: Name: %s, X: %f, Y: %f, Z: %f"), *FString(DetectedItemMap[elem].name.c_str()), DetectedItemMap[elem].x, DetectedItemMap[elem].y, DetectedItemMap[elem].z);
-
-
-	
 	}
 }
 
@@ -169,7 +166,7 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("localization", "*");
 		RegisterRobotSubscription("image_raw/compressed", "*");
 		RegisterRobotSubscription("detected", "*");
-		RegisterRobotSubscription("TempScrewParameters", "*");
+		RegisterRobotSubscription("ScrewParameters", "*");
 		RegisterRobotSubscription("agent_status", "*");
 		RegisterRobotSubscription("tf", "*");
 
@@ -241,10 +238,9 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 
 	//Detected Item AugRe_msgs
-	else if (topic == "TempScrewParameters") {
+	else if (topic == "ScrewParameters") {
 		ScrewParametersMap[RobotNamespace] = DecodeMsg<PoseStamped>(Data);
-		OnTempScrewParametersReceived.Broadcast(RobotNamespace);
-		UE_LOG(LogRobofleet, Warning, TEXT("BroadCasted!"));
+		OnScrewParametersReceived.Broadcast(RobotNamespace);
 	}
 
 	else if (topic == "image_raw/compressed") {
@@ -329,18 +325,22 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		tf_msg_iter != tf_msg.transforms.end();
 		tf_msg_iter++)
 	{
+		// init
 		TransformStamped rs = *tf_msg_iter;
 		FString TFRobotNamespace;
 
+		// save frames
 		std::string full_frame_id = rs.header.frame_id.c_str();
 		std::string child_frame_id = rs.child_frame_id.c_str();
+		
+		// debug
 		// UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
-		//UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
+		// UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
 
 		// If TransformStamped message is an ANCHOR transform 
 		if (full_frame_id.find("anchor") != std::string::npos)
 		{
-			//FString asa_id = FString(full_frame_id.substr(full_frame_id.find("_") + 1).c_str());
+			// grab asa id
 			std::string asa = full_frame_id.substr(full_frame_id.find("_") + 1).c_str();
 			std::replace(asa.begin(), asa.end(), '_', '-');
 			rs.header.frame_id = asa;
@@ -383,9 +383,11 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 						UTF8_TO_TCHAR(rs.header.frame_id.c_str()));
 				}
 
-				UE_LOG(LogRobofleet, Warning, TEXT("Location from rs: X: %f, Y: %f, Z: %f"), rs.transform.translation.x,
-					rs.transform.translation.y,
-					rs.transform.translation.z);
+				//UE_LOG(LogRobofleet, Warning, TEXT("Location from rs: X: %f, Y: %f, Z: %f"), rs.transform.translation.x,
+				//	rs.transform.translation.y,
+				//	rs.transform.translation.z);
+
+				// Save data to map
 				TransformStampedMap[TFRobotNamespace] = rs;
 
 				// Record the time that the robot was seen last
