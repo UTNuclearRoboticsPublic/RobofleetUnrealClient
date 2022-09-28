@@ -39,6 +39,33 @@ struct FHeader
 };
 
 USTRUCT(BlueprintType)
+struct FPoint
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float x;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float y;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float z;
+};
+
+USTRUCT(BlueprintType)
+struct FPose
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoint position;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FQuat orientation;
+};
+
+USTRUCT(BlueprintType)
 struct FRobotStatus
 {
 	GENERATED_BODY()
@@ -376,4 +403,57 @@ struct FScrew
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	float theta_dot;
+};
+
+
+USTRUCT(BlueprintType)
+struct FDetection
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoint position;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float confidence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int label;
+};
+
+USTRUCT(BlueprintType)
+struct FDetectionArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FDetection> detections;
+};
+
+
+USTRUCT(BlueprintType)
+struct FPerson
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPose pose;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int id;
+};
+
+USTRUCT(BlueprintType)
+struct FPersonArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FPerson> people;
 };

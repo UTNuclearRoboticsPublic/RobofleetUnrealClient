@@ -229,6 +229,26 @@ FVector URobofleetBPFunctionLibrary::GetDetectedImageSize(const FString& ObjectN
 	// FVector.Z = Not used
 }
 
+
+FString URobofleetBPFunctionLibrary::GetDetectedItemAsaId(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedItemAsaId(DetectedItemUid);
+	}
+	return TEXT("");
+}
+
+FVector URobofleetBPFunctionLibrary::GetDetectedItemPosition(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedItemPosition(DetectedItemUid);
+	}
+	return FVector(0, 0, 0);
+}
+
+
 FVector URobofleetBPFunctionLibrary::GetScrewAxisPoint(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -256,6 +276,37 @@ float URobofleetBPFunctionLibrary::GetScrewAxisPitch(const FString& RobotName)
 	return float{ 0 };
 }
 
+void URobofleetBPFunctionLibrary::GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetNonLegClusters(RobotName, NonLegClusterArray);
+	}
+}
+
+void URobofleetBPFunctionLibrary::GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedLegClusters(RobotName, DetectedLegClusterArray);
+	}
+}
+
+void URobofleetBPFunctionLibrary::GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetPeopleDetected(RobotName, PeopleDetectedArray);
+	}
+}
+
+void URobofleetBPFunctionLibrary::GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetPeopleDetected(RobotName, PeopleTrackedArray);
+	}
+}
 
 // Publish Messages to Robofleet
 // *TODO: These need to be rate limited somewhere in the client as there is the potential to overload the server

@@ -73,6 +73,12 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 
 	RegisterRobotSubscription("agent_status", "*");
 	RegisterRobotSubscription("tf", "*");
+
+	RegisterRobotSubscription("non_leg_clusters", "*");
+	RegisterRobotSubscription("detected_leg_clusters", "*");
+	RegisterRobotSubscription("people_detected", "*");
+	RegisterRobotSubscription("people_tracked", "*");
+
 	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 
 	bIsInitilized = true;
@@ -218,16 +224,16 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		AgentStatus agent_status = DecodeMsg<AgentStatus>(Data);
 		FString AgentNameSpace = FString(agent_status.name.c_str());
 		if (!AgentStatusMap[AgentNameSpace].agent_type.empty() && AgentStatusMap[AgentNameSpace].anchor_localization)
-		{				
+		{
 			OnAgentStatusUpdate.Broadcast(AgentNameSpace);
 		}
 		AgentStatusMap[AgentNameSpace] = agent_status;
 	}
-	
-	else if (topic == "tf") {		
-		UE_LOG(LogRobofleet, Warning, TEXT("In TF Decode Message, Something is wrong should not be here"));		
+
+	else if (topic == "tf") {
+		UE_LOG(LogRobofleet, Warning, TEXT("In TF Decode Message, Something is wrong should not be here"));
 	}
-	
+
 	else if (topic == "localization") {
 		RobotLocation rl = DecodeMsg<RobotLocation>(Data);
 		//UE_LOG(LogTemp,Warning,TEXT("x: %f, y:%f"), rl.x, rl.y)
@@ -235,9 +241,16 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 
 	//Detected Item AugRe_msgs
-	else if (topic == "detected") {
-		DetectedItemAugreMap[RobotNamespace] = DecodeMsg<DetectedItem_augre>(Data);
-		OnDetectedItemReceived.Broadcast(RobotNamespace);
+	else if (topic == "detected")
+	{
+		// We do not care about the robot that sent detected items. Detected items are identified and saved by their UID.
+		DetectedItem_augre decoded_detected_item = DecodeMsg<DetectedItem_augre>(Data);
+		FString DetectedItemUid = FString(decoded_detected_item.name.c_str());
+		if (!DetectedItemAugreMap[DetectedItemUid].name.empty() && !DetectedItemAugreMap[DetectedItemUid].asa_id.empty())
+		{
+			OnDetectedItemReceived.Broadcast(DetectedItemUid);
+		}
+		DetectedItemAugreMap[DetectedItemUid] = decoded_detected_item;
 	}
 
 	//Detected Item AugRe_msgs
@@ -316,6 +329,22 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		OnPathReceived.Broadcast(Tag, path, ColorTwistPath[RobotNamespace]);
 	}
 
+	//Leg Tracker
+	else if (topic == "non_leg_clusters") {
+	LegTrackingMap[RobotNamespace]->DetectedLegClusters = DecodeMsg<DetectionArray>(Data);
+	}
+
+	else if (topic == "detected_leg_clusters") {
+	LegTrackingMap[RobotNamespace]->NonLegClusters = DecodeMsg<DetectionArray>(Data);
+	}
+
+	else if (topic == "people_detected") {
+	LegTrackingMap[RobotNamespace]->PeopleDetected = DecodeMsg<PersonArray>(Data);
+	}
+
+	else if (topic == "people_tracked") {
+	LegTrackingMap[RobotNamespace]->PeopleTracker = DecodeMsg<PersonArray>(Data);
+	}
 }
 
 // Grab namespace from the TF Message
@@ -513,6 +542,11 @@ void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotN
 		msg, topic, subs, subs);
 }
 
+
+/*
+* HoloLens Publish Methods
+*/
+
 void URobofleetBase::PublishStatusMsg(FString RobotName, RobotStatus& StatusMsg)
 { // Publish a Status Message to Robofleet
 	std::string topic = "amrl_msgs/RobofleetStatus";
@@ -612,11 +646,19 @@ void URobofleetBase::PublishTwistStampedMsg(const FString& RobotName, const FStr
 	EncodeRosMsg<TwistStamped>(TwistStampedMsg, topic, from, to);
 }
 
+/*
+* Agent Status Messages
+*/
+
 FString URobofleetBase::GetName(const FString& RobotName)
 {
 	// Check if robot exists
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
+	if (AgentStatusMap[RobotNamestd].name.empty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[NOT SPAWNING %s] %s is publishing a TF message, but no agent status message. Ensure tf.child_frame_id namespace matches agent_status.name field in agent status message."), *RobotNamestd, *RobotNamestd);
+		return "";
+	}
 	return FString(AgentStatusMap[RobotNamestd].name.c_str());
 }
 
@@ -659,7 +701,10 @@ FString URobofleetBase::GetControlStatus(const FString& RobotName)
 	return FString(AgentStatusMap[RobotNamestd].control_status.c_str());
 }
 
-// TODO: DELETE DEPRECATED
+/*
+* AMRL Message Methods - NOT USED
+* Left for compatability and completeness
+*/
 FString URobofleetBase::GetRobotStatus(const FString& RobotName)
 {
 	// Check if robot exists
@@ -675,20 +720,24 @@ bool URobofleetBase::IsRobotOk(const FString& RobotName)
 	return RobotMap[RobotNamestd]->Status.is_ok;
 }
 
-FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
-{
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (TransformStampedMap.count(RobotNamestd) == 0) return "Anchor unavailable";
-	std::string origin_anchor =TransformStampedMap[RobotNamestd].header.frame_id.c_str();
-	return FString(origin_anchor.c_str());	
-}
-
 //FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
 //{
 //	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 //	if (RobotMap.count(RobotNamestd) == 0) return "Robot unavailable";
 //	return FString(UTF8_TO_TCHAR(RobotMap[RobotNamestd]->Status.location.c_str()));
 //}
+
+/*
+* Transform Message Methods
+*/
+
+FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (TransformStampedMap.count(RobotNamestd) == 0) return "Anchor unavailable";
+	std::string origin_anchor = TransformStampedMap[RobotNamestd].header.frame_id.c_str();
+	return FString(origin_anchor.c_str());
+}
 
 FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 {
@@ -699,6 +748,10 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 					TransformStampedMap[RobotNamestd].transform.translation.y,
 					TransformStampedMap[RobotNamestd].transform.translation.z);
 }
+
+/*
+* Compressed Image Message Methods
+*/
 
 TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 {
@@ -723,6 +776,10 @@ bool URobofleetBase::IsRobotImageCompressed(const FString& RobotName)
 	}
 	else return false;
 }
+
+/*
+* Global Message Methods
+*/
 
 TArray<FString> URobofleetBase::GetAllRobotsAtSite(const FString& Location)
 {
@@ -749,6 +806,10 @@ TArray<FString> URobofleetBase::GetAllAgents()
 	return ListOfAgents;
 }
 
+/*
+* Detected Item Message Methods
+*/
+
 FString URobofleetBase::GetDetectedName(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
@@ -757,9 +818,7 @@ FString URobofleetBase::GetDetectedName(const FString& RobotName)
 	//return FString(DetectedItemMap[RobotNamestd].name.c_str());
 }
 
-
 //TODO: REMOVE.... rep_id FIELD DOESNT EXIST ANYMORE
-
 FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
@@ -832,6 +891,41 @@ FVector URobofleetBase::GetDetectedImageSize(const FString& ObjectName)
 	}
 }
 
+
+FString URobofleetBase::GetDetectedItemAsaId(const FString& DetectedItemUid)
+{
+	FString DetectedItemUidStd = FString(TCHAR_TO_UTF8(*DetectedItemUid));
+	if (DetectedItemAugreMap.count(DetectedItemUidStd) == 0) return "No Items Found!";
+
+	// Fix ASA ID if needed
+	std::string asa_id = DetectedItemAugreMap[DetectedItemUidStd].asa_id.c_str();
+	std::replace(asa_id.begin(), asa_id.end(), '_', '-');
+
+	return  FString(asa_id.c_str());
+}
+
+FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
+{
+	FString DetectedItemUidStd = FString(TCHAR_TO_UTF8(*DetectedItemUid));
+	if (DetectedItemAugreMap.count(DetectedItemUidStd) == 0) return FVector(-1, -1, -1);
+	return FVector(DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.x,
+		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.y,
+		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.z);
+	//return FVector(DetectedItemMap[RobotNamestd].x, DetectedItemMap[RobotNamestd].y, DetectedItemMap[RobotNamestd].z);
+}
+
+/*
+* Leg Tracker Detections
+*/
+
+
+
+
+
+/*
+* AR Screw Axis Message Methods
+*/
+
 // TODO NEED TO UPDATE WITH NEW MESSAGE TYPE
 // /////////////////////////////////////////
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -863,6 +957,9 @@ float URobofleetBase::GetScrewAxisPitch(const FString& RobotName)
 // /////////////////////////////////////////
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+/*
+* TEMOTO Message Methods
+*/
 void URobofleetBase::PublishStartUMRFMsg(StartUMRF& StartUMRFMsg)
 { // Publish a UMRF Message
 	std::string topic = "temoto_action_engine/BroadcastStartUMRGgrapgh";
@@ -935,3 +1032,114 @@ FPath URobofleetBase::GetFPath(const FString& RobotName)
 	}
 	return Fp;
 }
+
+void URobofleetBase::GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (LegTrackingMap.count(RobotNamestd) == 0) 
+	{
+		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetNonLegClusters(): No key exists in LegTrackingMap"));
+	}
+	else 
+	{
+		// Fill Header Frame Id
+		NonLegClusterArray.header.frame_id = FString(LegTrackingMap[RobotName]->NonLegClusters.header.frame_id.c_str());
+
+		// Fill Detection Vector
+		FDetection temp{};
+		for (auto& this_detection : LegTrackingMap[RobotName]->NonLegClusters.detections)
+		{
+			temp.position.x = this_detection.position.x;
+			temp.position.y = this_detection.position.y;
+			temp.position.z = this_detection.position.z;
+			temp.confidence = this_detection.confidence;
+			temp.label = this_detection.label;
+			NonLegClusterArray.detections.Add(temp);
+		}
+	}
+}
+
+void URobofleetBase::GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (LegTrackingMap.count(RobotNamestd) == 0)
+	{
+		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetNonLegClusters(): No key exists in LegTrackingMap"));
+	}
+	else
+	{
+		// Fill Header Frame Id
+		DetectedLegClusterArray.header.frame_id = FString(LegTrackingMap[RobotName]->DetectedLegClusters.header.frame_id.c_str());
+
+		// Fill Detection Vector
+		FDetection temp{};
+		for (auto& this_detection : LegTrackingMap[RobotName]->DetectedLegClusters.detections)
+		{
+			temp.position.x = this_detection.position.x;
+			temp.position.y = this_detection.position.y;
+			temp.position.z = this_detection.position.z;
+			temp.confidence = this_detection.confidence;
+			temp.label = this_detection.label;
+			DetectedLegClusterArray.detections.Add(temp);
+		}
+	}
+}
+
+void URobofleetBase::GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (LegTrackingMap.count(RobotNamestd) == 0)
+	{
+		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetNonLegClusters(): No key exists in LegTrackingMap"));
+	}
+	else
+	{
+		// Fill Header Frame Id
+		PeopleDetectedArray.header.frame_id = FString(LegTrackingMap[RobotName]->PeopleDetected.header.frame_id.c_str());
+
+		// Fill Detection Vector
+		FPerson temp{};
+		for (auto& this_detection : LegTrackingMap[RobotName]->PeopleDetected.people)
+		{
+			temp.pose.position.x = this_detection.pose.position.x;
+			temp.pose.position.y = this_detection.pose.position.y;
+			temp.pose.position.z = this_detection.pose.position.z;
+			temp.pose.orientation.X = this_detection.pose.orientation.x;
+			temp.pose.orientation.Y = this_detection.pose.orientation.y;
+			temp.pose.orientation.Z = this_detection.pose.orientation.z;
+			temp.pose.orientation.W = this_detection.pose.orientation.w;
+			temp.id = this_detection.id;
+			PeopleDetectedArray.people.Add(temp);
+		}
+	}
+}
+
+void URobofleetBase::GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (LegTrackingMap.count(RobotNamestd) == 0)
+	{
+		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetNonLegClusters(): No key exists in LegTrackingMap"));
+	}
+	else
+	{
+		// Fill Header Frame Id
+		PeopleTrackedArray.header.frame_id = FString(LegTrackingMap[RobotName]->PeopleTracker.header.frame_id.c_str());
+
+		// Fill Detection Vector
+		FPerson temp{};
+		for (auto& this_detection : LegTrackingMap[RobotName]->PeopleTracker.people)
+		{
+			temp.pose.position.x = this_detection.pose.position.x;
+			temp.pose.position.y = this_detection.pose.position.y;
+			temp.pose.position.z = this_detection.pose.position.z;
+			temp.pose.orientation.X = this_detection.pose.orientation.x;
+			temp.pose.orientation.Y = this_detection.pose.orientation.y;
+			temp.pose.orientation.Z = this_detection.pose.orientation.z;
+			temp.pose.orientation.W = this_detection.pose.orientation.w;
+			temp.id = this_detection.id;
+			PeopleTrackedArray.people.Add(temp);
+		}
+	}
+}
+

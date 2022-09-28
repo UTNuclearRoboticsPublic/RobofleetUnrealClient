@@ -23,6 +23,13 @@ struct RobotData {
 	bool IsAlive;
 };
 
+struct LegTrackingData {
+	DetectionArray DetectedLegClusters;
+	DetectionArray NonLegClusters;
+	PersonArray PeopleDetected;
+	PersonArray PeopleTracker;
+};
+
 //Define Log Category and Verbosity
 DECLARE_LOG_CATEGORY_EXTERN(LogRobofleet, Log, All);
 
@@ -39,7 +46,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
 
 //OnDetectedItemRecevied  event
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, RobotName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, DetectedItemUid);
 
 //OnScrewParametersReceived  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScrewParametersReceived, FString, RobotName);
@@ -92,6 +99,7 @@ private:
 	std::map<FString, FLinearColor> ColorTrailPath;
 	std::set<FString> RobotsSeen = {};
 	std::set<FString> AnchorGTSAM = {};
+	std::map<FString, TSharedPtr<LegTrackingData>> LegTrackingMap;
 
 	NavSatFix WorldGeoOrigin;
 	bool bIsWorldGeoOriginSet;
@@ -172,6 +180,10 @@ public:
 
 	FVector GetDetectedImageSize(const FString& ObjectName);
 
+	FString GetDetectedItemAsaId(const FString& DetectedItemUid);
+
+	FVector GetDetectedItemPosition(const FString& DetectedItemUid);
+
 	FVector GetScrewAxisPoint(const FString& RobotName);
 
 	FVector GetScrewAxis(const FString& RobotName);
@@ -187,7 +199,15 @@ public:
 	bool IsRobotOk(const FString& RobotName);
 
 	void PrintRobotsSeen();
+
+	void GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray);
 	
+	void GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray);
+
+	void GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray);
+
+	void GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray);
+
 	UFUNCTION()
 	void RefreshRobotList();
 

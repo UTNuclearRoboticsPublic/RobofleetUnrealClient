@@ -92,13 +92,32 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static FVector GetDetectedImageSize(const FString& ObjectName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString GetDetectedItemAsaId(const FString& DetectedItemUid);
+	
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+		static FVector GetDetectedItemPosition(const FString& DetectedItemUid);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet|Screw Axis")
 	static FVector GetScrewAxisPoint(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	UFUNCTION(BlueprintCallable, Category = "Robofleet|Screw Axis")
 	static FVector GetScrewAxis(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	UFUNCTION(BlueprintCallable, Category = "Robofleet|Screw Axis")
 	static float GetScrewAxisPitch(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
+	static void GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
+	static void GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
+	static void GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
+	static void GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray);
+
 
 	// Publish Messages to Robofleet
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
@@ -137,6 +156,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg);
 
 	static void PublishStopUMRFMsg(const FStopUMRF& StopUMRFMsg);
+
+	
+	
 
 	// need to add detected image
 
