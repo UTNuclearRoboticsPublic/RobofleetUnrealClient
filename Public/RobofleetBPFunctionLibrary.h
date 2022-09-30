@@ -23,9 +23,12 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString GetRobotStatus(const FString& RobotName);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void ResetAllAgentsSeen();
+
 	// Augre_msgs
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static FString GetName(const FString& RobotName);	
+	static FString GetUidFromAgentStatus(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString GetAgentDisplayName(const FString& RobotName);
@@ -107,16 +110,16 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static float GetScrewAxisPitch(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
-	static void GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray);
+	static void GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray_);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
-	static void GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray);
+	static void GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray_);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
-	static void GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray);
+	static void GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray_);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
-	static void GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray);
+	static void GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray_);
 
 
 	// Publish Messages to Robofleet

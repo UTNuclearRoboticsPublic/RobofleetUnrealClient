@@ -139,7 +139,7 @@ public:
 
 	// ***********************************************************
 	// augre_msgs/agent_status getters
-	FString GetName(const FString& RobotName);
+	FString GetUidFromAgentStatus(const FString& RobotName);
 
 	FString GetAgentDisplayName(const FString& RobotName);
 
@@ -200,18 +200,20 @@ public:
 
 	void PrintRobotsSeen();
 
-	void GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray);
+	void GetNonLegClusters(const FString& RobotName, DetectionArray& NonLegClusterArray);
 	
-	void GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray);
+	void GetDetectedLegClusters(const FString& RobotName, DetectionArray& DetectedLegClusterArray);
 
-	void GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray);
+	void GetPeopleDetected(const FString& RobotName, PersonArray& PeopleDetectedArray);
 
-	void GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray);
+	void GetPeopleTracked(const FString& RobotName, PersonArray& PeopleTrackedArray);
 
 	UFUNCTION()
 	void RefreshRobotList();
 
 	void PruneInactiveRobots();
+
+	void ResetAllAgentsSeen();
 	
 	void RegisterRobotStatusSubscription();
 

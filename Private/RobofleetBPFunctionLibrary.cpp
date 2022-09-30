@@ -20,14 +20,22 @@ FString URobofleetBPFunctionLibrary::GetRobotStatus(const FString& RobotName)
 	return TEXT("");
 }
 
-
-//augre_msgs
-
-FString URobofleetBPFunctionLibrary::GetName(const FString& RobotName)
+void URobofleetBPFunctionLibrary::ResetAllAgentsSeen()
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetName(RobotName);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->ResetAllAgentsSeen();
+	}
+
+}
+
+//augre_msgs
+
+FString URobofleetBPFunctionLibrary::GetUidFromAgentStatus(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetUidFromAgentStatus(RobotName);
 	}
 	return TEXT("");
 }
@@ -276,35 +284,107 @@ float URobofleetBPFunctionLibrary::GetScrewAxisPitch(const FString& RobotName)
 	return float{ 0 };
 }
 
-void URobofleetBPFunctionLibrary::GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray)
+void URobofleetBPFunctionLibrary::GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray_)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
+		// Get Array
+		DetectionArray NonLegClusterArray{};
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetNonLegClusters(RobotName, NonLegClusterArray);
+
+		// Fill Header
+		NonLegClusterArray_.header.frame_id = FString(NonLegClusterArray.header.frame_id.c_str());
+
+		// Fill Vector
+		FDetection temp{};
+		for (auto& this_detection : NonLegClusterArray.detections)
+		{
+			temp.position.x = this_detection.position.x;
+			temp.position.y = this_detection.position.y;
+			temp.position.z = this_detection.position.z;
+			temp.confidence = this_detection.confidence;
+			temp.label = this_detection.label;
+			NonLegClusterArray_.detections.Add(temp);
+		}
 	}
 }
 
-void URobofleetBPFunctionLibrary::GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray)
+void URobofleetBPFunctionLibrary::GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray_)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
+		// Get Array
+		DetectionArray DetectedLegClusterArray{};
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedLegClusters(RobotName, DetectedLegClusterArray);
+
+		// Fill Header
+		DetectedLegClusterArray_.header.frame_id = FString(DetectedLegClusterArray.header.frame_id.c_str());
+
+		// Fill Vector
+		FDetection temp{};
+		for (auto& this_detection : DetectedLegClusterArray.detections)
+		{
+			temp.position.x = this_detection.position.x;
+			temp.position.y = this_detection.position.y;
+			temp.position.z = this_detection.position.z;
+			temp.confidence = this_detection.confidence;
+			temp.label = this_detection.label;
+			DetectedLegClusterArray_.detections.Add(temp);
+		}
 	}
 }
 
-void URobofleetBPFunctionLibrary::GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray)
+void URobofleetBPFunctionLibrary::GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray_)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
+		// Get Array
+		PersonArray PeopleDetectedArray{};
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetPeopleDetected(RobotName, PeopleDetectedArray);
+
+		// Fill Frame Id
+		PeopleDetectedArray_.header.frame_id = FString(PeopleDetectedArray.header.frame_id.c_str());
+
+		// Fill Vector
+		FPerson temp{};
+		for (auto& this_detection : PeopleDetectedArray.people)
+		{
+			temp.pose.position.x = this_detection.pose.position.x;
+			temp.pose.position.y = this_detection.pose.position.y;
+			temp.pose.position.z = this_detection.pose.position.z;
+			temp.pose.orientation.X = this_detection.pose.orientation.x;
+			temp.pose.orientation.Y = this_detection.pose.orientation.y;
+			temp.pose.orientation.Z = this_detection.pose.orientation.z;
+			temp.pose.orientation.W = this_detection.pose.orientation.w;
+			temp.id = this_detection.id;
+			PeopleDetectedArray_.people.Add(temp);
+		}
 	}
 }
 
-void URobofleetBPFunctionLibrary::GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray)
+void URobofleetBPFunctionLibrary::GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray_)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
+		PersonArray PeopleTrackedArray;
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetPeopleDetected(RobotName, PeopleTrackedArray);
+
+		PeopleTrackedArray_.header.frame_id = FString(PeopleTrackedArray.header.frame_id.c_str());
+
+		// Fill Detection Vector
+		FPerson temp{};
+		for (auto& this_detection : PeopleTrackedArray.people)
+		{
+			temp.pose.position.x = this_detection.pose.position.x;
+			temp.pose.position.y = this_detection.pose.position.y;
+			temp.pose.position.z = this_detection.pose.position.z;
+			temp.pose.orientation.X = this_detection.pose.orientation.x;
+			temp.pose.orientation.Y = this_detection.pose.orientation.y;
+			temp.pose.orientation.Z = this_detection.pose.orientation.z;
+			temp.pose.orientation.W = this_detection.pose.orientation.w;
+			temp.id = this_detection.id;
+			PeopleTrackedArray_.people.Add(temp);
+		}
 	}
 }
 
@@ -504,7 +584,6 @@ void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, 
 		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
 		Goal.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
 		Goal.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
-
 		Goal.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().Euler().X;
 		Goal.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Euler().Y;
 		Goal.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Euler().Z;

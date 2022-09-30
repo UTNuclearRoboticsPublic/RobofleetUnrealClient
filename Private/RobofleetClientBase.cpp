@@ -108,6 +108,10 @@ void URobofleetBase::PruneInactiveRobots() {
 	RobotsSeenTime = newMap;
 }
 
+void URobofleetBase::ResetAllAgentsSeen() {
+	RobotsSeen.erase(RobotsSeen.begin(),RobotsSeen.end());
+}
+
 
 void URobofleetBase::WebsocketDataCB(const void* Data)
 {	
@@ -650,7 +654,7 @@ void URobofleetBase::PublishTwistStampedMsg(const FString& RobotName, const FStr
 * Agent Status Messages
 */
 
-FString URobofleetBase::GetName(const FString& RobotName)
+FString URobofleetBase::GetUidFromAgentStatus(const FString& RobotName)
 {
 	// Check if robot exists
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
@@ -915,14 +919,6 @@ FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
 }
 
 /*
-* Leg Tracker Detections
-*/
-
-
-
-
-
-/*
 * AR Screw Axis Message Methods
 */
 
@@ -1033,113 +1029,47 @@ FPath URobofleetBase::GetFPath(const FString& RobotName)
 	return Fp;
 }
 
-void URobofleetBase::GetNonLegClusters(const FString& RobotName, FDetectionArray& NonLegClusterArray)
+
+/*
+* Leg Tracker Detections
+*/
+void URobofleetBase::GetNonLegClusters(const FString& RobotName, DetectionArray& NonLegClusterArray)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (LegTrackingMap.count(RobotNamestd) == 0) 
-	{
+	if (LegTrackingMap.count(RobotNamestd) == 0) {
 		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetNonLegClusters(): No key exists in LegTrackingMap"));
-	}
-	else 
-	{
-		// Fill Header Frame Id
-		NonLegClusterArray.header.frame_id = FString(LegTrackingMap[RobotName]->NonLegClusters.header.frame_id.c_str());
-
-		// Fill Detection Vector
-		FDetection temp{};
-		for (auto& this_detection : LegTrackingMap[RobotName]->NonLegClusters.detections)
-		{
-			temp.position.x = this_detection.position.x;
-			temp.position.y = this_detection.position.y;
-			temp.position.z = this_detection.position.z;
-			temp.confidence = this_detection.confidence;
-			temp.label = this_detection.label;
-			NonLegClusterArray.detections.Add(temp);
-		}
+	} else {
+		NonLegClusterArray = LegTrackingMap[RobotName]->NonLegClusters;
 	}
 }
 
-void URobofleetBase::GetDetectedLegClusters(const FString& RobotName, FDetectionArray& DetectedLegClusterArray)
+void URobofleetBase::GetDetectedLegClusters(const FString& RobotName, DetectionArray& DetectedLegClusterArray)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (LegTrackingMap.count(RobotNamestd) == 0)
-	{
-		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetNonLegClusters(): No key exists in LegTrackingMap"));
-	}
-	else
-	{
-		// Fill Header Frame Id
-		DetectedLegClusterArray.header.frame_id = FString(LegTrackingMap[RobotName]->DetectedLegClusters.header.frame_id.c_str());
-
-		// Fill Detection Vector
-		FDetection temp{};
-		for (auto& this_detection : LegTrackingMap[RobotName]->DetectedLegClusters.detections)
-		{
-			temp.position.x = this_detection.position.x;
-			temp.position.y = this_detection.position.y;
-			temp.position.z = this_detection.position.z;
-			temp.confidence = this_detection.confidence;
-			temp.label = this_detection.label;
-			DetectedLegClusterArray.detections.Add(temp);
-		}
+	if (LegTrackingMap.count(RobotNamestd) == 0){
+		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetDetectedLegClusters(): No key exists in LegTrackingMap"));
+	} else {
+		DetectedLegClusterArray = LegTrackingMap[RobotName]->DetectedLegClusters;
 	}
 }
 
-void URobofleetBase::GetPeopleDetected(const FString& RobotName, FPersonArray& PeopleDetectedArray)
+void URobofleetBase::GetPeopleDetected(const FString& RobotName, PersonArray& PeopleDetectedArray)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (LegTrackingMap.count(RobotNamestd) == 0)
-	{
-		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetNonLegClusters(): No key exists in LegTrackingMap"));
-	}
-	else
-	{
-		// Fill Header Frame Id
-		PeopleDetectedArray.header.frame_id = FString(LegTrackingMap[RobotName]->PeopleDetected.header.frame_id.c_str());
-
-		// Fill Detection Vector
-		FPerson temp{};
-		for (auto& this_detection : LegTrackingMap[RobotName]->PeopleDetected.people)
-		{
-			temp.pose.position.x = this_detection.pose.position.x;
-			temp.pose.position.y = this_detection.pose.position.y;
-			temp.pose.position.z = this_detection.pose.position.z;
-			temp.pose.orientation.X = this_detection.pose.orientation.x;
-			temp.pose.orientation.Y = this_detection.pose.orientation.y;
-			temp.pose.orientation.Z = this_detection.pose.orientation.z;
-			temp.pose.orientation.W = this_detection.pose.orientation.w;
-			temp.id = this_detection.id;
-			PeopleDetectedArray.people.Add(temp);
-		}
+	if (LegTrackingMap.count(RobotNamestd) == 0){
+		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetPeopleDetected(): No key exists in LegTrackingMap"));
+	} else {
+		PeopleDetectedArray = LegTrackingMap[RobotName]->PeopleDetected;
 	}
 }
 
-void URobofleetBase::GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray)
+void URobofleetBase::GetPeopleTracked(const FString& RobotName, PersonArray& PeopleTrackedArray)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (LegTrackingMap.count(RobotNamestd) == 0)
-	{
-		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetNonLegClusters(): No key exists in LegTrackingMap"));
-	}
-	else
-	{
-		// Fill Header Frame Id
-		PeopleTrackedArray.header.frame_id = FString(LegTrackingMap[RobotName]->PeopleTracker.header.frame_id.c_str());
-
-		// Fill Detection Vector
-		FPerson temp{};
-		for (auto& this_detection : LegTrackingMap[RobotName]->PeopleTracker.people)
-		{
-			temp.pose.position.x = this_detection.pose.position.x;
-			temp.pose.position.y = this_detection.pose.position.y;
-			temp.pose.position.z = this_detection.pose.position.z;
-			temp.pose.orientation.X = this_detection.pose.orientation.x;
-			temp.pose.orientation.Y = this_detection.pose.orientation.y;
-			temp.pose.orientation.Z = this_detection.pose.orientation.z;
-			temp.pose.orientation.W = this_detection.pose.orientation.w;
-			temp.id = this_detection.id;
-			PeopleTrackedArray.people.Add(temp);
-		}
+	if (LegTrackingMap.count(RobotNamestd) == 0){
+		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetPeopleTracked(): No key exists in LegTrackingMap"));
+	} else {
+		PeopleTrackedArray = LegTrackingMap[RobotName]->PeopleTracker;
 	}
 }
 
