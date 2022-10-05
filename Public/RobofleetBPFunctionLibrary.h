@@ -76,17 +76,17 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static FString GetDetectedName(const FString& RobotName);
 
 	//TODO: REMOVE REP ID
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static FString GetDetectedRepIDRef(const FString& RobotName);
+	//UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	//static FString GetDetectedRepIDRef(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static FString GetDetectedAnchorIDRef(const FString& RobotName);
+	//UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	//static FString GetDetectedAnchorIDRef(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FVector GetDetectedPositionRef(const FString& RobotName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static FVector GetDetectedPositionGlobal(const FString& RobotName);
+	//UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	//static FVector GetDetectedPositionGlobal(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static TArray<uint8> GetDetectedImage(const FString& RobotName);
@@ -94,8 +94,8 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FVector GetDetectedImageSize(const FString& ObjectName);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static FString GetDetectedItemAsaId(const FString& DetectedItemUid);
+	//UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	//static FString GetDetectedItemAsaId(const FString& DetectedItemUid);
 	
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 		static FVector GetDetectedItemPosition(const FString& DetectedItemUid);

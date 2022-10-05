@@ -180,23 +180,23 @@ FString URobofleetBPFunctionLibrary::GetDetectedName(const FString& RobotName)
 
 
 // TODO: REMOVE REP ID
-FString URobofleetBPFunctionLibrary::GetDetectedRepIDRef(const FString& RobotName)
-{
-	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedRepIDRef(RobotName);
-	}
-	return TEXT("");
-}
+//FString URobofleetBPFunctionLibrary::GetDetectedRepIDRef(const FString& RobotName)
+//{
+//	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+//	{
+//		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedRepIDRef(RobotName);
+//	}
+//	return TEXT("");
+//}
 
-FString URobofleetBPFunctionLibrary::GetDetectedAnchorIDRef(const FString& RobotName)
-{
-	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedAnchorIDRef(RobotName);
-	}
-	return TEXT("");
-}
+//FString URobofleetBPFunctionLibrary::GetDetectedAnchorIDRef(const FString& RobotName)
+//{
+//	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+//	{
+//		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedAnchorIDRef(RobotName);
+//	}
+//	return TEXT("");
+//}
 
 FVector URobofleetBPFunctionLibrary::GetDetectedPositionRef(const FString& RobotName)
 {
@@ -207,14 +207,14 @@ FVector URobofleetBPFunctionLibrary::GetDetectedPositionRef(const FString& Robot
 	return FVector(0, 0, 0);
 }
 
-FVector URobofleetBPFunctionLibrary::GetDetectedPositionGlobal(const FString& RobotName)
-{
-	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedPositionGlobal(RobotName);
-	}
-	return FVector(0, 0, 0);
-}
+//FVector URobofleetBPFunctionLibrary::GetDetectedPositionGlobal(const FString& RobotName)
+//{
+//	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+//	{
+//		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedPositionGlobal(RobotName);
+//	}
+//	return FVector(0, 0, 0);
+//}
 
 TArray<uint8> URobofleetBPFunctionLibrary::GetDetectedImage(const FString& RobotName)
 {
@@ -238,14 +238,14 @@ FVector URobofleetBPFunctionLibrary::GetDetectedImageSize(const FString& ObjectN
 }
 
 
-FString URobofleetBPFunctionLibrary::GetDetectedItemAsaId(const FString& DetectedItemUid)
-{
-	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedItemAsaId(DetectedItemUid);
-	}
-	return TEXT("");
-}
+//FString URobofleetBPFunctionLibrary::GetDetectedItemAsaId(const FString& DetectedItemUid)
+//{
+//	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+//	{
+//		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedItemAsaId(DetectedItemUid);
+//	}
+//	return TEXT("");
+//}
 
 FVector URobofleetBPFunctionLibrary::GetDetectedItemPosition(const FString& DetectedItemUid)
 {
@@ -557,12 +557,11 @@ void URobofleetBPFunctionLibrary::PublishAgentStatusMsg(const FString& RobotName
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
 		AgentStatus agent_status;
-		agent_status.name = std::string(TCHAR_TO_UTF8(*StatusMsg.name));
-		agent_status.display_name = std::string(TCHAR_TO_UTF8(*StatusMsg.display_name));
+		agent_status.uid = std::string(TCHAR_TO_UTF8(*StatusMsg.uid));
+		agent_status.callsign = std::string(TCHAR_TO_UTF8(*StatusMsg.callsign));
 		agent_status.agent_type = std::string(TCHAR_TO_UTF8(*StatusMsg.agent_type));
 		agent_status.battery = StatusMsg.battery;
-		agent_status.owner = std::string(TCHAR_TO_UTF8(*StatusMsg.owner));
-		agent_status.anchor_localization = StatusMsg.anchor_localization;
+		agent_status.commander = std::string(TCHAR_TO_UTF8(*StatusMsg.commander));
 		agent_status.control_status = std::string(TCHAR_TO_UTF8(*StatusMsg.control_status));
 
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishAgentStatusMsg(RobotName, agent_status);

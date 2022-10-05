@@ -154,7 +154,7 @@ void URobofleetBase::PrintRobotsSeen() {
 	for (auto elem : RobotsSeen) {
 		UE_LOG(LogRobofleet, Warning, TEXT("---------------"));
 		UE_LOG(LogRobofleet, Warning, TEXT("Robot Name: %s"), *FString(elem));
-		UE_LOG(LogRobofleet, Warning, TEXT("Agent Status: %s"), *FString(AgentStatusMap[elem].display_name.c_str()));
+		UE_LOG(LogRobofleet, Warning, TEXT("Agent Status: %s"), *FString(AgentStatusMap[elem].callsign.c_str()));
 		UE_LOG(LogRobofleet, Warning, TEXT("Location: X: %f, Y: %f, Z: %f"), TransformStampedMap[elem].transform.translation.x, 
 																			 TransformStampedMap[elem].transform.translation.y, 
 																			 TransformStampedMap[elem].transform.translation.z);
@@ -226,8 +226,8 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 
 	if (topic == "agent_status") {
 		AgentStatus agent_status = DecodeMsg<AgentStatus>(Data);
-		FString AgentNameSpace = FString(agent_status.name.c_str());
-		if (!AgentStatusMap[AgentNameSpace].agent_type.empty() && AgentStatusMap[AgentNameSpace].anchor_localization)
+		FString AgentNameSpace = FString(agent_status.uid.c_str());
+		if (!AgentStatusMap[AgentNameSpace].agent_type.empty())
 		{
 			OnAgentStatusUpdate.Broadcast(AgentNameSpace);
 		}
@@ -249,8 +249,8 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	{
 		// We do not care about the robot that sent detected items. Detected items are identified and saved by their UID.
 		DetectedItem_augre decoded_detected_item = DecodeMsg<DetectedItem_augre>(Data);
-		FString DetectedItemUid = FString(decoded_detected_item.name.c_str());
-		if (!DetectedItemAugreMap[DetectedItemUid].name.empty() && !DetectedItemAugreMap[DetectedItemUid].asa_id.empty())
+		FString DetectedItemUid = FString(decoded_detected_item.uid.c_str());
+		if (!DetectedItemAugreMap[DetectedItemUid].uid.empty())
 		{
 			OnDetectedItemReceived.Broadcast(DetectedItemUid);
 		}
@@ -658,12 +658,12 @@ FString URobofleetBase::GetUidFromAgentStatus(const FString& RobotName)
 {
 	// Check if robot exists
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (AgentStatusMap[RobotNamestd].name.empty())
+	if (AgentStatusMap[RobotNamestd].uid.empty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[NOT SPAWNING %s] %s is publishing a TF message, but no agent status message. Ensure tf.child_frame_id namespace matches agent_status.name field in agent status message."), *RobotNamestd, *RobotNamestd);
 		return "";
 	}
-	return FString(AgentStatusMap[RobotNamestd].name.c_str());
+	return FString(AgentStatusMap[RobotNamestd].uid.c_str());
 }
 
 FString URobofleetBase::GetAgentDisplayName(const FString& RobotName)
@@ -671,7 +671,7 @@ FString URobofleetBase::GetAgentDisplayName(const FString& RobotName)
 	// Check if robot exists
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(AgentStatusMap[RobotNamestd].display_name.c_str());
+	return FString(AgentStatusMap[RobotNamestd].callsign.c_str());
 }
 
 FString URobofleetBase::GetAgentType(const FString& RobotName)
@@ -694,7 +694,7 @@ FString URobofleetBase::GetOwner(const FString& RobotName)
 	// Check if robot exists
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(AgentStatusMap[RobotNamestd].owner.c_str());
+	return FString(AgentStatusMap[RobotNamestd].commander.c_str());
 }
 
 FString URobofleetBase::GetControlStatus(const FString& RobotName)
@@ -818,50 +818,50 @@ FString URobofleetBase::GetDetectedName(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(DetectedItemAugreMap[RobotNamestd].name.c_str());
+	return FString(DetectedItemAugreMap[RobotNamestd].uid.c_str());
 	//return FString(DetectedItemMap[RobotNamestd].name.c_str());
 }
 
 //TODO: REMOVE.... rep_id FIELD DOESNT EXIST ANYMORE
-FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
-{
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(DetectedItemAugreMap[RobotNamestd].asa_id.c_str());
-	//return FString(DetectedItemMap[RobotNamestd].repID.c_str()); // Currently used to pass URL
-}
+//FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
+//{
+//	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+//	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
+//	return FString(DetectedItemAugreMap[RobotNamestd].asa_id.c_str());
+//	//return FString(DetectedItemMap[RobotNamestd].repID.c_str()); // Currently used to pass URL
+//}
 
-FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
-{
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-
-	std::string asa_id = DetectedItemAugreMap[RobotNamestd].asa_id.c_str();
-	std::replace(asa_id.begin(), asa_id.end(), '_', '-');
-
-	return FString(asa_id.c_str());
-	//return FString(DetectedItemMap[RobotNamestd].anchorID.c_str());
-}
+//FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
+//{
+//	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+//	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
+//
+//	std::string asa_id = DetectedItemAugreMap[RobotNamestd].asa_id.c_str();
+//	std::replace(asa_id.begin(), asa_id.end(), '_', '-');
+//
+//	return FString(asa_id.c_str());
+//	//return FString(DetectedItemMap[RobotNamestd].anchorID.c_str());
+//}
 
 FVector URobofleetBase::GetDetectedPositionRef(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (AgentStatusMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1);
+	if (DetectedItemAugreMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1);
 	return FVector(	DetectedItemAugreMap[RobotNamestd].pose.pose.position.x,
 					DetectedItemAugreMap[RobotNamestd].pose.pose.position.y,
 					DetectedItemAugreMap[RobotNamestd].pose.pose.position.z);
 	//return FVector(DetectedItemMap[RobotNamestd].x, DetectedItemMap[RobotNamestd].y, DetectedItemMap[RobotNamestd].z);
 }
 
-FVector URobofleetBase::GetDetectedPositionGlobal(const FString& RobotName)
-{
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1, -1, -1);
-	return FVector(	DetectedItemAugreMap[RobotNamestd].geopose.pose.position.latitude,
-					DetectedItemAugreMap[RobotNamestd].geopose.pose.position.longitude,
-					DetectedItemAugreMap[RobotNamestd].geopose.pose.position.altitude);
-	//return FVector(DetectedItemMap[RobotNamestd].lat, DetectedItemMap[RobotNamestd].lon, DetectedItemMap[RobotNamestd].elv);
-}
+//FVector URobofleetBase::GetDetectedPositionGlobal(const FString& RobotName)
+//{
+//	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+//	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1, -1, -1);
+//	return FVector(	DetectedItemAugreMap[RobotNamestd].geopose.pose.position.latitude,
+//					DetectedItemAugreMap[RobotNamestd].geopose.pose.position.longitude,
+//					DetectedItemAugreMap[RobotNamestd].geopose.pose.position.altitude);
+//	//return FVector(DetectedItemMap[RobotNamestd].lat, DetectedItemMap[RobotNamestd].lon, DetectedItemMap[RobotNamestd].elv);
+//}
 
 TArray<uint8> URobofleetBase::GetDetectedImage(const FString& RobotName)
 {
@@ -896,17 +896,17 @@ FVector URobofleetBase::GetDetectedImageSize(const FString& ObjectName)
 }
 
 
-FString URobofleetBase::GetDetectedItemAsaId(const FString& DetectedItemUid)
-{
-	FString DetectedItemUidStd = FString(TCHAR_TO_UTF8(*DetectedItemUid));
-	if (DetectedItemAugreMap.count(DetectedItemUidStd) == 0) return "No Items Found!";
-
-	// Fix ASA ID if needed
-	std::string asa_id = DetectedItemAugreMap[DetectedItemUidStd].asa_id.c_str();
-	std::replace(asa_id.begin(), asa_id.end(), '_', '-');
-
-	return  FString(asa_id.c_str());
-}
+//FString URobofleetBase::GetDetectedItemAsaId(const FString& DetectedItemUid)
+//{
+//	FString DetectedItemUidStd = FString(TCHAR_TO_UTF8(*DetectedItemUid));
+//	if (DetectedItemAugreMap.count(DetectedItemUidStd) == 0) return "No Items Found!";
+//
+//	// Fix ASA ID if needed
+//	std::string asa_id = DetectedItemAugreMap[DetectedItemUidStd].asa_id.c_str();
+//	std::replace(asa_id.begin(), asa_id.end(), '_', '-');
+//
+//	return  FString(asa_id.c_str());
+//}
 
 FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
 {

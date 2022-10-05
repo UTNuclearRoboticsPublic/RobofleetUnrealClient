@@ -110,22 +110,19 @@ struct FAgentStatus
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString name;
+	FString uid;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FString agent_type;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString display_name;
+	FString callsign;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	float battery;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString owner;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	bool anchor_localization;
+	FString commander;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FString control_status;

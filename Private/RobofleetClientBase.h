@@ -168,19 +168,19 @@ public:
 
 	FString GetDetectedName(const FString& RobotName);
 
-	FString GetDetectedRepIDRef(const FString& RobotName);
+	//FString GetDetectedRepIDRef(const FString& RobotName);
 
-	FString GetDetectedAnchorIDRef(const FString& RobotName);
+	//FString GetDetectedAnchorIDRef(const FString& RobotName);
 
 	FVector GetDetectedPositionRef(const FString& RobotName);
 
-	FVector GetDetectedPositionGlobal(const FString& RobotName);
+	//FVector GetDetectedPositionGlobal(const FString& RobotName);
 
 	TArray<uint8> GetDetectedImage(const FString& RobotName);
 
 	FVector GetDetectedImageSize(const FString& ObjectName);
 
-	FString GetDetectedItemAsaId(const FString& DetectedItemUid);
+	//FString GetDetectedItemAsaId(const FString& DetectedItemUid);
 
 	FVector GetDetectedItemPosition(const FString& DetectedItemUid);
 
