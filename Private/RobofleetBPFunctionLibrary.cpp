@@ -103,6 +103,15 @@ FVector URobofleetBPFunctionLibrary::GetRobotPosition(const FString& RobotName)
 	return FVector(0,0,0);
 }
 
+FTransform URobofleetBPFunctionLibrary::GetFrameTransform(const FString& NodeName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetFrameTransform(NodeName);
+	}
+	return FTransform();
+}
+
 TArray<FString> URobofleetBPFunctionLibrary::GetAllRobotsAtSite(const FString& Location)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -119,6 +128,39 @@ TArray<FString> URobofleetBPFunctionLibrary::GetAllAgents()
 		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAllAgents();
 	}
 	return TArray<FString>();
+}
+
+TArray<FString> URobofleetBPFunctionLibrary::GetAllFrames()
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAllFrames();
+	}
+	return TArray<FString>();
+}
+
+TArray<FString> URobofleetBPFunctionLibrary::GetChildrenFrameId(const FString& NodeName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetChildrenFrameId(NodeName);
+	}
+	return TArray<FString>();
+}
+
+FTransform URobofleetBPFunctionLibrary::lookupTransform(const FString& target_frame, const FString& source_frame)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FTransform temp1 = FRobofleetUnrealClientModule::Get()->RobofleetClient->GetFrameWorldTransform(target_frame);
+		FTransform temp2 = FRobofleetUnrealClientModule::Get()->RobofleetClient->GetFrameWorldTransform(source_frame);
+		temp1.Inverse();
+		FTransform lookuptransform = FTransform();
+		lookuptransform.SetTranslation(temp1.Rotator().GetInverse().RotateVector(temp2.GetTranslation() - temp1.GetTranslation()));
+		lookuptransform.SetRotation(FQuat(temp1.Rotator().GetInverse()) * FQuat(temp2.Rotator()));		
+		return lookuptransform;		
+	}
+	return FTransform();
 }
 
 bool URobofleetBPFunctionLibrary::IsRobotOk(const FString& RobotName)
@@ -709,6 +751,35 @@ void URobofleetBPFunctionLibrary::PublishTwistStampedMsg(const FString& RobotNam
 		twistStpd.twist.angular.z = TwistStampedMsg.twist.angular.Z;
 
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTwistStampedMsg(RobotName, TopicName, twistStpd);
+	}
+}
+
+void URobofleetBPFunctionLibrary::PublishTFMessageMsg(const FTFMessage& TFMessageMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		TFMessage tf;
+
+		for (auto& transforms : TFMessageMsg.transforms)
+		{
+			TransformStamped tf_stamped;
+
+			tf_stamped.header.frame_id = std::string(TCHAR_TO_UTF8(*transforms.header.frame_id));
+			tf_stamped.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
+			tf_stamped.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
+			tf_stamped.header.seq = transforms.header.seq;
+			tf_stamped.child_frame_id = std::string(TCHAR_TO_UTF8(*transforms.child_frame_id));
+			tf_stamped.transform.translation.x = transforms.Transform.GetTranslation().X;
+			tf_stamped.transform.translation.y = transforms.Transform.GetTranslation().Y;
+			tf_stamped.transform.translation.z = transforms.Transform.GetTranslation().Z;
+			tf_stamped.transform.rotation.x = transforms.Transform.GetRotation().X;
+			tf_stamped.transform.rotation.y = transforms.Transform.GetRotation().Y;
+			tf_stamped.transform.rotation.z = transforms.Transform.GetRotation().Z;
+			tf_stamped.transform.rotation.w = transforms.Transform.GetRotation().W;
+
+			tf.transforms.push_back(tf_stamped);
+		}
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTFMessage(tf);
 	}
 }
 

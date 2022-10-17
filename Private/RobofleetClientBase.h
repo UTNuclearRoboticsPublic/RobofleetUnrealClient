@@ -23,6 +23,13 @@ struct RobotData {
 	bool IsAlive;
 };
 
+struct FrameInfo {
+	TransformStamped TransformStamped;	// Filled with the relative transforms from tfMessage
+	FTransform WorldTransform;			// Transform of actor(tf) in worldFrame
+	int64 age;							// time.now - last_update
+	bool visible;						// Toggle on off each partivular frame... Not implemented yet
+};
+
 struct LegTrackingData {
 	DetectionArray DetectedLegClusters;
 	DetectionArray NonLegClusters;
@@ -85,6 +92,7 @@ private:
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, AgentStatus> AgentStatusMap;
 	std::map<FString, TransformStamped> TransformStampedMap;
+	std::map<FString, TSharedPtr<FrameInfo>> FrameInfoMap;
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, DetectedItem> DetectedItemMap;		//TODO remove 
@@ -158,6 +166,14 @@ public:
 
 	FVector GetRobotPosition(const FString& RobotName);
 
+	FTransform GetFrameTransform(const FString& NodeName);
+
+	void SetFrameWorldTransform(const FString& NodeName, const FTransform& ActorWorldTransform);
+
+	FTransform GetFrameWorldTransform(const FString& NodeName);
+
+	int GetAgeTransform(const FString& NodeName);
+
 	TArray<uint8> GetRobotImage(const FString& RobotName);
 
 	bool IsRobotImageCompressed(const FString& RobotName);
@@ -165,6 +181,8 @@ public:
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
 	TArray<FString> GetAllAgents();
+
+	TArray<FString> GetAllFrames();
 
 	FString GetDetectedName(const FString& RobotName);
 
@@ -179,6 +197,8 @@ public:
 	TArray<uint8> GetDetectedImage(const FString& RobotName);
 
 	FVector GetDetectedImageSize(const FString& ObjectName);
+
+	TArray<FString> GetChildrenFrameId(const FString& NodeName);
 
 	//FString GetDetectedItemAsaId(const FString& DetectedItemUid);
 
@@ -213,6 +233,8 @@ public:
 
 	void PruneInactiveRobots();
 
+	void updateTFFrames();
+
 	void ResetAllAgentsSeen();
 	
 	void RegisterRobotStatusSubscription();
@@ -240,6 +262,8 @@ public:
 	void PublishTwistMsg(const FString& RobotName, const FString& TopicName, const Twist& TwistMsg);
 
 	void PublishTwistStampedMsg(const FString& RobotName, const FString& TopicName, const TwistStamped& TwistStampedMsg);
+
+	void PublishTFMessage(const TFMessage& TFMessageMsg);
 
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 

@@ -112,6 +112,21 @@ void URobofleetBase::ResetAllAgentsSeen() {
 	RobotsSeen.erase(RobotsSeen.begin(),RobotsSeen.end());
 }
 
+void URobofleetBase::updateTFFrames()
+{
+	int CutoffTime = 10;
+
+	for (auto& it : FrameInfoMap)
+	{
+		FrameInfoMap[it.first]->age = FDateTime::Now().ToUnixTimestamp() - FrameInfoMap[it.first]->TransformStamped.header.stamp._sec;
+		if (FrameInfoMap[it.first]->age > CutoffTime)
+		{
+			//TODO  clean the tf_tree multimap
+			UE_LOG(LogRobofleet, Warning, TEXT("Erase from the TF %s"), *it.first);
+			//FrameInfoMap.erase(it.first);
+		}
+	}
+}
 
 void URobofleetBase::WebsocketDataCB(const void* Data)
 {	
@@ -159,13 +174,7 @@ void URobofleetBase::PrintRobotsSeen() {
 																			 TransformStampedMap[elem].transform.translation.y, 
 																			 TransformStampedMap[elem].transform.translation.z);
 
-		// DEPRECIATED
-		//UE_LOG(LogRobofleet, Warning, TEXT("Status: %s"), *FString(RobotMap[elem]->Status.status.c_str()));
-		//UE_LOG(LogRobofleet, Warning, TEXT("Location String: %s"), *FString(RobotMap[elem]->Status.location.c_str()));
-		//UE_LOG(LogRobofleet, Warning, TEXT("Battery Level: %f"), RobotMap[elem]->Status.battery_level);
-		//UE_LOG(LogRobofleet, Warning, TEXT("Location: X: %f, Y: %f, Z: %f"), RobotMap[elem]->Location.x, RobotMap[elem]->Location.y, RobotMap[elem]->Location.z);
-		//UE_LOG(LogRobofleet, Warning, TEXT("Geo Location: Lat: %f, Long: %f, Alt: %f"), NavSatFixMap[elem].latitude, NavSatFixMap[elem].longitude, NavSatFixMap[elem].altitude);
-		//UE_LOG(LogRobofleet, Warning, TEXT("Detection Details: Name: %s, X: %f, Y: %f, Z: %f"), *FString(DetectedItemMap[elem].name.c_str()), DetectedItemMap[elem].x, DetectedItemMap[elem].y, DetectedItemMap[elem].z);
+		
 	}
 }
 
@@ -177,7 +186,7 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
 		RegisterRobotSubscription("image_raw/compressed", "*");
-		RegisterRobotSubscription("detected", "*");
+		RegisterRobotSubscription("detection", "*");
 		RegisterRobotSubscription("ScrewParameters", "*");
 		RegisterRobotSubscription("agent_status", "*");
 		RegisterRobotSubscription("tf", "*");
@@ -189,6 +198,7 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("twist_path", "*");
 
 		//PruneInactiveRobots();
+		// updateTFFrames();
 	}
 }
 
@@ -245,7 +255,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 
 	//Detected Item AugRe_msgs
-	else if (topic == "detected")
+	else if (topic == "detection")
 	{
 		// We do not care about the robot that sent detected items. Detected items are identified and saved by their UID.
 		DetectedItem_augre decoded_detected_item = DecodeMsg<DetectedItem_augre>(Data);
@@ -257,7 +267,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		DetectedItemAugreMap[DetectedItemUid] = decoded_detected_item;
 	}
 
-	//Detected Item AugRe_msgs
+	//ScrewParam Item AugRe_msgs
 	else if (topic == "ScrewParameters") {
 		ScrewParametersMap[RobotNamespace] = DecodeMsg<PoseStamped>(Data);
 		OnScrewParametersReceived.Broadcast(RobotNamespace);
@@ -351,6 +361,79 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	}
 }
 
+
+/////// TF TREE ////////////
+
+struct Node
+{
+	std::string name = {};
+	std::string parent = {};
+	std::vector<Node> children = {};
+};
+
+std::unordered_multimap<std::string, std::string> tf_tree;
+
+Node makeTree(const std::unordered_multimap<std::string, std::string>& map, const std::string& nodeName)
+{
+	Node node{ nodeName };
+	auto rng = map.equal_range(nodeName);
+	for (auto it = rng.first; it != rng.second; ++it)
+	{
+		node.children.push_back(makeTree(map, it->second));
+	}
+	return node;
+}
+
+void printTree(const Node& n, unsigned lvl = 0)
+{
+	int level = lvl * 2;
+	UE_LOG(LogTemp, Warning, TEXT("%*c %s\n"), lvl * 2, '>', *FString(n.name.c_str()));
+	for (auto child : n.children)
+	{
+		printTree(child, lvl + 1);
+	}
+}
+
+TArray<FString> URobofleetBase::GetChildrenFrameId(const FString& NodeName)
+{
+	TArray<FString> children;
+	auto rng = tf_tree.equal_range(std::string(TCHAR_TO_UTF8(*NodeName)));
+	for (auto it = rng.first; it != rng.second; ++it)
+	{
+		children.Add(FString(it->second.c_str()));
+	}
+	return children;
+}
+
+std::string GetTFRoot()
+{
+	std::vector<std::string> parent_frames = {};
+	std::vector<std::string> children_frames = {};
+	std::vector<std::string> root = {};
+
+	for (auto tf_tree_it = tf_tree.begin(); tf_tree_it != tf_tree.end(); tf_tree_it++)
+	{
+		parent_frames.push_back(tf_tree_it->first);
+		children_frames.push_back(tf_tree_it->second);
+	}
+	int n = sizeof(parent_frames) / sizeof(parent_frames[0]);
+	std::sort(parent_frames.begin(), parent_frames.end());
+	parent_frames.erase(std::unique(parent_frames.begin(), parent_frames.end()), parent_frames.end());
+	std::sort(children_frames.begin(), children_frames.end());
+	children_frames.erase(std::unique(children_frames.begin(), children_frames.end()), children_frames.end());
+
+	std::set_difference(parent_frames.begin(), parent_frames.end(), children_frames.begin(), children_frames.end(), std::inserter(root, root.end()));
+	UE_LOG(LogRobofleet, Warning, TEXT("Root TF Tree Size: %d"), root.size());
+
+	for (int i = 0; i < root.size(); i++)
+	{
+		UE_LOG(LogRobofleet, Warning, TEXT("%s"), *FString(root[i].c_str()));
+	}
+	return root[0];
+}
+
+////////////////////////////
+
 // Grab namespace from the TF Message
 void URobofleetBase::DecodeTFMsg(const void* Data) {
 	
@@ -363,14 +446,75 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		// init
 		TransformStamped rs = *tf_msg_iter;
 		FString TFRobotNamespace;
+		bool error = false;
 
 		// save frames
 		std::string full_frame_id = rs.header.frame_id.c_str();
 		std::string child_frame_id = rs.child_frame_id.c_str();
 		
+		if (child_frame_id == full_frame_id)
+		{
+			UE_LOG(LogRobofleet, Warning, TEXT("Ignoring transform with frame_id and child_frame_id: %s because they are the same"), *FString(child_frame_id.c_str()));
+			error = true;
+		}
+
+		if (child_frame_id == "/")	// Empty frame_id will be map to "/"
+		{
+			UE_LOG(LogRobofleet, Warning, TEXT("Ignoring transform with frame_id %s because child_frame_id not set"), *FString(full_frame_id.c_str()));
+			error = true;
+		}
+
+		if (full_frame_id == "/")	//Empty parent id will be map to "/"
+		{
+			UE_LOG(LogRobofleet, Warning, TEXT("Ignoring transform with child_frame_id %s because frame_id not set"), *FString(child_frame_id.c_str()));
+			error = true;
+		}
+
+		if (std::isnan(rs.transform.translation.x) || std::isnan(rs.transform.translation.y) || std::isnan(rs.transform.translation.z) ||
+			std::isnan(rs.transform.rotation.x) || std::isnan(rs.transform.rotation.y) || std::isnan(rs.transform.rotation.z) || std::isnan(rs.transform.rotation.w))
+		{
+			UE_LOG(LogRobofleet, Warning, TEXT("Ignoring transform for child_frame_id %s from frame_id %s because a nan value in the transform "), *FString(child_frame_id.c_str()), *FString(full_frame_id.c_str()));
+			error = true;
+		}
+		// TODO --- Do something when error (break maybe)
+		if (error)
+		{
+			break;
+		}
+		
+		//tf_tree.find(full_frame_id)
+		auto it = tf_tree.begin();
+		while (it != tf_tree.end()) {
+			if (it->second == child_frame_id)
+				break;
+			it++;
+		}
+
+		if (it == tf_tree.end())
+		{
+			tf_tree.insert({ {full_frame_id, child_frame_id} });
+		}
+		//if node its already in the tree, update parent
+		else
+		{
+			tf_tree.erase(it);
+			tf_tree.insert({ {full_frame_id, child_frame_id} });
+		}
+
+		if (!FrameInfoMap[FString(child_frame_id.c_str())].IsValid())
+		{
+			FrameInfoMap[FString(child_frame_id.c_str())] = MakeShared<FrameInfo>();
+		}
+		FrameInfoMap[FString(child_frame_id.c_str())]->TransformStamped = rs;
+		//update header timestamp with local time to avoid erros
+		FrameInfoMap[FString(child_frame_id.c_str())]->TransformStamped.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
+
 		// debug
 		// UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
 		// UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
+		// UE_LOG(LogRobofleet, Warning, TEXT("Transform : x %f y %f z %f "), rs.transform.translation.x, rs.transform.translation.y, rs.transform.translation.z);
+		// UE_LOG(LogRobofleet, Warning, TEXT("TF Tree Size: %d"), tf_tree.size());
+		// UE_LOG(LogRobofleet, Warning, TEXT("FrameInfoMap: %d"), FrameInfoMap.size());
 
 		// If TransformStamped message is an ANCHOR transform 
 		if (full_frame_id.find("anchor") != std::string::npos)
@@ -388,9 +532,16 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 				UE_LOG(LogRobofleet, Warning, TEXT("Broadcast OnNewAnchorSeen Anchor: %s"), *asa_id);
 				OnNewAnchorSeen.Broadcast(asa_id);
 			}
+		}
 
-			// If tf correspond to an agent and it's localized wrt the anchor 
-			if (child_frame_id.find("base_link") != std::string::npos)
+		// TODO we need to refactor this logic... for now "base_link" is the string to define the tf corresponds to a robot/agent"
+		if (child_frame_id.find("base_link") != std::string::npos)
+		{
+			// grab just "base_link" frames (without extra characters) 
+			std::string base_link_str = child_frame_id.substr(child_frame_id.find("/")+1).c_str();
+			UE_LOG(LogTemp, Warning, TEXT("agent_namespace  %s size: %d"), *FString(base_link_str.c_str()), base_link_str.length());
+
+			if (base_link_str.length() == 9)
 			{
 				//Get the agent's name 
 				TFRobotNamespace = FString(child_frame_id.substr(0, child_frame_id.find("/")).c_str());
@@ -400,36 +551,20 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 				{
 					RobotsSeen.insert(TFRobotNamespace);
 					UE_LOG(LogTemp, Warning, TEXT("Broadcast OnNewRobotSeen  %s"), *TFRobotNamespace);
-					TransformStampedMap[TFRobotNamespace] = rs;
 					OnNewRobotSeen.Broadcast(TFRobotNamespace);
 				}
 
-				// Robot location changed
-				std::string OldLocation = TransformStampedMap[TFRobotNamespace].header.frame_id;
-
-				if (OldLocation != rs.header.frame_id)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Robot location changed  %s"), *TFRobotNamespace);
-					UE_LOG(LogTemp, Warning, TEXT("OldLocation %s"), *FString(OldLocation.c_str()));
-					//UE_LOG(LogTemp, Warning, TEXT("OldLocation %s"), *FString(OldLocation.substr(OldLocation.find("_") + 1).c_str()));
-					UE_LOG(LogTemp, Warning, TEXT("NewLocation %s"), *FString(rs.header.frame_id.c_str()));
-					OnRobotLocationChanged.Broadcast(TFRobotNamespace,
-						UTF8_TO_TCHAR(OldLocation.c_str()),
-						UTF8_TO_TCHAR(rs.header.frame_id.c_str()));
-				}
-
-				//UE_LOG(LogRobofleet, Warning, TEXT("Location from rs: X: %f, Y: %f, Z: %f"), rs.transform.translation.x,
-				//	rs.transform.translation.y,
-				//	rs.transform.translation.z);
-
-				// Save data to map
-				TransformStampedMap[TFRobotNamespace] = rs;
-
-				// Record the time that the robot was seen last
-				RobotsSeenTime[TFRobotNamespace] = FDateTime::Now();
+				// Debug
+				/*UE_LOG(LogRobofleet, Warning, TEXT("Location from rs: X: %f, Y: %f, Z: %f"), rs.transform.translation.x,
+				rs.transform.translation.y,
+				rs.transform.translation.z);*/
 			}
 		}
 	}
+
+	// UE_LOG(LogTemp, Warning, TEXT("====== TF Tree ==============="));
+	//Node tree = makeTree(tf_tree, GetTFRoot());
+	//printTree(tree);
 }
 
 void URobofleetBase::AssingBaseColor(const FString& RobotNamespace)
@@ -551,6 +686,9 @@ void URobofleetBase::RegisterRobotSubscription(FString TopicName, FString RobotN
 * HoloLens Publish Methods
 */
 
+
+// TODO : Remove amrl_msgs
+
 void URobofleetBase::PublishStatusMsg(FString RobotName, RobotStatus& StatusMsg)
 { // Publish a Status Message to Robofleet
 	std::string topic = "amrl_msgs/RobofleetStatus";
@@ -570,18 +708,17 @@ void URobofleetBase::PublishLocationMsg(FString RobotName, RobotLocationStamped&
 void URobofleetBase::PublishAgentStatusMsg(const FString& RobotName,const AgentStatus& StatusMsg)
 { // Publish a Status Message to Robofleet
 	std::string topic = "augre_msgs/AgentStatus";
-	std::string from = "/agent_status";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/agent_status";
+	std::string from = "/hololens/agent_status";
+	std::string to = "/hololens/agent_status";
 	EncodeRosMsg<AgentStatus>(StatusMsg, topic, from, to);
-
 }
 
 void URobofleetBase::PublishTransformWithCovarianceStampedMsg(const FString& TopicName, const TransformWithCovarianceStamped& TFwithCovStamped)
 {
 	//Topic can be odometry or measurements. Comes from the BP_Robofleet_Pub
 	std::string topic = "augre_msgs/TransformWithCovarianceStamped";
-	std::string from = "multiagent_demo/gtsam/" + std::string(TCHAR_TO_UTF8(*TopicName));
-	std::string to = "multiagent_demo/gtsam/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string from = "/gtsam/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/gtsam/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	EncodeRosMsg<TransformWithCovarianceStamped>(TFwithCovStamped, topic, from, to);
 }
 
@@ -589,12 +726,13 @@ void URobofleetBase::PublishAzureSpatialAnchorMsg(const FString& RobotName, cons
 	
 	// Publish a mo Message to Robofleet
 	std::string topic = "asa_db_portal/AzureSpatialAnchor";
-	std::string from = "/add_anchor";
+	std::string from = "/gtsam/add_anchor";
 	//std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/add_anchor";
-	std::string to = "/add_anchor";
+	std::string to = "/gtsam/add_anchor";
 	EncodeRosMsg<AzureSpatialAnchor>(RosAzureSpatialAnchor, topic, from, to);
 }
 
+// Odom study
 void URobofleetBase::PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg)
 {
 	// Publish a mo Message to Robofleet
@@ -609,8 +747,8 @@ void URobofleetBase::PublishMoveBaseSimpleGoal(const FString& RobotName, const P
 {
 	// Publish a mo Message to Robofleet
 	std::string topic = "geometry_msgs/PoseStamped";
-	std::string from = "/PoseStamped";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/PoseStamped";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/move_base/goal";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/move_base/goal";
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
 
@@ -627,8 +765,8 @@ void URobofleetBase::PublishPath(const FString& RobotName, const Path& PathMsg)
 {
 	// Publish a path message to Robofleet
 	std::string topic = "nav_msgs/Path";
-	std::string from = "/navigation_path";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation_path";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/path";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/path";
 	EncodeRosMsg<Path>(PathMsg, topic, from, to);
 }
 
@@ -648,6 +786,15 @@ void URobofleetBase::PublishTwistStampedMsg(const FString& RobotName, const FStr
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	UE_LOG(LogTemp, Warning, TEXT("[PublishTwistStampedMsg : ... %s"), *RobotName);
 	EncodeRosMsg<TwistStamped>(TwistStampedMsg, topic, from, to);
+}
+
+void URobofleetBase::PublishTFMessage(const TFMessage& TFMessageMsg)
+{
+	std::string topic = "TF2_msgs/TFMessage";
+	std::string from = "/augre/tf";
+	std::string to = "/augre/tf";
+	UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
 }
 
 /*
@@ -738,11 +885,12 @@ bool URobofleetBase::IsRobotOk(const FString& RobotName)
 FString URobofleetBase::GetRobotLocationString(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (TransformStampedMap.count(RobotNamestd) == 0) return "Anchor unavailable";
-	std::string origin_anchor = TransformStampedMap[RobotNamestd].header.frame_id.c_str();
+	if (FrameInfoMap.count(RobotNamestd) == 0) return "Frame unavailable";
+	std::string origin_anchor = FrameInfoMap[RobotNamestd]->TransformStamped.header.frame_id.c_str();
 	return FString(origin_anchor.c_str());
 }
 
+// TODO - Remove
 FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
@@ -752,6 +900,50 @@ FVector URobofleetBase::GetRobotPosition(const FString& RobotName)
 					TransformStampedMap[RobotNamestd].transform.translation.y,
 					TransformStampedMap[RobotNamestd].transform.translation.z);
 }
+
+// Relative transform
+FTransform URobofleetBase::GetFrameTransform(const FString& NodeName)
+{
+	FString NodeNamestd = FString(TCHAR_TO_UTF8(*NodeName));
+	if (FrameInfoMap.count(NodeNamestd) == 0) return FTransform();
+
+	return FTransform(FQuat(FrameInfoMap[NodeNamestd]->TransformStamped.transform.rotation.x,
+							FrameInfoMap[NodeNamestd]->TransformStamped.transform.rotation.y,
+							FrameInfoMap[NodeNamestd]->TransformStamped.transform.rotation.z,
+							FrameInfoMap[NodeNamestd]->TransformStamped.transform.rotation.w),
+							FVector(FrameInfoMap[NodeNamestd]->TransformStamped.transform.translation.x,
+									FrameInfoMap[NodeNamestd]->TransformStamped.transform.translation.y,
+									FrameInfoMap[NodeNamestd]->TransformStamped.transform.translation.z),
+		FVector(1.0, 1.0, 1.0));
+}
+
+void URobofleetBase::SetFrameWorldTransform(const FString& NodeName, const FTransform& ActorWorldTransform)
+{
+	if (!FrameInfoMap[NodeName].IsValid())
+	{
+		FrameInfoMap[NodeName] = MakeShared<FrameInfo>();
+		FrameInfoMap[NodeName]->TransformStamped = TransformStamped();
+	}
+	FrameInfoMap[NodeName]->WorldTransform = ActorWorldTransform;
+}
+
+FTransform URobofleetBase::GetFrameWorldTransform(const FString& NodeName)
+{
+	FString NodeNamestd = FString(TCHAR_TO_UTF8(*NodeName));
+	if (FrameInfoMap.count(NodeNamestd) == 0) return FTransform();
+	return FrameInfoMap[NodeName]->WorldTransform;
+}
+
+int URobofleetBase::GetAgeTransform(const FString& NodeName)
+{
+	FString NodeNamestd = FString(TCHAR_TO_UTF8(*NodeName));
+	if (FrameInfoMap.count(NodeNamestd) == 0)
+	{
+		return -1;
+	}
+	return FrameInfoMap[NodeName]->age;
+}
+
 
 /*
 * Compressed Image Message Methods
@@ -808,6 +1000,17 @@ TArray<FString> URobofleetBase::GetAllAgents()
 		ListOfAgents.Add(AgentName);
 	}
 	return ListOfAgents;
+}
+
+TArray<FString> URobofleetBase::GetAllFrames()
+{
+	TArray<FString> ListOfFrames;
+
+	for (auto& it : FrameInfoMap)
+	{
+		ListOfFrames.Add(it.first);
+	}
+	return ListOfFrames;
 }
 
 /*

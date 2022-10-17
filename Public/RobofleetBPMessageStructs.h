@@ -204,7 +204,14 @@ struct FGeoPoseWithCovarianceStamped
 	FGeoPoseWithCovariance pose;
 };
 
+USTRUCT(BlueprintType)
+struct FTFMessage
+{
+	GENERATED_BODY()
 
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		TArray<FTransformStamped> transforms;
+};
 
 USTRUCT(BlueprintType)
 struct FAzureSpatialAnchor

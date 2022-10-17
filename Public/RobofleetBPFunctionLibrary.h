@@ -58,6 +58,18 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static TArray<FString> GetAllAgents();
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static TArray<FString> GetAllFrames();
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FTransform GetFrameTransform(const FString& NodeName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static TArray<FString> GetChildrenFrameId(const FString& NodeName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FTransform lookupTransform(const FString& target_frame, const FString& source_frame);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static bool IsRobotOk(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
@@ -156,8 +168,13 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishTwistStampedMsg(const FString& RobotName, const FString& TopicName, const FTwistStamped& TwistStampedMsg);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishTFMessageMsg(const FTFMessage& TFMessageMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg);
 
+	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStopUMRFMsg(const FStopUMRF& StopUMRFMsg);
 
 	
