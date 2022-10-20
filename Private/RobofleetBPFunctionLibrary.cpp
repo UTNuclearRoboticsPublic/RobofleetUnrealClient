@@ -112,6 +112,15 @@ FTransform URobofleetBPFunctionLibrary::GetFrameTransform(const FString& NodeNam
 	return FTransform();
 }
 
+FTransform URobofleetBPFunctionLibrary::GetFrameWorldTransform(const FString& NodeName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetFrameWorldTransform(NodeName);
+	}
+	return FTransform();
+}
+
 TArray<FString> URobofleetBPFunctionLibrary::GetAllRobotsAtSite(const FString& Location)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -137,6 +146,15 @@ TArray<FString> URobofleetBPFunctionLibrary::GetAllFrames()
 		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAllFrames();
 	}
 	return TArray<FString>();
+}
+
+bool URobofleetBPFunctionLibrary::isFrameAvailable(const FString& FrameName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->isFrameAvailable(FrameName);
+	}
+	return false;
 }
 
 TArray<FString> URobofleetBPFunctionLibrary::GetChildrenFrameId(const FString& NodeName)
@@ -211,83 +229,80 @@ URobofleetBase* URobofleetBPFunctionLibrary::GetClientReference()
 	return FRobofleetUnrealClientModule::Get()->RobofleetClient;
 }
 
-FString URobofleetBPFunctionLibrary::GetDetectedName(const FString& RobotName)
+FString URobofleetBPFunctionLibrary::GetDetectedName(const FString& DetectedItemUid)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedName(RobotName);
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedName(DetectedItemUid);
 	}
 	return TEXT("");
 }
 
-
-// TODO: REMOVE REP ID
-//FString URobofleetBPFunctionLibrary::GetDetectedRepIDRef(const FString& RobotName)
-//{
-//	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-//	{
-//		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedRepIDRef(RobotName);
-//	}
-//	return TEXT("");
-//}
-
-//FString URobofleetBPFunctionLibrary::GetDetectedAnchorIDRef(const FString& RobotName)
-//{
-//	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-//	{
-//		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedAnchorIDRef(RobotName);
-//	}
-//	return TEXT("");
-//}
-
-FVector URobofleetBPFunctionLibrary::GetDetectedPositionRef(const FString& RobotName)
+FString URobofleetBPFunctionLibrary::GetDetectedType(const FString& DetectedItemUid)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedPositionRef(RobotName);
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedType(DetectedItemUid);
 	}
-	return FVector(0, 0, 0);
+	return TEXT("");
 }
 
-//FVector URobofleetBPFunctionLibrary::GetDetectedPositionGlobal(const FString& RobotName)
-//{
-//	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-//	{
-//		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedPositionGlobal(RobotName);
-//	}
-//	return FVector(0, 0, 0);
-//}
-
-TArray<uint8> URobofleetBPFunctionLibrary::GetDetectedImage(const FString& RobotName)
+FString URobofleetBPFunctionLibrary::GetDetectedTypeLabel(const FString& DetectedItemUid)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedImage(RobotName);
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedTypeLabel(DetectedItemUid);
+	}
+	return TEXT("");
+}
+
+FString URobofleetBPFunctionLibrary::GetDetectedHow(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedHow(DetectedItemUid);
+	}
+	return TEXT("");
+}
+
+FString URobofleetBPFunctionLibrary::GetDetectedHowLabel(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedHowLabel(DetectedItemUid);
+	}
+	return TEXT("");
+}
+
+FPoseStamped URobofleetBPFunctionLibrary::GetDetectedItemPose(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedItemPose(DetectedItemUid);
+	}
+	return FPoseStamped();
+}
+
+TArray<uint8> URobofleetBPFunctionLibrary::GetDetectedImage(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedImage(DetectedItemUid);
 	}
 	return TArray<uint8>();
 }
 
-FVector URobofleetBPFunctionLibrary::GetDetectedImageSize(const FString& ObjectName)
+FVector URobofleetBPFunctionLibrary::GetDetectedImageSize(const FString& DetectedItemUid)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedImageSize(ObjectName);
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedImageSize(DetectedItemUid);
 	}
 	return FVector(0, 0, 0);
 	// FVector.X = height
 	// FVector.Y = width
 	// FVector.Z = Not used
 }
-
-
-//FString URobofleetBPFunctionLibrary::GetDetectedItemAsaId(const FString& DetectedItemUid)
-//{
-//	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-//	{
-//		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedItemAsaId(DetectedItemUid);
-//	}
-//	return TEXT("");
-//}
 
 FVector URobofleetBPFunctionLibrary::GetDetectedItemPosition(const FString& DetectedItemUid)
 {
@@ -297,7 +312,6 @@ FVector URobofleetBPFunctionLibrary::GetDetectedItemPosition(const FString& Dete
 	}
 	return FVector(0, 0, 0);
 }
-
 
 FVector URobofleetBPFunctionLibrary::GetScrewAxisPoint(const FString& RobotName)
 {

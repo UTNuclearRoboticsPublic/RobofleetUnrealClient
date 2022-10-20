@@ -53,7 +53,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
 
 //OnDetectedItemRecevied  event
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedItemReceived, FString, DetectedItemUid);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDetectedItemReceived, FString, DetectedItemUid, FString, frame_id);
 
 //OnScrewParametersReceived  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScrewParametersReceived, FString, RobotName);
@@ -95,7 +95,6 @@ private:
 	std::map<FString, TSharedPtr<FrameInfo>> FrameInfoMap;
 	std::map<FString, CompressedImage> RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
-	std::map<FString, DetectedItem> DetectedItemMap;		//TODO remove 
 	std::map<FString, FString> AnchorMap;
 	std::map<FString, DetectedItem_augre> DetectedItemAugreMap;
 	std::map<FString, PoseStamped> ScrewParametersMap;
@@ -174,7 +173,7 @@ public:
 
 	int GetAgeTransform(const FString& NodeName);
 
-	TArray<uint8> GetRobotImage(const FString& RobotName);
+	TArray<uint8> GetRobotImage(const FString& RobotName);     // image_raw/compressed
 
 	bool IsRobotImageCompressed(const FString& RobotName);
 
@@ -184,25 +183,32 @@ public:
 
 	TArray<FString> GetAllFrames();
 
-	FString GetDetectedName(const FString& RobotName);
+	bool isFrameAvailable(const FString& FrameName);
 
-	//FString GetDetectedRepIDRef(const FString& RobotName);
+	TArray<FString> GetChildrenFrameId(const FString& NodeName);
 
-	//FString GetDetectedAnchorIDRef(const FString& RobotName);
+	// ***********************************************************
+	// augre_msgs/DetectedItem getters
 
-	FVector GetDetectedPositionRef(const FString& RobotName);
+	FString GetDetectedName(const FString& RobotName);		//callsign
 
-	//FVector GetDetectedPositionGlobal(const FString& RobotName);
+	FString GetDetectedType(const FString& RobotName);
+
+	FString GetDetectedTypeLabel(const FString& RobotName);
+
+	FString GetDetectedHow(const FString& RobotName);
+
+	FString GetDetectedHowLabel(const FString& RobotName);
+
+	FPoseStamped GetDetectedItemPose(const FString& DetectedItemUid);
 
 	TArray<uint8> GetDetectedImage(const FString& RobotName);
 
 	FVector GetDetectedImageSize(const FString& ObjectName);
 
-	TArray<FString> GetChildrenFrameId(const FString& NodeName);
-
-	//FString GetDetectedItemAsaId(const FString& DetectedItemUid);
-
 	FVector GetDetectedItemPosition(const FString& DetectedItemUid);
+
+	// ***********************************************************
 
 	FVector GetScrewAxisPoint(const FString& RobotName);
 

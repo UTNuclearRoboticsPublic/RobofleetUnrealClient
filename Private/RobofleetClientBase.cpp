@@ -64,7 +64,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotSubscription("localization", "*");
 	RegisterRobotSubscription("image_raw/compressed", "*");
 	
-	RegisterRobotSubscription("detected", "*");
+	RegisterRobotSubscription("detection", "*");
 	RegisterRobotSubscription("ScrewParameters", "*");
 
 	RegisterRobotSubscription("global_path", "*");
@@ -260,11 +260,16 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		// We do not care about the robot that sent detected items. Detected items are identified and saved by their UID.
 		DetectedItem_augre decoded_detected_item = DecodeMsg<DetectedItem_augre>(Data);
 		FString DetectedItemUid = FString(decoded_detected_item.uid.c_str());
-		if (!DetectedItemAugreMap[DetectedItemUid].uid.empty())
-		{
-			OnDetectedItemReceived.Broadcast(DetectedItemUid);
-		}
+		FString frame_id = decoded_detected_item.pose.header.frame_id.c_str();
+		UE_LOG(LogTemp, Warning, TEXT("===Detected Item %s ===") , *DetectedItemUid);
 		DetectedItemAugreMap[DetectedItemUid] = decoded_detected_item;
+		OnDetectedItemReceived.Broadcast(DetectedItemUid, frame_id);
+
+		/*if (!DetectedItemAugreMap[DetectedItemUid].uid.empty())
+		{
+			OnDetectedItemReceived.Broadcast(DetectedItemUid, frame_id);
+		}
+		DetectedItemAugreMap[DetectedItemUid] = decoded_detected_item;*/
 	}
 
 	//ScrewParam Item AugRe_msgs
@@ -448,10 +453,17 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		FString TFRobotNamespace;
 		bool error = false;
 
+		std::replace(rs.header.frame_id.begin(), rs.header.frame_id.end(), '-', '_');
+		std::replace(rs.child_frame_id.begin(), rs.child_frame_id.end(), '-', '_');
+
 		// save frames
-		std::string full_frame_id = rs.header.frame_id.c_str();
+		std::string full_frame_id = rs.header.frame_id.c_str();		
 		std::string child_frame_id = rs.child_frame_id.c_str();
-		
+
+		 UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
+		 UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
+
+
 		if (child_frame_id == full_frame_id)
 		{
 			UE_LOG(LogRobofleet, Warning, TEXT("Ignoring transform with frame_id and child_frame_id: %s because they are the same"), *FString(child_frame_id.c_str()));
@@ -539,12 +551,13 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		{
 			// grab just "base_link" frames (without extra characters) 
 			std::string base_link_str = child_frame_id.substr(child_frame_id.find("/")+1).c_str();
-			UE_LOG(LogTemp, Warning, TEXT("agent_namespace  %s size: %d"), *FString(base_link_str.c_str()), base_link_str.length());
 
 			if (base_link_str.length() == 9)
 			{
 				//Get the agent's name 
 				TFRobotNamespace = FString(child_frame_id.substr(0, child_frame_id.find("/")).c_str());
+
+
 
 				// New Robot Seen
 				if (RobotsSeen.find(TFRobotNamespace) == RobotsSeen.end())
@@ -793,7 +806,7 @@ void URobofleetBase::PublishTFMessage(const TFMessage& TFMessageMsg)
 	std::string topic = "TF2_msgs/TFMessage";
 	std::string from = "/augre/tf";
 	std::string to = "/augre/tf";
-	UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
 	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
 }
 
@@ -1013,79 +1026,81 @@ TArray<FString> URobofleetBase::GetAllFrames()
 	return ListOfFrames;
 }
 
+bool URobofleetBase::isFrameAvailable(const FString& FrameName)
+{
+	if (FrameInfoMap.count(FrameName) == 0) return false;
+	return true;
+}
+
 /*
 * Detected Item Message Methods
 */
 
-FString URobofleetBase::GetDetectedName(const FString& RobotName)
+FString URobofleetBase::GetDetectedName(const FString& DetectedItemUid)
 {
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-	return FString(DetectedItemAugreMap[RobotNamestd].uid.c_str());
-	//return FString(DetectedItemMap[RobotNamestd].name.c_str());
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) return "Item unavailable";
+	return FString(DetectedItemAugreMap[DetectedItemUid].callsign.c_str());
 }
 
-//TODO: REMOVE.... rep_id FIELD DOESNT EXIST ANYMORE
-//FString URobofleetBase::GetDetectedRepIDRef(const FString& RobotName)
-//{
-//	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-//	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-//	return FString(DetectedItemAugreMap[RobotNamestd].asa_id.c_str());
-//	//return FString(DetectedItemMap[RobotNamestd].repID.c_str()); // Currently used to pass URL
-//}
-
-//FString URobofleetBase::GetDetectedAnchorIDRef(const FString& RobotName)
-//{
-//	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-//	if (AgentStatusMap.count(RobotNamestd) == 0) return "Robot unavailable";
-//
-//	std::string asa_id = DetectedItemAugreMap[RobotNamestd].asa_id.c_str();
-//	std::replace(asa_id.begin(), asa_id.end(), '_', '-');
-//
-//	return FString(asa_id.c_str());
-//	//return FString(DetectedItemMap[RobotNamestd].anchorID.c_str());
-//}
-
-FVector URobofleetBase::GetDetectedPositionRef(const FString& RobotName)
+FString URobofleetBase::GetDetectedType(const FString& DetectedItemUid)
 {
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (DetectedItemAugreMap.count(RobotNamestd) == 0) return FVector(-1,-1,-1);
-	return FVector(	DetectedItemAugreMap[RobotNamestd].pose.pose.position.x,
-					DetectedItemAugreMap[RobotNamestd].pose.pose.position.y,
-					DetectedItemAugreMap[RobotNamestd].pose.pose.position.z);
-	//return FVector(DetectedItemMap[RobotNamestd].x, DetectedItemMap[RobotNamestd].y, DetectedItemMap[RobotNamestd].z);
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) return "Item unavailable";
+	return FString(DetectedItemAugreMap[DetectedItemUid].type.c_str());
 }
 
-//FVector URobofleetBase::GetDetectedPositionGlobal(const FString& RobotName)
-//{
-//	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-//	if (RobotMap.count(RobotNamestd) == 0) return FVector(-1, -1, -1);
-//	return FVector(	DetectedItemAugreMap[RobotNamestd].geopose.pose.position.latitude,
-//					DetectedItemAugreMap[RobotNamestd].geopose.pose.position.longitude,
-//					DetectedItemAugreMap[RobotNamestd].geopose.pose.position.altitude);
-//	//return FVector(DetectedItemMap[RobotNamestd].lat, DetectedItemMap[RobotNamestd].lon, DetectedItemMap[RobotNamestd].elv);
-//}
-
-TArray<uint8> URobofleetBase::GetDetectedImage(const FString& RobotName)
+FString URobofleetBase::GetDetectedTypeLabel(const FString& DetectedItemUid)
 {
-	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
-	if (DetectedItemAugreMap.count(RobotNamestd) == 0) {
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) return "Item unavailable";
+	return FString(DetectedItemAugreMap[DetectedItemUid].type_label.c_str());
+}
+
+FString URobofleetBase::GetDetectedHow(const FString& DetectedItemUid)
+{
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) return "Item unavailable";
+	return FString(DetectedItemAugreMap[DetectedItemUid].how.c_str());
+}
+
+FString URobofleetBase::GetDetectedHowLabel(const FString& DetectedItemUid)
+{
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) return "Item unavailable";
+	return FString(DetectedItemAugreMap[DetectedItemUid].how_label.c_str());
+}
+
+FPoseStamped URobofleetBase::GetDetectedItemPose(const FString& DetectedItemUid)
+{
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) return FPoseStamped();
+	FPoseStamped item_pose;
+	item_pose.header.frame_id = DetectedItemAugreMap[DetectedItemUid].pose.header.frame_id.c_str();
+	item_pose.Transform.SetTranslation(FVector(DetectedItemAugreMap[DetectedItemUid].pose.pose.position.x,
+												DetectedItemAugreMap[DetectedItemUid].pose.pose.position.y,
+												DetectedItemAugreMap[DetectedItemUid].pose.pose.position.z));
+	item_pose.Transform.SetRotation(FQuat(	DetectedItemAugreMap[DetectedItemUid].pose.pose.orientation.x,
+											DetectedItemAugreMap[DetectedItemUid].pose.pose.orientation.y,
+											DetectedItemAugreMap[DetectedItemUid].pose.pose.orientation.z,
+											DetectedItemAugreMap[DetectedItemUid].pose.pose.orientation.w));
+	item_pose.Transform.SetScale3D(FVector(1, 1, 1));
+	return item_pose;
+}
+
+TArray<uint8> URobofleetBase::GetDetectedImage(const FString& DetectedItemUid)
+{
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) {
 		return TArray<uint8>();
 	}
 	else {
-		UE_LOG(LogRobofleet, Warning, TEXT("size %d") , DetectedItemAugreMap[RobotNamestd].cmpr_image.data.size());
-		return 	TArray<uint8>(&DetectedItemAugreMap[RobotNamestd].cmpr_image.data[0], DetectedItemAugreMap[RobotNamestd].cmpr_image.data.size());
+		UE_LOG(LogRobofleet, Warning, TEXT("size %d") , DetectedItemAugreMap[DetectedItemUid].cmpr_image.data.size());
+		return 	TArray<uint8>(&DetectedItemAugreMap[DetectedItemUid].cmpr_image.data[0], DetectedItemAugreMap[DetectedItemUid].cmpr_image.data.size());
 	}	
 }
 
-FVector URobofleetBase::GetDetectedImageSize(const FString& ObjectName)
+FVector URobofleetBase::GetDetectedImageSize(const FString& DetectedItemUid)
 {
-	FString object_name = FString(TCHAR_TO_UTF8(*ObjectName));
-	if (DetectedItemAugreMap.count(object_name) == 0 || !(DetectedItemAugreMap[ObjectName].cmpr_image.data.size() >= 0.0)) {
+	//FString object_name = FString(TCHAR_TO_UTF8(*ObjectName));
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0 || !(DetectedItemAugreMap[DetectedItemUid].cmpr_image.data.size() >= 0.0)) {
 		return FVector();
 	}
 	else {
-		TArray<uint8> image = TArray<uint8>(&DetectedItemAugreMap[ObjectName].cmpr_image.data[0], DetectedItemAugreMap[ObjectName].cmpr_image.data.size());
+		TArray<uint8> image = TArray<uint8>(&DetectedItemAugreMap[DetectedItemUid].cmpr_image.data[0], DetectedItemAugreMap[DetectedItemUid].cmpr_image.data.size());
 		IImageWrapperModule& imageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 		TSharedPtr<IImageWrapper> imageWrapper = imageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
 		imageWrapper->SetCompressed(image.GetData(), image.Num());
@@ -1098,19 +1113,6 @@ FVector URobofleetBase::GetDetectedImageSize(const FString& ObjectName)
 	}
 }
 
-
-//FString URobofleetBase::GetDetectedItemAsaId(const FString& DetectedItemUid)
-//{
-//	FString DetectedItemUidStd = FString(TCHAR_TO_UTF8(*DetectedItemUid));
-//	if (DetectedItemAugreMap.count(DetectedItemUidStd) == 0) return "No Items Found!";
-//
-//	// Fix ASA ID if needed
-//	std::string asa_id = DetectedItemAugreMap[DetectedItemUidStd].asa_id.c_str();
-//	std::replace(asa_id.begin(), asa_id.end(), '_', '-');
-//
-//	return  FString(asa_id.c_str());
-//}
-
 FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
 {
 	FString DetectedItemUidStd = FString(TCHAR_TO_UTF8(*DetectedItemUid));
@@ -1118,7 +1120,6 @@ FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
 	return FVector(DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.x,
 		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.y,
 		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.z);
-	//return FVector(DetectedItemMap[RobotNamestd].x, DetectedItemMap[RobotNamestd].y, DetectedItemMap[RobotNamestd].z);
 }
 
 /*
