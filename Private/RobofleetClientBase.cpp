@@ -168,11 +168,11 @@ void URobofleetBase::PrintRobotsSeen() {
 	UE_LOG(LogRobofleet, Warning, TEXT("Size of RobotsSeen Set: %s"), *FString(std::to_string(RobotsSeen.size()).c_str()));
 	for (auto elem : RobotsSeen) {
 		UE_LOG(LogRobofleet, Warning, TEXT("---------------"));
-		UE_LOG(LogRobofleet, Warning, TEXT("Robot Name: %s"), *FString(elem));
-		UE_LOG(LogRobofleet, Warning, TEXT("Agent Status: %s"), *FString(AgentStatusMap[elem].callsign.c_str()));
-		UE_LOG(LogRobofleet, Warning, TEXT("Location: X: %f, Y: %f, Z: %f"), TransformStampedMap[elem].transform.translation.x, 
-																			 TransformStampedMap[elem].transform.translation.y, 
-																			 TransformStampedMap[elem].transform.translation.z);
+		UE_LOG(LogRobofleet, Warning, TEXT("Agent UID: %s"), *FString(elem));
+		UE_LOG(LogRobofleet, Warning, TEXT("Agent Status Callsign: %s"), *FString(AgentStatusMap[elem].callsign.c_str()));
+		//UE_LOG(LogRobofleet, Warning, TEXT("Location: X: %f, Y: %f, Z: %f"), TransformStampedMap[elem].transform.translation.x, 
+		//																	 TransformStampedMap[elem].transform.translation.y, 
+		//																	 TransformStampedMap[elem].transform.translation.z);
 
 		
 	}
@@ -460,8 +460,8 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		std::string full_frame_id = rs.header.frame_id.c_str();		
 		std::string child_frame_id = rs.child_frame_id.c_str();
 
-		 UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
-		 UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
+		 //UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
+		 //UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
 
 
 		if (child_frame_id == full_frame_id)
