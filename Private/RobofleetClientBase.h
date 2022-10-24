@@ -277,6 +277,10 @@ public:
 	
 	void PublishStopUMRFMsg(StopUMRF& StopUMRFMsg);
 
+	void PublishFollowPose(const FString& RobotUid, const PoseStamped& FollowPoseMsg);
+
+	void PublishFollowCancel(const FString& RobotUid);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 

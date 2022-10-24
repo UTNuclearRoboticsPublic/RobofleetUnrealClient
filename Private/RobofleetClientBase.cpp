@@ -810,6 +810,25 @@ void URobofleetBase::PublishTFMessage(const TFMessage& TFMessageMsg)
 	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
 }
 
+void URobofleetBase::PublishFollowPose(const FString& RobotUid, const PoseStamped& FollowPoseMsg)
+{
+	std::string topic = "geometry_msgs/PoseStamped";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/pose";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/pose";
+	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	EncodeRosMsg<PoseStamped>(FollowPoseMsg, topic, from, to);
+}
+
+void URobofleetBase::PublishFollowCancel(const FString& RobotUid)
+{
+	const Empty cancel_msg;
+	std::string topic = "std_msgs/Empty";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/cancel";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/cancel";
+	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	EncodeRosMsg<Empty>(cancel_msg, topic, from, to);
+}
+
 /*
 * Agent Status Messages
 */

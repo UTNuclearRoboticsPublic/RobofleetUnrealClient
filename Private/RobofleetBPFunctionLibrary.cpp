@@ -648,6 +648,36 @@ void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, 
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishFollowPose(const FString& RobotUid, const FPoseStamped& FollowPoseMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		PoseStamped Goal;
+		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*FollowPoseMsg.header.frame_id));
+		Goal.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
+		Goal.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
+		Goal.header.seq = FollowPoseMsg.header.seq;
+
+		Goal.pose.position.x = FollowPoseMsg.Transform.GetLocation().X;
+		Goal.pose.position.y = FollowPoseMsg.Transform.GetLocation().Y;
+		Goal.pose.position.z = FollowPoseMsg.Transform.GetLocation().Z;
+		Goal.pose.orientation.x = FollowPoseMsg.Transform.GetRotation().X;
+		Goal.pose.orientation.y = FollowPoseMsg.Transform.GetRotation().Y;
+		Goal.pose.orientation.z = FollowPoseMsg.Transform.GetRotation().Z;
+		Goal.pose.orientation.w = FollowPoseMsg.Transform.GetRotation().W;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowPose(RobotUid, Goal);
+	}
+}
+
+void URobofleetBPFunctionLibrary::PublishFollowCancel(const FString& RobotUid) {
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowCancel(RobotUid);
+	}
+
+}
+
 void URobofleetBPFunctionLibrary::PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -777,10 +807,9 @@ void URobofleetBPFunctionLibrary::PublishTFMessageMsg(const FTFMessage& TFMessag
 		for (auto& transforms : TFMessageMsg.transforms)
 		{
 			TransformStamped tf_stamped;
-
 			tf_stamped.header.frame_id = std::string(TCHAR_TO_UTF8(*transforms.header.frame_id));
-			tf_stamped.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
-			tf_stamped.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
+			tf_stamped.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+			tf_stamped.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
 			tf_stamped.header.seq = transforms.header.seq;
 			tf_stamped.child_frame_id = std::string(TCHAR_TO_UTF8(*transforms.child_frame_id));
 			tf_stamped.transform.translation.x = transforms.Transform.GetTranslation().X;
