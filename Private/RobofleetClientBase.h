@@ -66,6 +66,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAgentStatusUpdate, FString, Robot
 
 //OnPathRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPathReceived, FString, Tag, FPath, RobotPath, FLinearColor, Color);
+
+//OnAgentStatusUpdate event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedLegClusterReceived, FString, RobotName);
+
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
 
 UCLASS(Blueprintable)
@@ -90,6 +94,7 @@ private:
 	FTimerHandle RefreshTimerHandle;
 	
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
+	std::map<FString, TSharedPtr<LegTrackingData> > LegTrackingMap;
 	std::map<FString, AgentStatus> AgentStatusMap;
 	std::map<FString, TransformStamped> TransformStampedMap;
 	std::map<FString, TSharedPtr<FrameInfo>> FrameInfoMap;
@@ -106,7 +111,7 @@ private:
 	std::map<FString, FLinearColor> ColorTrailPath;
 	std::set<FString> RobotsSeen = {};
 	std::set<FString> AnchorGTSAM = {};
-	std::map<FString, TSharedPtr<LegTrackingData>> LegTrackingMap;
+	std::map<FString, DetectionArray> LegDetectionMap;
 
 	NavSatFix WorldGeoOrigin;
 	bool bIsWorldGeoOriginSet;
@@ -184,6 +189,8 @@ public:
 	TArray<FString> GetAllFrames();
 
 	bool isFrameAvailable(const FString& FrameName);
+
+	bool IsAgentPublishingStatusMsg(const FString& AgentUid);
 
 	TArray<FString> GetChildrenFrameId(const FString& NodeName);
 
@@ -307,6 +314,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnPathReceived OnPathReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnDetectedLegClusterReceived OnDetectedLegClusterReceived;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)

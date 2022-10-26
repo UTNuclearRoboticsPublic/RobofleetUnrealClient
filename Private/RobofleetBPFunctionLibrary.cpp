@@ -31,6 +31,15 @@ void URobofleetBPFunctionLibrary::ResetAllAgentsSeen()
 
 //augre_msgs
 
+bool URobofleetBPFunctionLibrary::IsAgentPublishingStatusMsg(const FString& TfNamespace)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->IsAgentPublishingStatusMsg(TfNamespace);
+	}
+	return false;
+}
+
 FString URobofleetBPFunctionLibrary::GetUidFromAgentStatus(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -378,6 +387,7 @@ void URobofleetBPFunctionLibrary::GetDetectedLegClusters(const FString& RobotNam
 
 		// Fill Vector
 		FDetection temp{};
+		DetectedLegClusterArray_ = {};
 		for (auto& this_detection : DetectedLegClusterArray.detections)
 		{
 			temp.position.x = this_detection.position.x;

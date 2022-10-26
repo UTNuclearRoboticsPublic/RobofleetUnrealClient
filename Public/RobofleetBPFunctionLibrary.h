@@ -28,6 +28,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 
 	// Augre_msgs
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static bool IsAgentPublishingStatusMsg(const FString& TfNamespace);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString GetUidFromAgentStatus(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")

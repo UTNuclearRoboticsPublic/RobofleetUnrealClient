@@ -237,10 +237,11 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	if (topic == "agent_status") {
 		AgentStatus agent_status = DecodeMsg<AgentStatus>(Data);
 		FString AgentNameSpace = FString(agent_status.uid.c_str());
-		if (!AgentStatusMap[AgentNameSpace].agent_type.empty())
-		{
-			OnAgentStatusUpdate.Broadcast(AgentNameSpace);
-		}
+		//if (!AgentStatusMap[AgentNameSpace].agent_type.empty())
+		//if (AgentStatusMap.find(AgentNameSpace) == AgentStatusMap.end())
+		//{
+		//	OnAgentStatusUpdate.Broadcast(AgentNameSpace);
+		//}
 		AgentStatusMap[AgentNameSpace] = agent_status;
 	}
 
@@ -350,19 +351,35 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 
 	//Leg Tracker
 	else if (topic == "non_leg_clusters") {
-	LegTrackingMap[RobotNamespace]->DetectedLegClusters = DecodeMsg<DetectionArray>(Data);
+		if (!LegTrackingMap[RobotNamespace].IsValid()) {
+			LegTrackingMap[RobotNamespace] = MakeShared<LegTrackingData>();
+		}
+		LegTrackingMap[RobotNamespace]->NonLegClusters = DecodeMsg<DetectionArray>(Data);
+		// TODO: Create Delegate
 	}
 
 	else if (topic == "detected_leg_clusters") {
-	LegTrackingMap[RobotNamespace]->NonLegClusters = DecodeMsg<DetectionArray>(Data);
+		if (!LegTrackingMap[RobotNamespace].IsValid()){
+			LegTrackingMap[RobotNamespace] = MakeShared<LegTrackingData>();
+		}
+		LegTrackingMap[RobotNamespace]->DetectedLegClusters= DecodeMsg<DetectionArray>(Data);
+		OnDetectedLegClusterReceived.Broadcast(RobotNamespace);
 	}
 
 	else if (topic == "people_detected") {
-	LegTrackingMap[RobotNamespace]->PeopleDetected = DecodeMsg<PersonArray>(Data);
+		if (!LegTrackingMap[RobotNamespace].IsValid()) {
+			LegTrackingMap[RobotNamespace] = MakeShared<LegTrackingData>();
+		}
+		LegTrackingMap[RobotNamespace]->PeopleDetected = DecodeMsg<PersonArray>(Data);
+		// TODO: Create Delegate
 	}
 
 	else if (topic == "people_tracked") {
-	LegTrackingMap[RobotNamespace]->PeopleTracker = DecodeMsg<PersonArray>(Data);
+		if (!LegTrackingMap[RobotNamespace].IsValid()) {
+			LegTrackingMap[RobotNamespace] = MakeShared<LegTrackingData>();
+		}
+		LegTrackingMap[RobotNamespace]->PeopleTracker = DecodeMsg<PersonArray>(Data);
+		// TODO: Create Delegate
 	}
 }
 
@@ -833,6 +850,13 @@ void URobofleetBase::PublishFollowCancel(const FString& RobotUid)
 * Agent Status Messages
 */
 
+bool URobofleetBase::IsAgentPublishingStatusMsg(const FString& TfNamespace) 
+{
+	FString TfNamespacestd = FString(TCHAR_TO_UTF8(*TfNamespace));
+	if (AgentStatusMap.find(TfNamespacestd) != AgentStatusMap.end()){return true;}
+	return false;
+}
+
 FString URobofleetBase::GetUidFromAgentStatus(const FString& RobotName)
 {
 	// Check if robot exists
@@ -1047,7 +1071,11 @@ TArray<FString> URobofleetBase::GetAllFrames()
 
 bool URobofleetBase::isFrameAvailable(const FString& FrameName)
 {
-	if (FrameInfoMap.count(FrameName) == 0) return false;
+	// TODO: THIS IS NOT IDEAL. A CONVENTION SHOULD BE PROVIDED TO ROBOT
+	//std::string FrameNamestd = std::string(TCHAR_TO_UTF8(*FrameName));
+	//std::replace(FrameNamestd.begin(),FrameNamestd.end(), '-', '_');
+	//if (!FrameInfoMap[FString(FrameNamestd.c_str())].IsValid()) return false;
+	if (!FrameInfoMap[FrameName].IsValid()) return false;
 	return true;
 }
 
