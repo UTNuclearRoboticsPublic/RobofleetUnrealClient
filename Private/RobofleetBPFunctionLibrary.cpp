@@ -49,11 +49,11 @@ FString URobofleetBPFunctionLibrary::GetUidFromAgentStatus(const FString& RobotN
 	return TEXT("");
 }
 
-FString URobofleetBPFunctionLibrary::GetAgentDisplayName(const FString& RobotName)
+FString URobofleetBPFunctionLibrary::GetAgentCallsign(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAgentDisplayName(RobotName);
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAgentCallsign(RobotName);
 	}
 	return TEXT("");
 }

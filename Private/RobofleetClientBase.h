@@ -153,7 +153,7 @@ public:
 	// augre_msgs/agent_status getters
 	FString GetUidFromAgentStatus(const FString& RobotName);
 
-	FString GetAgentDisplayName(const FString& RobotName);
+	FString GetAgentCallsign(const FString& RobotName);
 
 	FString GetAgentType(const FString& RobotName);
 
