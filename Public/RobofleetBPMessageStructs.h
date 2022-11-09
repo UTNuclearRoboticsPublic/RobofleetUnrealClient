@@ -66,6 +66,21 @@ struct FPose
 };
 
 USTRUCT(BlueprintType)
+struct FPose2D
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float x;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float y;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float theta;
+};
+
+USTRUCT(BlueprintType)
 struct FRobotStatus
 {
 	GENERATED_BODY()
@@ -209,8 +224,8 @@ struct FTFMessage
 {
 	GENERATED_BODY()
 
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-		TArray<FTransformStamped> transforms;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FTransformStamped> transforms;
 };
 
 USTRUCT(BlueprintType)
@@ -238,6 +253,30 @@ struct FAzureSpatialAnchor
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	TArray<FString> neighbors;
+};
+
+USTRUCT(BlueprintType)
+struct FTeMotoAction
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int id;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString children_node;  /// It shopuld be an array... for now just one element 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int children_id;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString parent_node;	/// It shopuld be an array... for now just one element 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int parent_id;
 };
 
 USTRUCT(BlueprintType)
@@ -383,6 +422,9 @@ struct FScrew
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FString ee_name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString screw_frame;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FString is_pure_translation;
