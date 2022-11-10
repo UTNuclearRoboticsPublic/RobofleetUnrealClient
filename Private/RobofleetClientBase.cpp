@@ -110,6 +110,8 @@ void URobofleetBase::PruneInactiveRobots() {
 
 void URobofleetBase::ResetAllAgentsSeen() {
 	RobotsSeen.erase(RobotsSeen.begin(),RobotsSeen.end());
+	FrameInfoMap.erase(FrameInfoMap.begin(), FrameInfoMap.end());
+	OnResetAllAgentsSeen.Broadcast();
 }
 
 void URobofleetBase::updateTFFrames()

@@ -49,6 +49,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewAnchorSeen, FString, AsaId);
 //OnRobotPruned event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
 
+//ResetAllAgentSeen event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnResetAllAgentsSeen);
+
 //OnImageRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
 
@@ -319,6 +322,10 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedLegClusterReceived OnDetectedLegClusterReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnResetAllAgentsSeen OnResetAllAgentsSeen;
+
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
