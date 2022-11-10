@@ -76,7 +76,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static TArray<FString> GetChildrenFrameId(const FString& NodeName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static FTransform lookupTransform(const FString& target_frame, const FString& source_frame);
+	static FTransform LookupTransform(const FString& target_frame, const FString& source_frame);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static bool IsRobotOk(const FString& RobotName);

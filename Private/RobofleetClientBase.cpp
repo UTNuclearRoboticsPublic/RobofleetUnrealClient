@@ -427,6 +427,17 @@ TArray<FString> URobofleetBase::GetChildrenFrameId(const FString& NodeName)
 	return children;
 }
 
+FTransform URobofleetBase::LookupTransform(const FString& target_frame, const FString& source_frame)
+{
+	FTransform temp1 = GetFrameWorldTransform(target_frame);
+	FTransform temp2 = GetFrameWorldTransform(source_frame);
+	temp1.Inverse();
+	FTransform lookuptransform = FTransform();
+	lookuptransform.SetTranslation(temp1.Rotator().GetInverse().RotateVector(temp2.GetTranslation() - temp1.GetTranslation()));
+	lookuptransform.SetRotation(FQuat(temp1.Rotator().GetInverse()) * FQuat(temp2.Rotator()));
+	return lookuptransform;
+}
+
 std::string GetTFRoot()
 {
 	std::vector<std::string> parent_frames = {};

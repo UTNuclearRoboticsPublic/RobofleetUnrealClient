@@ -175,17 +175,11 @@ TArray<FString> URobofleetBPFunctionLibrary::GetChildrenFrameId(const FString& N
 	return TArray<FString>();
 }
 
-FTransform URobofleetBPFunctionLibrary::lookupTransform(const FString& target_frame, const FString& source_frame)
+FTransform URobofleetBPFunctionLibrary::LookupTransform(const FString& target_frame, const FString& source_frame)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		FTransform temp1 = FRobofleetUnrealClientModule::Get()->RobofleetClient->GetFrameWorldTransform(target_frame);
-		FTransform temp2 = FRobofleetUnrealClientModule::Get()->RobofleetClient->GetFrameWorldTransform(source_frame);
-		temp1.Inverse();
-		FTransform lookuptransform = FTransform();
-		lookuptransform.SetTranslation(temp1.Rotator().GetInverse().RotateVector(temp2.GetTranslation() - temp1.GetTranslation()));
-		lookuptransform.SetRotation(FQuat(temp1.Rotator().GetInverse()) * FQuat(temp2.Rotator()));		
-		return lookuptransform;		
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->LookupTransform(target_frame, source_frame);
 	}
 	return FTransform();
 }

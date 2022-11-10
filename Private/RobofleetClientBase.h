@@ -194,6 +194,8 @@ public:
 
 	TArray<FString> GetChildrenFrameId(const FString& NodeName);
 
+	FTransform LookupTransform(const FString& target_frame, const FString& source_frame);
+
 	// ***********************************************************
 	// augre_msgs/DetectedItem getters
 
