@@ -682,6 +682,13 @@ void URobofleetBPFunctionLibrary::PublishFollowCancel(const FString& RobotUid) {
 
 }
 
+void URobofleetBPFunctionLibrary::PublishStringCommand(const FString& cmd) {
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishStringCommand(cmd);
+	}
+}
+
 void URobofleetBPFunctionLibrary::PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

@@ -859,6 +859,21 @@ void URobofleetBase::PublishFollowCancel(const FString& RobotUid)
 	EncodeRosMsg<Empty>(cancel_msg, topic, from, to);
 }
 
+/// <summary>
+/// String command with augmented information for parser node (GPT or T5)
+/// </summary>
+/// <param name="cmd: Natural Language instruction"></param>
+void URobofleetBase::PublishStringCommand(const FString& cmd)
+{
+	String test;
+	test.data = std::string(TCHAR_TO_UTF8(*cmd));
+	std::string topic = "std_msgs/String";
+	std::string from = "/umrf_parser/cmd";
+	std::string to = "/umrf_parser/cmd";
+	UE_LOG(LogTemp, Warning, TEXT("[Publish String Cmd : ...  %s"), *cmd);
+	EncodeRosMsg<String>(test, topic, from, to);
+}
+
 /*
 * Agent Status Messages
 */

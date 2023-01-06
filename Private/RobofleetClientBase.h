@@ -293,6 +293,8 @@ public:
 
 	void PublishFollowCancel(const FString& RobotUid);
 
+	void PublishStringCommand(const FString& cmd);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 
