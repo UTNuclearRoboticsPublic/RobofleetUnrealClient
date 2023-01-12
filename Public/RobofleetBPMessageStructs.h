@@ -243,6 +243,9 @@ struct FAzureSpatialAnchor
 	FString ns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString anchor_type;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FTime timestamp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")

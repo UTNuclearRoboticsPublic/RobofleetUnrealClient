@@ -547,13 +547,14 @@ void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& Ro
 		AzureSpatialAnchor.asa_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.asa_id));
 		AzureSpatialAnchor.rep_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.rep_id));
 		AzureSpatialAnchor.ns = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.ns));
-		AzureSpatialAnchor.timestamp._nsec = FAzureSpatialAnchorMsg.timestamp._nsec;
+		AzureSpatialAnchor.anchor_type = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.anchor_type));
+		AzureSpatialAnchor.timestamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
 		AzureSpatialAnchor.timestamp._sec = FDateTime::Now().ToUnixTimestamp();
 		//AzureSpatialAnchor.timestamp._sec = FAzureSpatialAnchorMsg.timestamp._sec;
 		
 		// PoseWithCovarianceStamped
 		AzureSpatialAnchor.pose.header.frame_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.pose.header.frame_id));
-		AzureSpatialAnchor.pose.header.stamp._nsec = FAzureSpatialAnchorMsg.pose.header.stamp._nsec;
+		AzureSpatialAnchor.pose.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
 		AzureSpatialAnchor.pose.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
 		//AzureSpatialAnchor.pose.header.stamp._sec = FAzureSpatialAnchorMsg.pose.header.stamp._sec;
 		AzureSpatialAnchor.pose.header.seq = FAzureSpatialAnchorMsg.pose.header.seq;
@@ -580,7 +581,7 @@ void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& Ro
 
 		// GeoPoseWithCovarianceStamped
 		AzureSpatialAnchor.geopose.header.frame_id = std::string(TCHAR_TO_UTF8(*FAzureSpatialAnchorMsg.geopose.header.frame_id));
-		AzureSpatialAnchor.geopose.header.stamp._nsec = FAzureSpatialAnchorMsg.geopose.header.stamp._nsec;
+		AzureSpatialAnchor.geopose.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
 		AzureSpatialAnchor.geopose.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
 		//AzureSpatialAnchor.geopose.header.stamp._sec = FAzureSpatialAnchorMsg.geopose.header.stamp._sec;
 		AzureSpatialAnchor.geopose.header.seq = FAzureSpatialAnchorMsg.geopose.header.seq;
