@@ -4,7 +4,7 @@
 UURDFParser::UURDFParser() {}
 
 /* Takes raw URDF string and prepares it for parsing */
-bool UURDFParser::loadURDF(const FString &urdf) {
+bool UURDFParser::loadURDF(const FString& urdf) {
 	cleanXML(urdf);
 	bool load_result = loadXML();
 	return load_result;
@@ -14,7 +14,7 @@ bool UURDFParser::loadURDF(const FString &urdf) {
 std::string UURDFParser::as_utf8(const char* str) { return str; }
 
 /* Removes unnecessary spaces and characters from URDF string */
-void UURDFParser::cleanXML(const FString &urdf) {
+void UURDFParser::cleanXML(const FString& urdf) {
 
 	std::string str(TCHAR_TO_ANSI(*urdf));
 
@@ -63,7 +63,7 @@ bool UURDFParser::loadXML() {
 
 	robot = doc.child("robot");
 
-	if (!robot) { 
+	if (!robot) {
 		UE_LOG(LogTemp, Warning, TEXT("No <robot> tag found"));
 		return false;
 	}
@@ -76,7 +76,7 @@ TArray<FString> UURDFParser::getJointList() {
 
 	TArray<FString> joint_list;
 
-	if (robot) { 
+	if (robot) {
 		for (pugi::xml_node joint = robot.child("joint"); joint; joint = joint.next_sibling("joint"))
 		{
 			FString vfs = as_utf8(joint.attribute("name").value()).c_str();
@@ -90,22 +90,23 @@ TArray<FString> UURDFParser::getJointList() {
 /* Returns list of ONLY the links that are direct children of the robot tag */
 TArray<FString> UURDFParser::getLinkList() {
 
-	TArray<FString> link_list;
-
 	if (robot) {
 		for (pugi::xml_node link = robot.child("link"); link; link = link.next_sibling("link"))
 		{
 			FString vfs = as_utf8(link.attribute("name").value()).c_str();
 			link_list.Add(vfs);
+			//UE_LOG(LogTemp, Warning, TEXT("LINK LIST: %s"), *vfs);
 		}
 	}
+
+	linksLoaded = true;
 
 	return link_list;
 }
 
-/* Populates jointParent with the parent of the specified joint.
+/* Populates jointParent with the parent link of the specified joint.
 	Returns false if specified joint does not exist. */
-bool UURDFParser::getJointParent(const FString &jointName, FString &jointParent) {
+bool UURDFParser::getJointParent(const FString& jointName, FString& jointParent) {
 
 	pugi::xml_node givenJoint = robot.find_child_by_attribute("joint", "name", TCHAR_TO_ANSI(*jointName));
 
@@ -119,7 +120,7 @@ bool UURDFParser::getJointParent(const FString &jointName, FString &jointParent)
 
 /* Populates position and orientation vectors with the components of the transform of the specified joint
 	Returns false if transform tag doesn't exist. */
-bool UURDFParser::getJointTransform(const FString &jointName, FVector &position, FVector &orientation) {
+bool UURDFParser::getJointTransform(const FString& jointName, FVector& position, FVector& orientation) {
 
 	pugi::xml_node givenJoint = robot.find_child_by_attribute("joint", "name", TCHAR_TO_ANSI(*jointName));
 
@@ -159,4 +160,57 @@ bool UURDFParser::getJointTransform(const FString &jointName, FVector &position,
 	UE_LOG(LogTemp, Warning, TEXT("JOINT XYZ: %f %f %f"), position.X, position.Y, position.Z);
 
 	return true;
+}
+
+bool UURDFParser::getBaseLink(FString& baselink) {
+
+	// check if link list loaded
+	if (!linksLoaded) {
+		getLinkList();
+	}
+
+	// check if base link already found
+	if (baseLoaded) {
+		baselink = base_link;
+		UE_LOG(LogTemp, Warning, TEXT("BASE LINK FOUND: %s"), *base_link);
+		return true;
+	}
+
+	// go through link names (not the actual xml nodes!)
+	for (auto& link : link_list) {
+		bool is_child = false;
+		bool is_parent = false;
+		char* attr_value = TCHAR_TO_ANSI(*link);
+
+		// go through all joint xml nodes looking for that link name
+		for (pugi::xml_node joint = robot.child("joint"); joint; joint = joint.next_sibling("joint"))
+		{
+			// check if this link shows up as a child, if so, then break (bc base link can't ever be a child)
+			is_child = joint.find_child_by_attribute("child", "link", attr_value) != NULL;
+
+			if (is_child) {
+				break;
+			}
+
+			// if not child, check link is a parent at least once (to confirm base link is used somewhere)
+			if (!is_parent) {
+				is_parent = joint.find_child_by_attribute("parent", "link", attr_value) != NULL;
+			}
+
+		}
+
+		// if link is not child anywhere and is a parent somewhere, it is the base link
+		if (!is_child && is_parent) {
+			base_link = link;
+			baseLoaded = true;
+			UE_LOG(LogTemp, Warning, TEXT("BASE LINK FOUND: %s"), *link);
+			baselink = base_link;
+			return true;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("NO BASE LINK FOUND"));
+
+	return false;
+
 }

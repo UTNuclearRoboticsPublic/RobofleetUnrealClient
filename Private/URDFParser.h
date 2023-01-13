@@ -16,25 +16,28 @@ class UURDFParser : public UObject
 	GENERATED_BODY()
 
 public:
-	UURDFParser ();
-	
+	UURDFParser();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
-	FString RepresentationID;
+		FString RepresentationID;
 
 	UFUNCTION(BlueprintCallable, Category = "Parser")
-	bool loadURDF(const FString &urdf);
+		bool loadURDF(const FString& urdf);
 
 	UFUNCTION(BlueprintCallable, Category = "Parser")
-	TArray<FString> getJointList();
+		TArray<FString> getJointList();
 
 	UFUNCTION(BlueprintCallable, Category = "Parser")
-	TArray<FString> getLinkList();
+		TArray<FString> getLinkList();
 
 	UFUNCTION(BlueprintCallable, Category = "Parser")
-	bool getJointParent(const FString &jointName, FString &jointParent);
+		bool getJointParent(const FString& jointName, FString& jointParent);
 
 	UFUNCTION(BlueprintCallable, Category = "Parser")
-	bool getJointTransform(const FString &jointName, FVector &position, FVector &orientation);
+		bool getJointTransform(const FString& jointName, FVector& position, FVector& orientation);
+
+	UFUNCTION(BlueprintCallable, Category = "Parser")
+		bool getBaseLink(FString& base_link);
 
 private:
 
@@ -43,8 +46,13 @@ private:
 	std::string cleaned_xml;
 	pugi::xml_node robot;
 
+	TArray<FString> link_list;
+	bool linksLoaded;
+	bool baseLoaded;
+	FString base_link;
+
 	std::string as_utf8(const char* str);
 	bool loadXML();
-	void cleanXML(const FString &urdf);
+	void cleanXML(const FString& urdf);
 
 };
