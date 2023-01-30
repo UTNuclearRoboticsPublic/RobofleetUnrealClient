@@ -295,6 +295,8 @@ public:
 
 	void PublishHapticsResearchMsg(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
+	void PublishStringCommand(const FString& cmd);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 
