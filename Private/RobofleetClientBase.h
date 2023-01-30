@@ -293,6 +293,8 @@ public:
 
 	void PublishFollowCancel(const FString& RobotUid);
 
+	void PublishHapticsResearchMsg(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 

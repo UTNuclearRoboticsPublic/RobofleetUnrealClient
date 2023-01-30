@@ -859,6 +859,15 @@ void URobofleetBase::PublishFollowCancel(const FString& RobotUid)
 	EncodeRosMsg<Empty>(cancel_msg, topic, from, to);
 }
 
+void URobofleetBase::PublishHapticsResearchMsg(const FString& RobotName, const PoseStamped& PoseStampedMsg)
+{
+	// Publish a mo Message to Robofleet
+	std::string topic = "geometry_msgs/PoseStamped";
+	std::string from = "/HapticsResearchMsg";
+	std::string to = "/HapticsResearchMsg";
+	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
+}
+
 /*
 * Agent Status Messages
 */

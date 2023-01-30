@@ -893,3 +893,26 @@ FPath URobofleetBPFunctionLibrary::GetRobotPath(const FString& RobotName)
 	}
 	return FPath();
 }
+
+void URobofleetBPFunctionLibrary::PublishHapticsResearchMsg(const FString& RobotName, const FPoseStamped& PoseStampedMsg, FDateTime CurTimeStamp)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		PoseStamped Goal;
+		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
+		Goal.header.stamp._nsec = PoseStampedMsg.header.stamp._nsec;
+		Goal.header.stamp._sec = (int)CurTimeStamp.ToUnixTimestamp();
+		Goal.header.seq = PoseStampedMsg.header.seq;
+
+		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
+		Goal.pose.position.y = 0.00;
+		Goal.pose.position.z = 0.00;
+
+		Goal.pose.orientation.x = 0.00;
+		Goal.pose.orientation.y = 0.00;
+		Goal.pose.orientation.z = 0.00;
+		Goal.pose.orientation.w = 0.00;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishHapticsResearchMsg(RobotName, Goal);
+	}
+}
