@@ -567,14 +567,8 @@ void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& Ro
 		AzureSpatialAnchor.pose.pose.pose.orientation.w = FAzureSpatialAnchorMsg.pose.pose.pose.GetRotation().W;
 		
 		// TODO: GET ANCHOR COVARIANCES
-		//Convert from TArray to std::vector
-		std::vector<float> pose_anchor_cov = { 71.1655073735117,	3.45821576403310,	0.593090091521150,	1.30137103899806,	0.664337209474972,	15.3887697684447,
-										3.45821576403310,	2.17138180031235,	0.0889157579901040,	0.356811074478031, -1.54724979011027,	1.08088777296042,
-										0.593090091521150,	0.0889157579901040,	0.312597527415474, -0.0669388300717367,	1.34318992031335,	0.200723741020181,
-										1.30137103899806,	0.356811074478031, -0.0669388300717367,	0.770845292528924, -0.520578503254728,	0.245532369990909,
-										0.664337209474972, -1.54724979011027,	1.34318992031335, -0.520578503254728,	9.36524337618332,	0.0369266731945052,
-										15.3887697684447,	1.08088777296042,	0.200723741020181,	0.245532369990909,	0.0369266731945052,	4.16394130032915 };
-		for (auto& cov : pose_anchor_cov)
+
+		for (auto& cov : FAzureSpatialAnchorMsg.pose.pose.covariance)
 		{
 			AzureSpatialAnchor.pose.pose.covariance.push_back(cov);
 		}
@@ -612,6 +606,7 @@ void URobofleetBPFunctionLibrary::PublishAzureSpatialAnchorMsg(const FString& Ro
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishAzureSpatialAnchorMsg(RobotName, AzureSpatialAnchor);
 	}
 }
+
 
 void URobofleetBPFunctionLibrary::PublishAgentStatusMsg(const FString& RobotName, const FAgentStatus& StatusMsg)
 {

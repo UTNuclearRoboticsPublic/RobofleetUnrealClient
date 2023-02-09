@@ -6,6 +6,7 @@
 #include "Misc/Char.h"
 #include "IImageWrapperModule.h"
 #include "IImageWrapper.h"
+#include <regex>
 
 /////// TF TREE ////////////
 
@@ -594,7 +595,14 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 				AnchorGTSAM.insert(asa_id);
 				UE_LOG(LogTemp, Warning, TEXT("Broadcast OnNewAnchorSeen"));
 				UE_LOG(LogRobofleet, Warning, TEXT("Broadcast OnNewAnchorSeen Anchor: %s"), *asa_id);
+				if (isValidUuid(asa_id))
+				{
 				OnNewAnchorSeen.Broadcast(asa_id);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("ASA id invalid"));
+				}
 			}
 		}
 
@@ -1383,3 +1391,10 @@ void URobofleetBase::GetPeopleTracked(const FString& RobotName, PersonArray& Peo
 	}
 }
 
+bool URobofleetBase::isValidUuid(const FString& id) {
+	// From: https://www.regextester.com/99148
+	const std::regex uuid_regex(
+		"[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-"
+		"9a-fA-F]{12}");
+	return std::regex_match(std::string(TCHAR_TO_UTF8(*id)), uuid_regex);
+}

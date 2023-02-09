@@ -246,6 +246,8 @@ public:
 
 	void GetPeopleTracked(const FString& RobotName, PersonArray& PeopleTrackedArray);
 
+	bool isValidUuid(const FString& id);
+
 	UFUNCTION()
 	void RefreshRobotList();
 
