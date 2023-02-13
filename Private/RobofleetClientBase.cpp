@@ -863,8 +863,8 @@ void URobofleetBase::PublishHapticsResearchMsg(const FString& RobotName, const P
 {
 	// Publish a mo Message to Robofleet
 	std::string topic = "geometry_msgs/PoseStamped";
-	std::string from = "/HapticsResearchMsg";
-	std::string to = "/HapticsResearchMsg";
+	std::string from = "/haptics/recorded_data";
+	std::string to = "/haptics/recorded_data";
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
 
