@@ -6,6 +6,18 @@
 #include "Misc/Char.h"
 #include "IImageWrapperModule.h"
 #include "IImageWrapper.h"
+#include <regex>
+
+/////// TF TREE ////////////
+
+struct Node
+{
+	std::string name = {};
+	std::string parent = {};
+	std::vector<Node> children = {};
+};
+
+std::unordered_multimap<std::string, std::string> tf_tree;
 
 URobofleetBase::URobofleetBase()
 {
@@ -110,6 +122,7 @@ void URobofleetBase::PruneInactiveRobots() {
 
 void URobofleetBase::ResetAllAgentsSeen() {
 	RobotsSeen.erase(RobotsSeen.begin(),RobotsSeen.end());
+	tf_tree.clear();
 	FrameInfoMap.erase(FrameInfoMap.begin(), FrameInfoMap.end());
 	OnResetAllAgentsSeen.Broadcast();
 }
@@ -117,15 +130,36 @@ void URobofleetBase::ResetAllAgentsSeen() {
 void URobofleetBase::updateTFFrames()
 {
 	int CutoffTime = 10;
-
-	for (auto& it : FrameInfoMap)
+		
+	auto itr = FrameInfoMap.begin();
+	while (itr != FrameInfoMap.end()) 
 	{
-		FrameInfoMap[it.first]->age = FDateTime::Now().ToUnixTimestamp() - FrameInfoMap[it.first]->TransformStamped.header.stamp._sec;
-		if (FrameInfoMap[it.first]->age > CutoffTime)
+		FrameInfoMap[itr->first]->age = FDateTime::Now().ToUnixTimestamp() - FrameInfoMap[itr->first]->TransformStamped.header.stamp._sec;
+		if (FrameInfoMap[itr->first]->age > CutoffTime)
 		{
-			//TODO  clean the tf_tree multimap
-			UE_LOG(LogRobofleet, Warning, TEXT("Erase from the TF %s"), *it.first);
-			//FrameInfoMap.erase(it.first);
+			auto iter_tree = tf_tree.begin();
+			while (iter_tree != tf_tree.end()) {
+				if (iter_tree->second == std::string(TCHAR_TO_UTF8(*itr->first)))
+					break;
+				iter_tree++;
+			}
+			if (iter_tree != tf_tree.end())
+			{
+				tf_tree.erase(iter_tree);
+			}
+
+			// Get name of agent --- Asuming: name/base_link 
+			std::string agent_name = std::string(TCHAR_TO_UTF8(*itr->first));
+			FString agent = FString(agent_name.substr(0, agent_name.find("/")).c_str());
+
+			//Remove the representation
+			OnRobotPruned.Broadcast(agent);
+			RobotsSeen.erase(agent);
+
+			FrameInfoMap.erase(itr++);
+		}
+		else {
+			++itr;
 		}
 	}
 }
@@ -200,7 +234,7 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("twist_path", "*");
 
 		//PruneInactiveRobots();
-		// updateTFFrames();
+		updateTFFrames();
 	}
 }
 
@@ -386,17 +420,6 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 }
 
 
-/////// TF TREE ////////////
-
-struct Node
-{
-	std::string name = {};
-	std::string parent = {};
-	std::vector<Node> children = {};
-};
-
-std::unordered_multimap<std::string, std::string> tf_tree;
-
 Node makeTree(const std::unordered_multimap<std::string, std::string>& map, const std::string& nodeName)
 {
 	Node node{ nodeName };
@@ -572,7 +595,14 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 				AnchorGTSAM.insert(asa_id);
 				UE_LOG(LogTemp, Warning, TEXT("Broadcast OnNewAnchorSeen"));
 				UE_LOG(LogRobofleet, Warning, TEXT("Broadcast OnNewAnchorSeen Anchor: %s"), *asa_id);
+				if (isValidUuid(asa_id))
+				{
 				OnNewAnchorSeen.Broadcast(asa_id);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("ASA id invalid"));
+				}
 			}
 		}
 
@@ -605,9 +635,9 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		}
 	}
 
-	// UE_LOG(LogTemp, Warning, TEXT("====== TF Tree ==============="));
-	//Node tree = makeTree(tf_tree, GetTFRoot());
-	//printTree(tree);
+	/*UE_LOG(LogTemp, Warning, TEXT("====== TF Tree ==============="));
+	Node tree = makeTree(tf_tree, GetTFRoot());
+	printTree(tree);*/
 }
 
 void URobofleetBase::AssingBaseColor(const FString& RobotNamespace)
@@ -818,7 +848,7 @@ void URobofleetBase::PublishTwistMsg(const FString& RobotName, const FString& To
 	std::string topic = "geometry_msgs/Twist";
 	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
-	UE_LOG(LogTemp, Warning, TEXT("[PublishTwistMsg : ... %s"), *RobotName);
+	//UE_LOG(LogTemp, Warning, TEXT("[PublishTwistMsg : ... %s"), *RobotName);
 	EncodeRosMsg<Twist>(TwistMsg, topic, from, to);
 }
 
@@ -827,7 +857,7 @@ void URobofleetBase::PublishTwistStampedMsg(const FString& RobotName, const FStr
 	std::string topic = "geometry_msgs/TwistStamped";
 	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName));
-	UE_LOG(LogTemp, Warning, TEXT("[PublishTwistStampedMsg : ... %s"), *RobotName);
+	//UE_LOG(LogTemp, Warning, TEXT("[PublishTwistStampedMsg : ... %s"), *RobotName);
 	EncodeRosMsg<TwistStamped>(TwistStampedMsg, topic, from, to);
 }
 
@@ -1361,3 +1391,10 @@ void URobofleetBase::GetPeopleTracked(const FString& RobotName, PersonArray& Peo
 	}
 }
 
+bool URobofleetBase::isValidUuid(const FString& id) {
+	// From: https://www.regextester.com/99148
+	const std::regex uuid_regex(
+		"[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-"
+		"9a-fA-F]{12}");
+	return std::regex_match(std::string(TCHAR_TO_UTF8(*id)), uuid_regex);
+}
