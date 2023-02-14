@@ -506,3 +506,31 @@ struct FPersonArray
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	TArray<FPerson> people;
 };
+
+// Affordance Primitive 
+USTRUCT(BlueprintType)
+struct FScrewStamped
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoint origin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FVector axis;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	bool is_pure_translation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float pitch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float min;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float max;
+};
