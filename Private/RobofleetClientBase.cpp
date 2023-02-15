@@ -870,6 +870,15 @@ void URobofleetBase::PublishTFMessage(const TFMessage& TFMessageMsg)
 	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
 }
 
+void URobofleetBase::PublishGenericTF(const FString& TopicName, const TFMessage& TFMessageMsg)
+{
+	std::string topic = "TF2_msgs/TFMessage";
+	std::string from = std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = std::string(TCHAR_TO_UTF8(*TopicName));
+	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
+}
+
 void URobofleetBase::PublishFollowPose(const FString& RobotUid, const PoseStamped& FollowPoseMsg)
 {
 	std::string topic = "geometry_msgs/PoseStamped";

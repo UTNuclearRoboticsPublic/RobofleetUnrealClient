@@ -833,6 +833,34 @@ void URobofleetBPFunctionLibrary::PublishTFMessageMsg(const FTFMessage& TFMessag
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishGenericTF(const FString& TopicName, const FTFMessage& TFMessageMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		TFMessage tf;
+
+		for (auto& transforms : TFMessageMsg.transforms)
+		{
+			TransformStamped tf_stamped;
+			tf_stamped.header.frame_id = std::string(TCHAR_TO_UTF8(*transforms.header.frame_id));
+			tf_stamped.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+			tf_stamped.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
+			tf_stamped.header.seq = transforms.header.seq;
+			tf_stamped.child_frame_id = std::string(TCHAR_TO_UTF8(*transforms.child_frame_id));
+			tf_stamped.transform.translation.x = transforms.Transform.GetTranslation().X;
+			tf_stamped.transform.translation.y = transforms.Transform.GetTranslation().Y;
+			tf_stamped.transform.translation.z = transforms.Transform.GetTranslation().Z;
+			tf_stamped.transform.rotation.x = transforms.Transform.GetRotation().X;
+			tf_stamped.transform.rotation.y = transforms.Transform.GetRotation().Y;
+			tf_stamped.transform.rotation.z = transforms.Transform.GetRotation().Z;
+			tf_stamped.transform.rotation.w = transforms.Transform.GetRotation().W;
+
+			tf.transforms.push_back(tf_stamped);
+		}
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishGenericTF(TopicName, tf);
+	}
+}
+
 // Publish TeMoto msgs
 void URobofleetBPFunctionLibrary::PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg)
 {

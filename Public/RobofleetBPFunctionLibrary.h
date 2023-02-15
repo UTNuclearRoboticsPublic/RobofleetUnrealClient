@@ -186,6 +186,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishTFMessageMsg(const FTFMessage& TFMessageMsg);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishGenericTF(const FString& TopicName, const FTFMessage& TFMessageMsg);
+
 	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg);
 

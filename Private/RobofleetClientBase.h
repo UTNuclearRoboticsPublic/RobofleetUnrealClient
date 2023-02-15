@@ -285,6 +285,8 @@ public:
 
 	void PublishTFMessage(const TFMessage& TFMessageMsg);
 
+	void PublishGenericTF(const FString& TopicName, const TFMessage& TFMessageMsg);
+
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
 	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);
