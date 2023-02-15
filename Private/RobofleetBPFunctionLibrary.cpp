@@ -648,7 +648,7 @@ void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, 
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishFollowPose(const FString& RobotUid, const FPoseStamped& FollowPoseMsg)
+void URobofleetBPFunctionLibrary::PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const FPoseStamped& FollowPoseMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
@@ -666,14 +666,14 @@ void URobofleetBPFunctionLibrary::PublishFollowPose(const FString& RobotUid, con
 		Goal.pose.orientation.z = FollowPoseMsg.Transform.GetRotation().Z;
 		Goal.pose.orientation.w = FollowPoseMsg.Transform.GetRotation().W;
 
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowPose(RobotUid, Goal);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishPoseStamped(RobotUid, TopicName, Goal);
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishFollowCancel(const FString& RobotUid) {
+void URobofleetBPFunctionLibrary::PublishCancel(const FString& RobotUid, const FString& TopicName) {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowCancel(RobotUid);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishCancel(RobotUid, TopicName);
 	}
 
 }
@@ -740,7 +740,7 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 		std::string asa_header = std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
 		std::replace(asa_header.begin(), asa_header.end(), '-', '_');
 
-		navigation_path.header.frame_id = "anchor_" + asa_header;
+		navigation_path.header.frame_id = asa_header;
 		navigation_path.header.stamp._nsec = PathMsg.header.stamp._nsec;
 		navigation_path.header.stamp._sec = PathMsg.header.stamp._sec;
 		navigation_path.header.seq = PathMsg.header.seq;
@@ -751,7 +751,7 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 
 			std::string asa_poses = std::string(TCHAR_TO_UTF8(*poses.header.frame_id));
 			std::replace(asa_poses.begin(), asa_poses.end(), '-', '_');
-			poseTemp.header.frame_id = "anchor_" + asa_poses;
+			poseTemp.header.frame_id = asa_poses;
 			poseTemp.header.stamp._nsec = poses.header.stamp._nsec;
 			poseTemp.header.stamp._sec = poses.header.stamp._sec;
 			poseTemp.header.seq = poses.header.seq;

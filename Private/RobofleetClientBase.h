@@ -291,9 +291,9 @@ public:
 	
 	void PublishStopUMRFMsg(StopUMRF& StopUMRFMsg);
 
-	void PublishFollowPose(const FString& RobotUid, const PoseStamped& FollowPoseMsg);
+	void PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const PoseStamped& FollowPoseMsg);
 
-	void PublishFollowCancel(const FString& RobotUid);
+	void PublishCancel(const FString& RobotUid, const FString& TopicName);
 
 	void PublishHapticsResearchMsg(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
