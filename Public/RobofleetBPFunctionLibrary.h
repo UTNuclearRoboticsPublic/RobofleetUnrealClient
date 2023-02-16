@@ -163,10 +163,10 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishFollowPose(const FString& RobotUid, const FPoseStamped& PoseStampedMsg);
+	static void PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const FPoseStamped& PoseStampedMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishFollowCancel(const FString& RobotUid);
+	static void PublishCancel(const FString& RobotUid, const FString& TopicName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
