@@ -293,7 +293,7 @@ public:
 	
 	void PublishStopUMRFMsg(StopUMRF& StopUMRFMsg);
 
-	void PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const PoseStamped& FollowPoseMsg);
+	void PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const PoseStamped& PoseStampedMsg);
 
 	void PublishCancel(const FString& RobotUid, const FString& TopicName);
 

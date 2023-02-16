@@ -879,22 +879,13 @@ void URobofleetBase::PublishGenericTF(const FString& TopicName, const TFMessage&
 	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishFollowPose(const FString& RobotUid, const PoseStamped& FollowPoseMsg)
-{
-	std::string topic = "geometry_msgs/PoseStamped";
-	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/pose";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/pose";
-	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
-	EncodeRosMsg<PoseStamped>(FollowPoseMsg, topic, from, to);
-}
-
-void URobofleetBase::PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const PoseStamped& FollowPoseMsg)
+void URobofleetBase::PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const PoseStamped& PoseStampedMsg)
 {
 	std::string topic = "geometry_msgs/PoseStamped";
 	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName)) + "/pose";
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName)) + "/pose";
 	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
-	EncodeRosMsg<PoseStamped>(FollowPoseMsg, topic, from, to);
+	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
 
 void URobofleetBase::PublishCancel(const FString& RobotUid, const FString& TopicName)

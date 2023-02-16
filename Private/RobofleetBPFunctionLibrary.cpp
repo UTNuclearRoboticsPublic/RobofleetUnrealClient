@@ -648,23 +648,23 @@ void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, 
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const FPoseStamped& FollowPoseMsg)
+void URobofleetBPFunctionLibrary::PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const FPoseStamped& PoseStampedMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
 		PoseStamped Goal;
-		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*FollowPoseMsg.header.frame_id));
+		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
 		Goal.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
 		Goal.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
-		Goal.header.seq = FollowPoseMsg.header.seq;
+		Goal.header.seq = PoseStampedMsg.header.seq;
 
-		Goal.pose.position.x = FollowPoseMsg.Transform.GetLocation().X;
-		Goal.pose.position.y = FollowPoseMsg.Transform.GetLocation().Y;
-		Goal.pose.position.z = FollowPoseMsg.Transform.GetLocation().Z;
-		Goal.pose.orientation.x = FollowPoseMsg.Transform.GetRotation().X;
-		Goal.pose.orientation.y = FollowPoseMsg.Transform.GetRotation().Y;
-		Goal.pose.orientation.z = FollowPoseMsg.Transform.GetRotation().Z;
-		Goal.pose.orientation.w = FollowPoseMsg.Transform.GetRotation().W;
+		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
+		Goal.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
+		Goal.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
+		Goal.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().X;
+		Goal.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Y;
+		Goal.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Z;
+		Goal.pose.orientation.w = PoseStampedMsg.Transform.GetRotation().W;
 
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishPoseStamped(RobotUid, TopicName, Goal);
 	}
