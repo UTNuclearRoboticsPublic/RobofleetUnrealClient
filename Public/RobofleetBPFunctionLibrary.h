@@ -163,19 +163,22 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishHololensOdom(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishFollowPose(const FString& RobotUid, const FPoseStamped& PoseStampedMsg);
+	static void PublishFollowPose(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishFollowCancel(const FString& RobotUid);
+	static void PublishFollowCancel(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
-
-	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishHandPose(const FString& RobotName, const FPoseStamped& PoseStampedMsg, FDateTime CurTimeStamp);
+	static void PublishNavigationPose(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishNavigationPath(const FString& RobotName, const FPath& PathMsg);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishNavigationCancel(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishHandPose(const FString& RobotName, const FPoseStamped& PoseStampedMsg, FDateTime CurTimeStamp);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishTwistMsg(const FString& RobotName, const FString& TopicName, const FTwist& TwistMsg);

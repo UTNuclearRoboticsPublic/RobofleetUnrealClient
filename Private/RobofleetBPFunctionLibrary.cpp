@@ -648,34 +648,34 @@ void URobofleetBPFunctionLibrary::PublishHololensOdom(const FString& RobotName, 
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishFollowPose(const FString& RobotUid, const FPoseStamped& FollowPoseMsg)
+void URobofleetBPFunctionLibrary::PublishFollowPose(const FString& RobotName, const FPoseStamped& FollowPoseMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		PoseStamped Goal;
-		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*FollowPoseMsg.header.frame_id));
-		Goal.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
-		Goal.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
-		Goal.header.seq = FollowPoseMsg.header.seq;
 
-		Goal.pose.position.x = FollowPoseMsg.Transform.GetLocation().X;
-		Goal.pose.position.y = FollowPoseMsg.Transform.GetLocation().Y;
-		Goal.pose.position.z = FollowPoseMsg.Transform.GetLocation().Z;
-		Goal.pose.orientation.x = FollowPoseMsg.Transform.GetRotation().X;
-		Goal.pose.orientation.y = FollowPoseMsg.Transform.GetRotation().Y;
-		Goal.pose.orientation.z = FollowPoseMsg.Transform.GetRotation().Z;
-		Goal.pose.orientation.w = FollowPoseMsg.Transform.GetRotation().W;
+		PoseStamped goal_pose;
+		goal_pose.header.frame_id = std::string(TCHAR_TO_UTF8(*FollowPoseMsg.header.frame_id));
+		goal_pose.header.stamp._nsec = FDateTime::Now().GetMillisecond() * 1000000;
+		goal_pose.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
+		goal_pose.header.seq = FollowPoseMsg.header.seq;
 
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowPose(RobotUid, Goal);
+		goal_pose.pose.position.x = FollowPoseMsg.Transform.GetLocation().X;
+		goal_pose.pose.position.y = FollowPoseMsg.Transform.GetLocation().Y;
+		goal_pose.pose.position.z = FollowPoseMsg.Transform.GetLocation().Z;
+		goal_pose.pose.orientation.x = FollowPoseMsg.Transform.GetRotation().X;
+		goal_pose.pose.orientation.y = FollowPoseMsg.Transform.GetRotation().Y;
+		goal_pose.pose.orientation.z = FollowPoseMsg.Transform.GetRotation().Z;
+		goal_pose.pose.orientation.w = FollowPoseMsg.Transform.GetRotation().W;
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowPose(RobotName, goal_pose);
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishFollowCancel(const FString& RobotUid) {
+void URobofleetBPFunctionLibrary::PublishFollowCancel(const FString& RobotName) {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowCancel(RobotUid);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowCancel(RobotName);
 	}
-
 }
 
 void URobofleetBPFunctionLibrary::PublishStringCommand(const FString& cmd) {
@@ -685,26 +685,70 @@ void URobofleetBPFunctionLibrary::PublishStringCommand(const FString& cmd) {
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
+void URobofleetBPFunctionLibrary::PublishNavigationPose(const FString& RobotName, const FPoseStamped& PoseStampedMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
-		PoseStamped Goal;
-		Goal.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
-		Goal.header.stamp._nsec = PoseStampedMsg.header.stamp._nsec;
-		Goal.header.stamp._sec = PoseStampedMsg.header.stamp._sec;
-		Goal.header.seq = PoseStampedMsg.header.seq;
+		PoseStamped goal_pose;
+		goal_pose.header.frame_id = std::string(TCHAR_TO_UTF8(*PoseStampedMsg.header.frame_id));
+		goal_pose.header.stamp._nsec = PoseStampedMsg.header.stamp._nsec;
+		goal_pose.header.stamp._sec = PoseStampedMsg.header.stamp._sec;
+		goal_pose.header.seq = PoseStampedMsg.header.seq;
 
-		Goal.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
-		Goal.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
-		Goal.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
+		goal_pose.pose.position.x = PoseStampedMsg.Transform.GetLocation().X;
+		goal_pose.pose.position.y = PoseStampedMsg.Transform.GetLocation().Y;
+		goal_pose.pose.position.z = PoseStampedMsg.Transform.GetLocation().Z;
 
-		Goal.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().X;
-		Goal.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Y;
-		Goal.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Z;
-		Goal.pose.orientation.w = PoseStampedMsg.Transform.GetRotation().W;
+		goal_pose.pose.orientation.x = PoseStampedMsg.Transform.GetRotation().X;
+		goal_pose.pose.orientation.y = PoseStampedMsg.Transform.GetRotation().Y;
+		goal_pose.pose.orientation.z = PoseStampedMsg.Transform.GetRotation().Z;
+		goal_pose.pose.orientation.w = PoseStampedMsg.Transform.GetRotation().W;
 
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishMoveBaseSimpleGoal(RobotName, Goal);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishNavigationPose(RobotName, goal_pose);
+	}
+}
+
+void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName, const FPath& PathMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		Path navigation_path;
+
+		std::string asa_header = std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
+		std::replace(asa_header.begin(), asa_header.end(), '-', '_');
+
+		navigation_path.header.frame_id = asa_header;
+		navigation_path.header.stamp._nsec = PathMsg.header.stamp._nsec;
+		navigation_path.header.stamp._sec = PathMsg.header.stamp._sec;
+		navigation_path.header.seq = PathMsg.header.seq;
+
+		for (auto& poses : PathMsg.poses)
+		{
+			PoseStamped pose_out;
+
+			std::string asa_poses = std::string(TCHAR_TO_UTF8(*poses.header.frame_id));
+			std::replace(asa_poses.begin(), asa_poses.end(), '-', '_');
+			pose_out.header.frame_id = asa_poses;
+			pose_out.header.stamp._nsec = poses.header.stamp._nsec;
+			pose_out.header.stamp._sec = poses.header.stamp._sec;
+			pose_out.header.seq = poses.header.seq;
+			pose_out.pose.position.x = poses.Transform.GetTranslation().X / 100;
+			pose_out.pose.position.y = -poses.Transform.GetTranslation().Y / 100;
+			pose_out.pose.position.z = poses.Transform.GetTranslation().Z / 100;
+			pose_out.pose.orientation.x = poses.Transform.GetRotation().X;
+			pose_out.pose.orientation.y = poses.Transform.GetRotation().Y;
+			pose_out.pose.orientation.z = poses.Transform.GetRotation().Z;
+			pose_out.pose.orientation.w = poses.Transform.GetRotation().W;
+			navigation_path.poses.push_back(pose_out);
+		}
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishNavigationPath(RobotName, navigation_path);
+	}
+}
+
+void URobofleetBPFunctionLibrary::PublishNavigationCancel(const FString& RobotName) {
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishFollowCancel(RobotName);
 	}
 }
 
@@ -728,43 +772,6 @@ void URobofleetBPFunctionLibrary::PublishHandPose(const FString& RobotName, cons
 		Goal.pose.orientation.w = PoseStampedMsg.Transform.GetRotation().W;
 
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishHandPose(RobotName, Goal);
-	}
-}
-
-void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName, const FPath& PathMsg)
-{
-	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
-	{
-		Path navigation_path;
-
-		std::string asa_header = std::string(TCHAR_TO_UTF8(*PathMsg.header.frame_id));
-		std::replace(asa_header.begin(), asa_header.end(), '-', '_');
-
-		navigation_path.header.frame_id = "anchor_" + asa_header;
-		navigation_path.header.stamp._nsec = PathMsg.header.stamp._nsec;
-		navigation_path.header.stamp._sec = PathMsg.header.stamp._sec;
-		navigation_path.header.seq = PathMsg.header.seq;
-
-		for (auto& poses : PathMsg.poses)
-		{
-			PoseStamped poseTemp;
-
-			std::string asa_poses = std::string(TCHAR_TO_UTF8(*poses.header.frame_id));
-			std::replace(asa_poses.begin(), asa_poses.end(), '-', '_');
-			poseTemp.header.frame_id = "anchor_" + asa_poses;
-			poseTemp.header.stamp._nsec = poses.header.stamp._nsec;
-			poseTemp.header.stamp._sec = poses.header.stamp._sec;
-			poseTemp.header.seq = poses.header.seq;
-			poseTemp.pose.position.x = poses.Transform.GetTranslation().X / 100;
-			poseTemp.pose.position.y = -poses.Transform.GetTranslation().Y / 100;
-			poseTemp.pose.position.z = poses.Transform.GetTranslation().Z / 100;
-			poseTemp.pose.orientation.x = poses.Transform.GetRotation().X;
-			poseTemp.pose.orientation.y = poses.Transform.GetRotation().Y;
-			poseTemp.pose.orientation.z = poses.Transform.GetRotation().Z;
-			poseTemp.pose.orientation.w = poses.Transform.GetRotation().W;
-			navigation_path.poses.push_back(poseTemp);
-		}
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishPath(RobotName, navigation_path);
 	}
 }
 

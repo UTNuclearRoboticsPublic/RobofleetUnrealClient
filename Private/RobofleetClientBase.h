@@ -273,11 +273,13 @@ public:
 
 	void PublishAzureSpatialAnchorMsg(const FString& RobotName, const AzureSpatialAnchor& RosAzureSpatialAnchor);
 
-	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+	void PublishNavigationPose(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+
+	void PublishNavigationPath(const FString& RobotName, const Path& PathMsg);
+	
+	void PublishNavigationCancel(const FString& RobotName);
 
 	void PublishHandPose(const FString& RobotName, const PoseStamped& PoseStampedMsg);
-
-	void PublishPath(const FString& RobotName, const Path& PathMsg);
 
 	void PublishTwistMsg(const FString& RobotName, const FString& TopicName, const Twist& TwistMsg);
 

@@ -816,13 +816,32 @@ void URobofleetBase::PublishHololensOdom(const FString& RobotName, const PoseSta
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg)
+void URobofleetBase::PublishNavigationPose(const FString& RobotName, const PoseStamped& PoseStampedMsg)
 {
 	// Publish a mo Message to Robofleet
 	std::string topic = "geometry_msgs/PoseStamped";
-	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/move_base/goal";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/move_base/goal";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/pose";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/pose";
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
+}
+
+void URobofleetBase::PublishNavigationPath(const FString& RobotName, const Path& PathMsg)
+{
+	// Publish a path message to Robofleet
+	std::string topic = "nav_msgs/Path";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/path";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/path";
+	EncodeRosMsg<Path>(PathMsg, topic, from, to);
+}
+
+void URobofleetBase::PublishNavigationCancel(const FString& RobotName)
+{
+	const Empty cancel_msg;
+	std::string topic = "std_msgs/Empty";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/cancel";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/cancel";
+	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	EncodeRosMsg<Empty>(cancel_msg, topic, from, to);
 }
 
 void URobofleetBase::PublishHandPose(const FString& RobotName, const PoseStamped& PoseStampedMsg)
@@ -832,15 +851,6 @@ void URobofleetBase::PublishHandPose(const FString& RobotName, const PoseStamped
 	std::string from = "/HandPose";
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/HandPose";
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
-}
-
-void URobofleetBase::PublishPath(const FString& RobotName, const Path& PathMsg)
-{
-	// Publish a path message to Robofleet
-	std::string topic = "nav_msgs/Path";
-	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/path";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/navigation/path";
-	EncodeRosMsg<Path>(PathMsg, topic, from, to);
 }
 
 void URobofleetBase::PublishTwistMsg(const FString& RobotName, const FString& TopicName, const Twist& TwistMsg)
@@ -870,21 +880,21 @@ void URobofleetBase::PublishTFMessage(const TFMessage& TFMessageMsg)
 	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishFollowPose(const FString& RobotUid, const PoseStamped& FollowPoseMsg)
+void URobofleetBase::PublishFollowPose(const FString& RobotName, const PoseStamped& FollowPoseMsg)
 {
 	std::string topic = "geometry_msgs/PoseStamped";
-	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/pose";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/pose";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/follow/pose";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/follow/pose";
 	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
 	EncodeRosMsg<PoseStamped>(FollowPoseMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishFollowCancel(const FString& RobotUid)
+void URobofleetBase::PublishFollowCancel(const FString& RobotName)
 {
 	const Empty cancel_msg;
 	std::string topic = "std_msgs/Empty";
-	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/cancel";
-	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/follow/cancel";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/follow/cancel";
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotName)) + "/follow/cancel";
 	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
 	EncodeRosMsg<Empty>(cancel_msg, topic, from, to);
 }
