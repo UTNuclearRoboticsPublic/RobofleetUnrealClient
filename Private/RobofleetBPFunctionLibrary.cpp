@@ -764,7 +764,7 @@ void URobofleetBPFunctionLibrary::PublishNavigationPath(const FString& RobotName
 			poseTemp.pose.orientation.w = poses.Transform.GetRotation().W;
 			navigation_path.poses.push_back(poseTemp);
 		}
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishPath(RobotName, navigation_path);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishNavigationPath(RobotName, navigation_path);
 	}
 }
 
