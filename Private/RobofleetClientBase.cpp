@@ -834,7 +834,7 @@ void URobofleetBase::PublishHandPose(const FString& RobotName, const PoseStamped
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishPath(const FString& RobotName, const Path& PathMsg)
+void URobofleetBase::PublishNavigationPath(const FString& RobotName, const Path& PathMsg)
 {
 	// Publish a path message to Robofleet
 	std::string topic = "nav_msgs/Path";
