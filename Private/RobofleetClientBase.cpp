@@ -874,9 +874,13 @@ void URobofleetBase::PublishTFMessage(const TFMessage& TFMessageMsg)
 void URobofleetBase::PublishTFMsg(const FString& TopicName, const FString& Namespace, const TFMessage& TFMessageMsg)
 {
 	std::string topic = "TF2_msgs/TFMessage";
-	std::string from = std::string(TCHAR_TO_UTF8(*TopicName));
-	std::string to = std::string(TCHAR_TO_UTF8(*TopicName));
-	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	if (!Namespace.IsEmpty()) {
+		from = "/" + std::string(TCHAR_TO_UTF8(*Namespace)) + from;
+		to = "/" + std::string(TCHAR_TO_UTF8(*Namespace)) + to;
+	}
+
 	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
 }
 
