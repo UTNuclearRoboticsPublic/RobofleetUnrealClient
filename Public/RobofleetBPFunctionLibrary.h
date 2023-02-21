@@ -167,6 +167,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishCancel(const FString& RobotUid, const FString& TopicName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static void PublishEmptyMsg(const FString& TopicName, const FString& Namespace);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PublishMoveBaseSimpleGoal(const FString& RobotName, const FPoseStamped& PoseStampedMsg);
@@ -187,7 +190,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static void PublishTFMessageMsg(const FTFMessage& TFMessageMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
-	static void PublishGenericTF(const FString& TopicName, const FTFMessage& TFMessageMsg);
+	static void PublishTFMsg(const FString& TopicName, const FString& Namespace, const FTFMessage& TFMessageMsg);
 
 	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg);

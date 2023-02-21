@@ -285,7 +285,7 @@ public:
 
 	void PublishTFMessage(const TFMessage& TFMessageMsg);
 
-	void PublishGenericTF(const FString& TopicName, const TFMessage& TFMessageMsg);
+	void PublishTFMsg(const FString& TopicName, const FString& Namespace, const TFMessage& TFMessageMsg); // **to replace PublishTFMessage
 
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
@@ -296,6 +296,8 @@ public:
 	void PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const PoseStamped& PoseStampedMsg);
 
 	void PublishCancel(const FString& RobotUid, const FString& TopicName);
+
+	void PublishEmptyMsg(const FString& TopicName, const FString& Namespace);
 
 	void PublishHapticsResearchMsg(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 

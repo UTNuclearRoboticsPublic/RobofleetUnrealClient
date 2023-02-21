@@ -678,6 +678,14 @@ void URobofleetBPFunctionLibrary::PublishCancel(const FString& RobotUid, const F
 
 }
 
+void URobofleetBPFunctionLibrary::PublishEmptyMsg(const FString& TopicName, const FString& Namespace) {
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishEmptyMsg(TopicName, Namespace);
+	}
+
+}
+
 void URobofleetBPFunctionLibrary::PublishStringCommand(const FString& cmd) {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
@@ -833,7 +841,7 @@ void URobofleetBPFunctionLibrary::PublishTFMessageMsg(const FTFMessage& TFMessag
 	}
 }
 
-void URobofleetBPFunctionLibrary::PublishGenericTF(const FString& TopicName, const FTFMessage& TFMessageMsg)
+void URobofleetBPFunctionLibrary::PublishTFMsg(const FString& TopicName, const FString& Namespace, const FTFMessage& TFMessageMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
@@ -857,7 +865,7 @@ void URobofleetBPFunctionLibrary::PublishGenericTF(const FString& TopicName, con
 
 			tf.transforms.push_back(tf_stamped);
 		}
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishGenericTF(TopicName, tf);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTFMsg(TopicName, Namespace, tf);
 	}
 }
 

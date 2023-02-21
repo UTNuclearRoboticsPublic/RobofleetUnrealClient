@@ -870,7 +870,8 @@ void URobofleetBase::PublishTFMessage(const TFMessage& TFMessageMsg)
 	EncodeRosMsg<TFMessage>(TFMessageMsg, topic, from, to);
 }
 
-void URobofleetBase::PublishGenericTF(const FString& TopicName, const TFMessage& TFMessageMsg)
+// to replace the above function
+void URobofleetBase::PublishTFMsg(const FString& TopicName, const FString& Namespace, const TFMessage& TFMessageMsg)
 {
 	std::string topic = "TF2_msgs/TFMessage";
 	std::string from = std::string(TCHAR_TO_UTF8(*TopicName));
@@ -884,7 +885,7 @@ void URobofleetBase::PublishPoseStamped(const FString& RobotUid, const FString& 
 	std::string topic = "geometry_msgs/PoseStamped";
 	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName)) + "/pose";
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + "/" + std::string(TCHAR_TO_UTF8(*TopicName)) + "/pose";
-	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	
 	EncodeRosMsg<PoseStamped>(PoseStampedMsg, topic, from, to);
 }
 
@@ -895,6 +896,21 @@ void URobofleetBase::PublishCancel(const FString& RobotUid, const FString& Topic
 	std::string from = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + std::string(TCHAR_TO_UTF8(*TopicName)) + "/cancel";
 	std::string to = "/" + std::string(TCHAR_TO_UTF8(*RobotUid)) + std::string(TCHAR_TO_UTF8(*TopicName)) + "/cancel";
 	// UE_LOG(LogTemp, Warning, TEXT("[PublishTFMessageMsg : ..."));
+	EncodeRosMsg<Empty>(cancel_msg, topic, from, to);
+}
+
+void URobofleetBase::PublishEmptyMsg(const FString& TopicName, const FString& Namespace)
+{
+	const Empty cancel_msg;
+	std::string topic = "std_msgs/Empty";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+
+	if (!Namespace.IsEmpty()){
+		from = "/" + std::string(TCHAR_TO_UTF8(*Namespace)) + from;
+		to = "/" + std::string(TCHAR_TO_UTF8(*Namespace)) + to;
+	}
+
 	EncodeRosMsg<Empty>(cancel_msg, topic, from, to);
 }
 
