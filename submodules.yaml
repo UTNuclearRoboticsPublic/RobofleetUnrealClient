@@ -1,0 +1,5 @@
+repositories:
+  Private/robofleet_client_lib:
+    type: git
+    url: git@github.com:UTNuclearRobotics/robofleet_client_lib.git
+    version: master
