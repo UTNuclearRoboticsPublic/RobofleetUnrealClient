@@ -1262,6 +1262,17 @@ FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
 		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.z);
 }
 
+TArray<FString> URobofleetBase::GetAllDetectedItems()
+{
+	TArray<FString> ListOfDetectedItems;
+
+	for (auto& it : DetectedItemAugreMap)
+	{
+		ListOfDetectedItems.Add(it.first);
+	}
+	return ListOfDetectedItems;
+}
+
 /*
 * AR Screw Axis Message Methods
 */

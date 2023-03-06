@@ -220,6 +220,8 @@ public:
 
 	FVector GetDetectedItemPosition(const FString& DetectedItemUid);
 
+	TArray<FString> GetAllDetectedItems();
+
 	// ***********************************************************
 
 	FVector GetScrewAxisPoint(const FString& RobotName);
