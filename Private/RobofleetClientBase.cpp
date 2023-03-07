@@ -594,8 +594,8 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		FrameInfoMap[FString(child_frame_id.c_str())]->TransformStamped.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
 
 		// debug
-		// UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
-		// UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
+		//UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
+		//UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
 		// UE_LOG(LogRobofleet, Warning, TEXT("Transform : x %f y %f z %f "), rs.transform.translation.x, rs.transform.translation.y, rs.transform.translation.z);
 		// UE_LOG(LogRobofleet, Warning, TEXT("TF Tree Size: %d"), tf_tree.size());
 		// UE_LOG(LogRobofleet, Warning, TEXT("FrameInfoMap: %d"), FrameInfoMap.size());
@@ -1343,6 +1343,17 @@ FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
 	return FVector(DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.x,
 		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.y,
 		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.z);
+}
+
+TArray<FString> URobofleetBase::GetAllDetectedItems()
+{
+	TArray<FString> ListOfDetectedItems;
+
+	for (auto& it : DetectedItemAugreMap)
+	{
+		ListOfDetectedItems.Add(it.first);
+	}
+	return ListOfDetectedItems;
 }
 
 /*
