@@ -83,6 +83,10 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotSubscription("trail_path", "*");
 	RegisterRobotSubscription("twist_path", "*");
 
+	RegisterRobotSubscription("heat_map/count_rate_grid", "*");
+	RegisterRobotSubscription("heat_map/count_time_grid", "*");
+	RegisterRobotSubscription("heat_map/survey_grid", "*");
+
 	RegisterRobotSubscription("agent_status", "*");
 	RegisterRobotSubscription("tf", "*");
 
@@ -221,12 +225,17 @@ void URobofleetBase::RefreshRobotList()
 		UE_LOG(LogRobofleet, Log, TEXT("Refreshing robot list"));
 		RegisterRobotStatusSubscription();
 		RegisterRobotSubscription("localization", "*");
-		RegisterRobotSubscription("image_raw/compressed", "*");
-		RegisterRobotSubscription("detection", "*");
-		RegisterRobotSubscription("ScrewParameters", "*");
 		RegisterRobotSubscription("agent_status", "*");
 		RegisterRobotSubscription("tf", "*");
+		RegisterRobotSubscription("detection", "*");
+		RegisterRobotSubscription("image_raw/compressed", "*");
 
+		RegisterRobotSubscription("heat_map/count_rate_grid", "*");
+		RegisterRobotSubscription("heat_map/count_time_grid", "*");
+		RegisterRobotSubscription("heat_map/survey_grid", "*");
+		
+		RegisterRobotSubscription("ScrewParameters", "*");
+		
 		//RegisterRobotSubscription("NavSatFix", "*");		
 
 		RegisterRobotSubscription("global_path", "*");
@@ -318,7 +327,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	else if (topic == "image_raw/compressed") {
 		//call function to convert msg to bitmap
 		//return bitmap
-		UE_LOG(LogTemp, Warning, TEXT("Found a compressed image"));
+		//UE_LOG(LogTemp, Display, TEXT("Found a compressed image"));
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
 	}
@@ -383,6 +392,16 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		FString Tag = RobotNamespace;
 		Tag = Tag.Append(topic);
 		OnPathReceived.Broadcast(Tag, path, ColorTwistPath[RobotNamespace]);
+	}
+
+	// Heat Map
+	else if (topic == "heat_map/count_rate_grid") {
+		//call function to convert msg to bitmap
+		//return bitmap
+		//UE_LOG(LogTemp, Display, TEXT("Found a heat_map"));
+		OccupancyGridMap[RobotNamespace] = DecodeMsg<OccupancyGrid>(Data);
+		OnOccupancyGridReceived.Broadcast(RobotNamespace);
+
 	}
 
 	//Leg Tracker
@@ -1124,6 +1143,70 @@ bool URobofleetBase::IsRobotImageCompressed(const FString& RobotName)
 	}
 	else return false;
 }
+
+/*
+* Occupancy Grid Message Methods
+*/
+FMapMetaData URobofleetBase::GetOccupancyGridInfo(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (OccupancyGridMap.count(RobotNamestd) == 0)
+	{
+		return FMapMetaData();
+	}
+	else
+	{
+		FMapMetaData mdata_;
+		//FTime t_;
+		//FPose p_;
+		//t_._nsec = OccupancyGridMap[RobotNamestd].info.map_load_time._nsec;
+		//t_._sec = OccupancyGridMap[RobotNamestd].info.map_load_time._sec;
+		//p_.position.x = OccupancyGridMap[RobotNamestd].info.origin.position.x;
+		//p_.position.y = OccupancyGridMap[RobotNamestd].info.origin.position.y;
+		//p_.position.z = OccupancyGridMap[RobotNamestd].info.origin.position.y;
+		//p_.orientation.W = OccupancyGridMap[RobotNamestd].info.origin.orientation.w;
+
+		//mdata_.map_load_time = t_;
+		//mdata_.resolution = OccupancyGridMap[RobotNamestd].info.resolution;
+		//mdata_.width = static_cast<int32>(OccupancyGridMap[RobotNamestd].info.width);
+		//mdata_.height = static_cast<int32>(OccupancyGridMap[RobotNamestd].info.height);
+		//mdata_.origin = p_;
+
+		return mdata_;
+	}
+}
+
+TArray<uint8> URobofleetBase::GetOccupancyGridImage(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (OccupancyGridMap.count(RobotNamestd) == 0)
+	{
+		return TArray<uint8>();
+	}
+	else
+	{
+		int32 gridSize = OccupancyGridMap[RobotNamestd].data.size();
+		int numOfCells = gridSize / sizeof(int8);
+		TArray<uint8> gridImage;
+		//gridImage.SetNumUninitialized(numOfCells * 4);
+		int val;
+		uint8 r, g, b, a;
+		for (auto i = 0; i < numOfCells; i++) {
+			val = OccupancyGridMap[RobotNamestd].data[i];
+			r = val * (255 / 100);
+			g = 0;
+			b = 255 - val * (255 / 100);
+			a = 255;
+			gridImage.Push(r);
+			gridImage.Push(g);
+			gridImage.Push(b);
+			gridImage.Push(a);
+		}
+
+		return gridImage;
+	}
+}
+
 
 /*
 * Global Message Methods

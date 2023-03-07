@@ -211,6 +211,30 @@ bool URobofleetBPFunctionLibrary::IsRobotImageCompressed(const FString& RobotNam
 	return bool();
 }
 
+TArray<uint8> URobofleetBPFunctionLibrary::GetOccupancyGridImage(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetOccupancyGridImage(RobotName);
+	}
+	return TArray<uint8>();
+}
+
+FMapMetaData URobofleetBPFunctionLibrary::GetOccupancyGridInfo(const FString& RobotName)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetOccupancyGridInfo(RobotName);
+	}
+	return FMapMetaData();
+}
+
+//TArray<uint8> URobofleetBPFunctionLibrary::ConvertGridtoRGBA(const TArray<int8>& OccupancyGridData)
+//{
+//	
+//
+//}
+
 void URobofleetBPFunctionLibrary::PrintRobotsSeen()
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

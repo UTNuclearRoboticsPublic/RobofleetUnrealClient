@@ -55,6 +55,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnResetAllAgentsSeen);
 //OnImageRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
 
+//OnOccupacyGridRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOccupancyGridReceived, FString, RobotName);
+
 //OnDetectedItemRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDetectedItemReceived, FString, DetectedItemUid, FString, frame_id);
 
@@ -114,6 +117,7 @@ private:
 	std::map<FString, FLinearColor> ColorTrailPath;
 	std::set<FString> RobotsSeen = {};
 	std::set<FString> AnchorGTSAM = {};
+	std::map<FString, OccupancyGrid> OccupancyGridMap;
 	std::map<FString, DetectionArray> LegDetectionMap;
 
 	NavSatFix WorldGeoOrigin;
@@ -198,6 +202,11 @@ public:
 	TArray<FString> GetChildrenFrameId(const FString& NodeName);
 
 	FTransform LookupTransform(const FString& target_frame, const FString& source_frame);
+
+	// ***********************************************************
+	// nav_msgs/OccupancyGrid getters
+	FMapMetaData GetOccupancyGridInfo(const FString& RobotName);
+	TArray<uint8> GetOccupancyGridImage(const FString& RobotName);
 
 	// ***********************************************************
 	// augre_msgs/DetectedItem getters
@@ -314,6 +323,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnImageReceived OnImageReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnOccupancyGridReceived OnOccupancyGridReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedItemReceived OnDetectedItemReceived;

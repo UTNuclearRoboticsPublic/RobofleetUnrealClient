@@ -86,6 +86,15 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static bool IsRobotImageCompressed(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | HeatMap")
+	static TArray<uint8> GetOccupancyGridImage(const FString& RobotName);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | HeatMap")
+	FMapMetaData GetOccupancyGridInfo(const FString& RobotName);
+
+	//UFUNCTION(BlueprintCallable, Category = "HeatMap")
+	//static TArray<uint8> ConvertGridtoRGBA(const TArray<int8>& OccupancyGridData);
 	 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void PrintRobotsSeen();
