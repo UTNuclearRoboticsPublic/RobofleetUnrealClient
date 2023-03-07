@@ -575,8 +575,8 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		FrameInfoMap[FString(child_frame_id.c_str())]->TransformStamped.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
 
 		// debug
-		// UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
-		// UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
+		//UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
+		//UE_LOG(LogRobofleet, Warning, TEXT("Child_frame_id: %s"), *FString(child_frame_id.c_str()));
 		// UE_LOG(LogRobofleet, Warning, TEXT("Transform : x %f y %f z %f "), rs.transform.translation.x, rs.transform.translation.y, rs.transform.translation.z);
 		// UE_LOG(LogRobofleet, Warning, TEXT("TF Tree Size: %d"), tf_tree.size());
 		// UE_LOG(LogRobofleet, Warning, TEXT("FrameInfoMap: %d"), FrameInfoMap.size());
@@ -1171,7 +1171,7 @@ bool URobofleetBase::isFrameAvailable(const FString& FrameName)
 	//std::string FrameNamestd = std::string(TCHAR_TO_UTF8(*FrameName));
 	//std::replace(FrameNamestd.begin(),FrameNamestd.end(), '-', '_');
 	//if (!FrameInfoMap[FString(FrameNamestd.c_str())].IsValid()) return false;
-	if (!FrameInfoMap[FrameName].IsValid()) return false;
+	if (FrameInfoMap.count(FrameName) == 0) return false;
 	return true;
 }
 
