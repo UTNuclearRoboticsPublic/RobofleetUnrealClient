@@ -316,6 +316,15 @@ FVector URobofleetBPFunctionLibrary::GetDetectedItemPosition(const FString& Dete
 	return FVector(0, 0, 0);
 }
 
+TArray<FString> URobofleetBPFunctionLibrary::GetAllDetectedItems()
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetAllDetectedItems();
+	}
+	return TArray<FString>();
+}
+
 FVector URobofleetBPFunctionLibrary::GetScrewAxisPoint(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

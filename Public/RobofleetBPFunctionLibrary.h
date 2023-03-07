@@ -121,6 +121,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
 	static FVector GetDetectedItemPosition(const FString& DetectedItemUid);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
+	static TArray<FString> GetAllDetectedItems();
+
 	UFUNCTION(BlueprintCallable, Category = "Robofleet|Screw Axis")
 	static FVector GetScrewAxisPoint(const FString& RobotName);
 

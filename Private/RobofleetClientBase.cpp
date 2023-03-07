@@ -1168,9 +1168,6 @@ TArray<FString> URobofleetBase::GetAllFrames()
 bool URobofleetBase::isFrameAvailable(const FString& FrameName)
 {
 	// TODO: THIS IS NOT IDEAL. A CONVENTION SHOULD BE PROVIDED TO ROBOT
-	//std::string FrameNamestd = std::string(TCHAR_TO_UTF8(*FrameName));
-	//std::replace(FrameNamestd.begin(),FrameNamestd.end(), '-', '_');
-	//if (!FrameInfoMap[FString(FrameNamestd.c_str())].IsValid()) return false;
 	if (FrameInfoMap.count(FrameName) == 0) return false;
 	return true;
 }
@@ -1263,6 +1260,17 @@ FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
 	return FVector(DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.x,
 		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.y,
 		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.z);
+}
+
+TArray<FString> URobofleetBase::GetAllDetectedItems()
+{
+	TArray<FString> ListOfDetectedItems;
+
+	for (auto& it : DetectedItemAugreMap)
+	{
+		ListOfDetectedItems.Add(it.first);
+	}
+	return ListOfDetectedItems;
 }
 
 /*
