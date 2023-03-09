@@ -53,7 +53,8 @@ void FRobofleetUnrealClientModule::StartRobofleetSession(FString HostUrl, const 
 	//if (!bIsInitialized)
 	{
 		//bIsInitialized = true;
-		RobofleetClient = NewObject<URobofleetBase>(GEngine->GetWorldFromContextObject(WorldContextObject));
+		//RobofleetClient = NewObject<URobofleetBase>(GEngine->GetWorldFromContextObject(WorldContextObject));
+		RobofleetClient = NewObject<URobofleetBase>(GEngine->GetWorldFromContextObjectChecked(WorldContextObject));
 		
 		// TODO: FInd a better way to avoid GC...
 		RobofleetClient->AddToRoot();
