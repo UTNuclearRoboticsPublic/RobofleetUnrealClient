@@ -231,6 +231,8 @@ public:
 
 	TArray<FString> GetAllDetectedItems();
 
+	void RemoveDetectedItem(const FString& DetectedItemUid);
+
 	// ***********************************************************
 
 	FVector GetScrewAxisPoint(const FString& RobotName);

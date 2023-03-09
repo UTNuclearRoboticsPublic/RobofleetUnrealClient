@@ -349,6 +349,14 @@ TArray<FString> URobofleetBPFunctionLibrary::GetAllDetectedItems()
 	return TArray<FString>();
 }
 
+void URobofleetBPFunctionLibrary::RemoveDetectedItem(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->RemoveDetectedItem(DetectedItemUid);
+	}
+}
+
 FVector URobofleetBPFunctionLibrary::GetScrewAxisPoint(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
