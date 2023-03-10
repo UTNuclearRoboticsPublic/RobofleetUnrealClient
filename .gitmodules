@@ -1,4 +1,4 @@
 [submodule "Private/robofleet_client_lib"]
 	path = Private/robofleet_client_lib
-	url = https://github.com/UTNuclearRobotics/robofleet_client_lib.git
+	url = git@github.com:UTNuclearRobotics/robofleet_client_lib.git
 	branch = master
