@@ -1356,6 +1356,12 @@ TArray<FString> URobofleetBase::GetAllDetectedItems()
 	return ListOfDetectedItems;
 }
 
+void URobofleetBase::RemoveDetectedItem(const FString& DetectedItemUid)
+{
+	FString DetectedItemUidStd = FString(TCHAR_TO_UTF8(*DetectedItemUid));
+	DetectedItemAugreMap.erase(DetectedItemUidStd);
+}
+
 /*
 * AR Screw Axis Message Methods
 */
