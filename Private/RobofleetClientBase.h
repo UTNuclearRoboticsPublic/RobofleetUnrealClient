@@ -316,6 +316,8 @@ public:
 
 	void PublishStringCommand(const FString& cmd);
 
+	void PublishDetection(const DetectedItem_augre& Detection);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 

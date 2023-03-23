@@ -961,6 +961,15 @@ void URobofleetBase::PublishStringCommand(const FString& cmd)
 	EncodeRosMsg<String>(test, topic, from, to);
 }
 
+void URobofleetBase::PublishDetection(const DetectedItem_augre& Detection)
+{
+	std::string topic = "augre_msgs/DetectedItem";
+	std::string from = "/hololens/detection";
+	std::string to = "/hololens/detection";
+	UE_LOG(LogTemp, Warning, TEXT("[Publish Detection : ..."));
+	EncodeRosMsg<DetectedItem_augre>(Detection, topic, from, to);
+}
+
 /*
 * Agent Status Messages
 */
