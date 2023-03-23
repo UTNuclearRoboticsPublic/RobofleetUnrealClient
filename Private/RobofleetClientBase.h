@@ -211,6 +211,10 @@ public:
 	// ***********************************************************
 	// augre_msgs/DetectedItem getters
 
+	FString ConvertAsaToFrameId(const FString& asa, const FString& tf_prefix);
+
+	FString ConvertFrameIdToAsa(const FString& frame_id, const FString& tf_prefix);
+
 	FString GetDetectedName(const FString& RobotName);		//callsign
 
 	FString GetDetectedType(const FString& RobotName);
@@ -260,6 +264,7 @@ public:
 	void GetPeopleTracked(const FString& RobotName, PersonArray& PeopleTrackedArray);
 
 	bool isValidUuid(const FString& id);
+	bool isValidUuid(const std::string& id);
 
 	UFUNCTION()
 	void RefreshRobotList();

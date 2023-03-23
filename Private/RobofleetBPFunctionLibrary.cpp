@@ -256,6 +256,24 @@ URobofleetBase* URobofleetBPFunctionLibrary::GetClientReference()
 	return FRobofleetUnrealClientModule::Get()->RobofleetClient;
 }
 
+FString URobofleetBPFunctionLibrary::ConvertAsaToFrameId(const FString& asa, const FString& tf_prefix)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->ConvertAsaToFrameId(asa, tf_prefix);
+	}
+	return TEXT("");
+}
+
+FString URobofleetBPFunctionLibrary::ConvertFrameIdToAsa(const FString& frame_id, const FString& tf_prefix)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->ConvertFrameIdToAsa(frame_id, tf_prefix);
+	}
+	return TEXT("");
+}
+
 FString URobofleetBPFunctionLibrary::GetDetectedName(const FString& DetectedItemUid)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

@@ -102,6 +102,12 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static void RegisterRobotSubscription(FString TopicName, FString RobotName);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString ConvertAsaToFrameId(const FString& asa, const FString& tf_prefix);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FString ConvertFrameIdToAsa(const FString& frame_id, const FString& tf_prefix);
+
 	// Detected Item
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
 	static FString GetDetectedName(const FString& DetectedItemUid);
@@ -218,8 +224,6 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStringCommand(const FString& cmd);
-
-	
 
 	
 

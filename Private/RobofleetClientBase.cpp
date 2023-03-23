@@ -1259,6 +1259,33 @@ bool URobofleetBase::isFrameAvailable(const FString& FrameName)
 * Detected Item Message Methods
 */
 
+FString URobofleetBase::ConvertAsaToFrameId(const FString& asa, const FString& tf_prefix) {
+	std::string frame_id = std::string(TCHAR_TO_UTF8(*asa));
+	std::replace(frame_id.begin(), frame_id.end(), '-', '_');
+
+	frame_id = std::string(TCHAR_TO_UTF8(*tf_prefix)) + frame_id;
+	return FString(UTF8_TO_TCHAR(frame_id.c_str()));
+}
+
+FString URobofleetBase::ConvertFrameIdToAsa(const FString& frame_id, const FString& tf_prefix) {
+	std::string frame = std::string(TCHAR_TO_UTF8(*frame_id));
+	std::string prefix = std::string(TCHAR_TO_UTF8(*tf_prefix));
+	std::string asa;
+
+	if (frame.size() != prefix.size() + 36) {
+		return "";
+	}
+
+	asa = frame.substr(prefix.size(), frame.size());
+	std::replace(asa.begin(), asa.end(), '_', '-');
+
+	if (!isValidUuid(asa)) {
+		return "";
+	}
+
+	return FString(UTF8_TO_TCHAR(asa.c_str()));;
+}
+
 FString URobofleetBase::GetDetectedName(const FString& DetectedItemUid)
 {
 	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) return "Item unavailable";
@@ -1523,4 +1550,12 @@ bool URobofleetBase::isValidUuid(const FString& id) {
 		"[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-"
 		"9a-fA-F]{12}");
 	return std::regex_match(std::string(TCHAR_TO_UTF8(*id)), uuid_regex);
+}
+
+bool URobofleetBase::isValidUuid(const std::string& id) {
+	// From: https://www.regextester.com/99148
+	const std::regex uuid_regex(
+		"[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-"
+		"9a-fA-F]{12}");
+	return std::regex_match(id, uuid_regex);
 }
