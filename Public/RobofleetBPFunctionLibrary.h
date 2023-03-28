@@ -133,6 +133,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
 	static TArray<FString> GetAllDetectedItems();
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
+	static void RemoveDetectedItem(const FString& DetectedItemUid);
+
 	UFUNCTION(BlueprintCallable, Category = "Robofleet|Screw Axis")
 	static FVector GetScrewAxisPoint(const FString& RobotName);
 
@@ -215,6 +218,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 
 	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStringCommand(const FString& cmd);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
+    static void PublishDetection(const FDetectedItem& detection);
 
 	
 

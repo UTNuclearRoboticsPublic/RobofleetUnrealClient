@@ -231,6 +231,8 @@ public:
 
 	TArray<FString> GetAllDetectedItems();
 
+	void RemoveDetectedItem(const FString& DetectedItemUid);
+
 	// ***********************************************************
 
 	FVector GetScrewAxisPoint(const FString& RobotName);
@@ -313,6 +315,8 @@ public:
 	void PublishHapticsResearchMsg(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
 	void PublishStringCommand(const FString& cmd);
+
+	void PublishDetection(const DetectedItem_augre& Detection);
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;

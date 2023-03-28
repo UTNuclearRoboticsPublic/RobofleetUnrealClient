@@ -349,6 +349,14 @@ TArray<FString> URobofleetBPFunctionLibrary::GetAllDetectedItems()
 	return TArray<FString>();
 }
 
+void URobofleetBPFunctionLibrary::RemoveDetectedItem(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->RemoveDetectedItem(DetectedItemUid);
+	}
+}
+
 FVector URobofleetBPFunctionLibrary::GetScrewAxisPoint(const FString& RobotName)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
@@ -899,6 +907,48 @@ void URobofleetBPFunctionLibrary::PublishTFMsg(const FString& TopicName, const F
 			tf.transforms.push_back(tf_stamped);
 		}
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishTFMsg(TopicName, Namespace, tf);
+	}
+}
+
+void URobofleetBPFunctionLibrary::PublishDetection(const FDetectedItem& detection)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		DetectedItem_augre detection_augre;
+
+		detection_augre.uid = std::string(TCHAR_TO_UTF8(*detection.uid));
+		detection_augre.callsign = std::string(TCHAR_TO_UTF8(*detection.callsign));
+		detection_augre.type = std::string(TCHAR_TO_UTF8(*detection.type));
+		detection_augre.type_label = std::string(TCHAR_TO_UTF8(*detection.type_label));
+		detection_augre.how = std::string(TCHAR_TO_UTF8(*detection.how));
+		detection_augre.how_label = std::string(TCHAR_TO_UTF8(*detection.how_label));
+
+		detection_augre.pose.header.frame_id = std::string(TCHAR_TO_UTF8(*detection.pose.header.frame_id));
+		detection_augre.pose.header.seq = detection.pose.header.seq;
+		detection_augre.pose.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+		detection_augre.pose.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
+		detection_augre.pose.pose.position.x = detection.pose.Transform.GetTranslation().X;
+		detection_augre.pose.pose.position.y = detection.pose.Transform.GetTranslation().Y;
+		detection_augre.pose.pose.position.z = detection.pose.Transform.GetTranslation().Z;
+		detection_augre.pose.pose.orientation.x = detection.pose.Transform.GetRotation().X;
+		detection_augre.pose.pose.orientation.y = detection.pose.Transform.GetRotation().Y;
+		detection_augre.pose.pose.orientation.z = detection.pose.Transform.GetRotation().Z;
+		detection_augre.pose.pose.orientation.w = detection.pose.Transform.GetRotation().W;
+
+		detection_augre.cmpr_image.header.frame_id = std::string(TCHAR_TO_UTF8(*detection.cmpr_image.header.frame_id));
+		detection_augre.cmpr_image.header.seq = detection.cmpr_image.header.seq;
+		detection_augre.cmpr_image.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+		detection_augre.cmpr_image.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
+		detection_augre.cmpr_image.format = std::string(TCHAR_TO_UTF8(*detection.cmpr_image.format));
+
+		for (auto& data : detection.cmpr_image.data)
+		{
+			detection_augre.cmpr_image.data.push_back(data);
+		}
+
+		detection_augre.url = std::string(TCHAR_TO_UTF8(*detection.url));
+		
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishDetection(detection_augre);
 	}
 }
 
