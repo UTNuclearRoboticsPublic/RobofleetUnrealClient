@@ -396,9 +396,6 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 
 	// Heat Map
 	else if (topic == "heat_map/count_rate_grid") {
-		//call function to convert msg to bitmap
-		//return bitmap
-		//UE_LOG(LogTemp, Display, TEXT("Found a heat_map"));
 		OccupancyGridMap[RobotNamespace] = DecodeMsg<OccupancyGrid>(Data);
 		OnOccupancyGridReceived.Broadcast(RobotNamespace);
 
@@ -1176,7 +1173,7 @@ FMapMetaData URobofleetBase::GetOccupancyGridInfo(const FString& RobotName)
 	}
 }
 
-TArray<uint8> URobofleetBase::GetOccupancyGridImage(const FString& RobotName)
+const TArray<uint8> URobofleetBase::GetOccupancyGridImage(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
 	if (OccupancyGridMap.count(RobotNamestd) == 0)
@@ -1185,24 +1182,33 @@ TArray<uint8> URobofleetBase::GetOccupancyGridImage(const FString& RobotName)
 	}
 	else
 	{
+		UE_LOG(LogTemp, Display, TEXT("In get OG image function"));
 		int32 gridSize = OccupancyGridMap[RobotNamestd].data.size();
 		int numOfCells = gridSize / sizeof(int8);
 		TArray<uint8> gridImage;
-		//gridImage.SetNumUninitialized(numOfCells * 4);
-		int val;
+		// initialize image array with all values set to 100
+		gridImage.Init(100, numOfCells * 4);
+		int8_t* val = nullptr;
 		uint8 r, g, b, a;
+		
 		for (auto i = 0; i < numOfCells; i++) {
-			val = OccupancyGridMap[RobotNamestd].data[i];
-			r = val * (255 / 100);
-			g = 0;
-			b = 255 - val * (255 / 100);
-			a = 255;
-			gridImage.Push(r);
-			gridImage.Push(g);
-			gridImage.Push(b);
-			gridImage.Push(a);
+			val = &(OccupancyGridMap[RobotNamestd].data[i]);
+			// cells having value -1 are set to grey with semi-transparency
+			if (*val < 0) {
+				gridImage[i * 4 + 3] = 20;
+			}
+			else {
+				r = 255 - *val * (255 / 100);
+				g = 0;
+				b = *val * (255 / 100);
+				a = 255;
+				gridImage[i * 4] = r;
+				gridImage[i * 4 + 1] = g;
+				gridImage[i * 4 + 2] = b;
+				gridImage[i * 4 + 3] = a;
+			}
 		}
-
+		UE_LOG(LogTemp, Display, TEXT("returning image of size %i"), gridImage.GetAllocatedSize());
 		return gridImage;
 	}
 }
