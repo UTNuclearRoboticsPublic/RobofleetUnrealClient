@@ -274,6 +274,107 @@ FString URobofleetBPFunctionLibrary::ConvertFrameIdToAsa(const FString& frame_id
 	return TEXT("");
 }
 
+
+FPose URobofleetBPFunctionLibrary::ConvertPoseToRightHandMeters(const FPose& pose_in) {
+	FPose pose_out;
+	
+	if (!(FRobofleetUnrealClientModule::Get()->IsSessionRunning()))
+	{
+		return pose_out;
+	}
+	
+	pose_out.position.x =  pose_in.position.x / 100;
+	pose_out.position.y = -pose_in.position.y / 100;
+	pose_out.position.z =  pose_in.position.z / 100;
+	pose_out.orientation.X = -pose_in.orientation.X;
+	pose_out.orientation.Y = -pose_in.orientation.Y;
+	pose_out.orientation.Z = -pose_in.orientation.Z;
+	pose_out.orientation.W =  pose_in.orientation.W;
+
+	return pose_out;
+}
+
+FVector URobofleetBPFunctionLibrary::ConvertPositionToRightHandMeters(const FVector& pos_in) {
+	FVector pos_out;
+
+	if (!(FRobofleetUnrealClientModule::Get()->IsSessionRunning()))
+	{
+		return pos_out;
+	}
+
+	pos_out.X =  pos_in.X / 100;
+	pos_out.Y = -pos_in.Y / 100;
+	pos_out.Z =  pos_in.Z / 100;
+
+	return pos_out;
+}
+
+FQuat URobofleetBPFunctionLibrary::ConvertQuaternionToRightHand(const FQuat& rot_in) {
+	FQuat rot_out;
+
+	if (!(FRobofleetUnrealClientModule::Get()->IsSessionRunning()))
+	{
+		return rot_out;
+	}
+
+	// Quaternion to RH untested
+	rot_out.X = -rot_in.X;
+	rot_out.Y = -rot_in.Z;
+	rot_out.Z = -rot_in.Y;
+	rot_out.W =  rot_in.W;
+
+	return rot_out;
+}
+
+FRotator URobofleetBPFunctionLibrary::ConvertEulerToRightHand(const FRotator& rot_in) {
+	FRotator rot_out;
+
+	if (!(FRobofleetUnrealClientModule::Get()->IsSessionRunning()))
+	{
+		return rot_out;
+	}
+
+	rot_out.Roll  = -rot_in.Roll;
+	rot_out.Pitch =  rot_in.Pitch;
+	rot_out.Yaw   = -rot_in.Yaw;
+
+	return rot_out;
+}
+
+FQuat URobofleetBPFunctionLibrary::ConvertEulerToRightHandQuaternion(const FRotator& rot_in) {
+	FQuat rot_out;
+
+	if (!(FRobofleetUnrealClientModule::Get()->IsSessionRunning()))
+	{
+		return rot_out;
+	}
+
+	rot_out.MakeFromEuler(FVector(rot_in.Roll, rot_in.Pitch, rot_in.Yaw));
+	// Quaternion to RH untested
+	rot_out.X = -rot_out.X;
+	rot_out.Y = -rot_out.Z;
+	rot_out.Z = -rot_out.Y;
+	rot_out.W =  rot_out.W;
+
+	return rot_out;
+}
+
+
+FRotator URobofleetBPFunctionLibrary::ConvertQuaternionToRightHandEuler(const FQuat& rot_in) {
+	FRotator rot_out;
+
+	if (!(FRobofleetUnrealClientModule::Get()->IsSessionRunning()))
+	{
+		return rot_out;
+	}
+
+	rot_out.Roll  = -rot_in.Euler().X;
+	rot_out.Pitch =  rot_in.Euler().Y;
+	rot_out.Yaw   = -rot_in.Euler().Z;
+
+	return rot_out;
+}
+
 FString URobofleetBPFunctionLibrary::GetDetectedName(const FString& DetectedItemUid)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())

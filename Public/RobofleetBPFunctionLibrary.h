@@ -108,6 +108,24 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
 	static FString ConvertFrameIdToAsa(const FString& frame_id, const FString& tf_prefix);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FPose ConvertPoseToRightHandMeters(const FPose& pose_in);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FVector ConvertPositionToRightHandMeters(const FVector& pos_in);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FQuat ConvertQuaternionToRightHand(const FQuat& rot_in);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FRotator ConvertEulerToRightHand(const FRotator& rot_in);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FQuat ConvertEulerToRightHandQuaternion(const FRotator& rot_in);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet")
+	static FRotator ConvertQuaternionToRightHandEuler(const FQuat& rot_in);
+
 	// Detected Item
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
 	static FString GetDetectedName(const FString& DetectedItemUid);
