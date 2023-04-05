@@ -143,7 +143,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static FString GetDetectedHowLabel(const FString& DetectedItemUid);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
-	FPoseStamped GetDetectedItemPose(const FString& DetectedItemUid);
+	static FPoseStamped GetDetectedItemPose(const FString& DetectedItemUid);
 	
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
 	static TArray<uint8> GetDetectedImage(const FString& DetectedItemUid);
