@@ -941,12 +941,22 @@ void URobofleetBPFunctionLibrary::PublishDetection(const FDetectedItem& detectio
 		detection_augre.cmpr_image.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
 		detection_augre.cmpr_image.format = std::string(TCHAR_TO_UTF8(*detection.cmpr_image.format));
 
-		for (auto& data : detection.cmpr_image.data)
-		{
-			detection_augre.cmpr_image.data.push_back(data);
-		}
-
-		detection_augre.url = std::string(TCHAR_TO_UTF8(*detection.url));
+		//for (auto& data : detection.cmpr_image.data)
+		//{
+		//	detection_augre.cmpr_image.data.push_back(data);
+		//}
+		
+		//// Get UTexture2D into a TArray
+		//TArray<uint8> out_compressed_image;
+		//GetCompressedImageData(detection.cmpr_image.data, out_compressed_image);
+		//
+		//// reserve space in image vector to avoid reallocations
+		//detection_augre.cmpr_image.data.reserve(out_compressed_image.Num());
+		//
+		//// copy the contents of the TArray to the std::vector
+		//detection_augre.cmpr_image.data.assign(out_compressed_image.GetData(), out_compressed_image.GetData() + out_compressed_image.Num());
+		//
+		//detection_augre.url = std::string(TCHAR_TO_UTF8(*detection.url));
 		
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishDetection(detection_augre);
 	}
@@ -983,7 +993,7 @@ void URobofleetBPFunctionLibrary::PublishStartUMRFMsg(const FStartUMRF& StartUMR
 	}
 	else 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("RobofleetClient No running"));
+		UE_LOG(LogTemp, Warning, TEXT("RobofleetClient Not running"));
 	}
 	
 }
@@ -1002,7 +1012,7 @@ void URobofleetBPFunctionLibrary::PublishStopUMRFMsg(const FStopUMRF& StopUMRFMs
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("RobofleetClient No running"));
+		UE_LOG(LogTemp, Warning, TEXT("RobofleetClient Not running"));
 	}
 }
 
@@ -1037,4 +1047,230 @@ void URobofleetBPFunctionLibrary::PublishHapticsResearchMsg(const FString& Robot
 
 		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishHapticsResearchMsg(RobotName, Goal);
 	}
+
+}
+
+void URobofleetBPFunctionLibrary::PublishVLCImageMsg(const FString& TopicName, const FString& Namespace, const FImageROS& ImageMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		// Init
+		Image msg;
+		uint32 time_stamp = FDateTime::UtcNow().GetMillisecond();
+
+		// Convert and fill ROS sensor_msgs/Image message
+		msg.header.frame_id = std::string(TCHAR_TO_UTF8(*ImageMsg.header.frame_id));
+		msg.header.seq = ImageMsg.header.seq;
+		msg.header.stamp._nsec = time_stamp * 1000000;
+		msg.header.stamp._sec = time_stamp;
+		msg.height = ImageMsg.height;
+		msg.width = ImageMsg.width;
+		msg.encoding = std::string(TCHAR_TO_UTF8(*ImageMsg.encoding));
+		msg.is_bigendian = ImageMsg.is_bigendian;
+		msg.step = ImageMsg.step;
+
+		// Fill robofleet vector with data
+		msg.data.reserve(ImageMsg.data.Num());
+		msg.data.assign(ImageMsg.data.GetData(), ImageMsg.data.GetData() + ImageMsg.data.Num());
+
+		// Call RobofleetClient Publish Image Msg
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishImageMsg(TopicName, Namespace, msg);
+
+		//UE_LOG(LogTemp, Warning, TEXT("Byte Array Size: %d"), ImageMsg.data.Num());
+	}
+	else { UE_LOG(LogTemp, Error, TEXT("Robofleet Session Not Runnning")); }
+
+}
+
+void URobofleetBPFunctionLibrary::PublishVLCCompressedImageMsg(const FString& TopicName,
+															   const FString& Namespace,
+															   const FCompressedImage& CompressedImageMsg,
+															   const int& ImageHeight,
+															   const int& ImageWidth,
+															   const int& BitDepth)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		// Init
+		CompressedImage msg;
+		TArray<uint8> OutCompressedImageMsg;
+		uint32 time_stamp = FDateTime::UtcNow().GetMillisecond();
+
+		// Convert and fill ROS sensor_msgs/CompressedImage message
+		msg.header.frame_id = std::string(TCHAR_TO_UTF8(*CompressedImageMsg.header.frame_id));
+		msg.header.seq = CompressedImageMsg.header.seq;
+		msg.header.stamp._nsec = time_stamp * 1000000;
+		msg.header.stamp._sec = time_stamp;
+		msg.format = std::string(TCHAR_TO_UTF8(*CompressedImageMsg.format));
+
+		// Compress image to jpeg
+		ToCompressedJPEGImage(CompressedImageMsg.data.GetData(), ImageHeight, ImageWidth, BitDepth, ERGBFormat::Gray, OutCompressedImageMsg);
+
+		// Fill robofleet vector with data
+		msg.data.reserve(OutCompressedImageMsg.Num());
+		msg.data.assign(OutCompressedImageMsg.GetData(), OutCompressedImageMsg.GetData() + OutCompressedImageMsg.Num());
+
+		//UE_LOG(LogTemp, Warning, TEXT("Compression Size: %d"), OutCompressedImageMsg.Num());
+
+		// Call RobofleetClient publish msg
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishCompressedImageMsg(TopicName, Namespace, msg);
+	}
+	else { UE_LOG(LogTemp, Error, TEXT("Robofleet Session Not Runnning")); }
+
+}
+
+void  URobofleetBPFunctionLibrary::PublishPVImageMsg(const FString& TopicName,
+													 const FString& Namespace, 
+													 const FImageROS& ImageMsg, 
+													 UTextureRenderTarget2D* RenderTarget)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		// Init
+		Image temp;
+		TArray<uint8> out_image;
+		uint32 Height{ 0 };
+		uint32 Width{ 0 };
+		uint32 BitDepth{ 0 };
+
+		// Set header and format
+		temp.header.frame_id = std::string(TCHAR_TO_UTF8(*ImageMsg.header.frame_id));
+		temp.header.seq = ImageMsg.header.seq;
+		temp.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+		temp.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
+		temp.height = ImageMsg.height;
+		temp.width = ImageMsg.width;
+		temp.encoding = std::string(TCHAR_TO_UTF8(*ImageMsg.encoding));
+		temp.is_bigendian = ImageMsg.is_bigendian;
+		temp.step = ImageMsg.step;
+
+		// Get UTexture2D into a TArray
+		GetByteArrayFromTextureRenderTarget(RenderTarget, out_image, Height, Width, BitDepth);
+
+		// Fill robofleet vector with data
+		temp.data.reserve(out_image.Num());
+		temp.data.assign(out_image.GetData(), out_image.GetData() + out_image.Num());
+
+		// Call RobofleetClient publish msg
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishImageMsg(TopicName, Namespace, temp);
+
+	}
+	else { UE_LOG(LogTemp, Error, TEXT("Robofleet Session Not Runnning")); }
+
+}
+
+void  URobofleetBPFunctionLibrary::PublishPVCompressedImageMsg(const FString& TopicName,
+														       const FString& Namespace,
+														       const FCompressedImage& ImageMsg,
+														       UTextureRenderTarget2D* RenderTarget)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		CompressedImage temp;
+		TArray<uint8> out_image;
+
+		// Set header and format
+		temp.header.frame_id = std::string(TCHAR_TO_UTF8(*ImageMsg.header.frame_id));
+		temp.header.seq = ImageMsg.header.seq;
+		temp.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+		temp.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
+		temp.format = std::string(TCHAR_TO_UTF8(*ImageMsg.format));
+
+		// Convert UTextureRenderTarget2D into a TArray
+		GetCompressedByteArrayFromTextureRenderTarget(RenderTarget, out_image);
+
+		// reserve space in image vector to avoid reallocations
+		temp.data.resize(out_image.Num());
+
+		// copy the contents of the TArray to the std::vector
+		temp.data.assign(out_image.GetData(), out_image.GetData() + out_image.Num());
+
+		UE_LOG(LogTemp, Warning, TEXT("JPEG Size: %d"), temp.data.size());
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishCompressedImageMsg(TopicName, Namespace, temp);
+	}
+
+}
+
+void URobofleetBPFunctionLibrary::ToCompressedJPEGImage(const void* InRawImageData,
+														const uint32& InHeight,
+														const uint32& InWidth,
+														const uint32& BitDepth,
+														const ERGBFormat RawFormat,
+														TArray<uint8>& OutCompressedImageData)
+{
+	// Create image wrapper class for JPEG image
+	static IImageWrapperModule& jpeg_image_wrapper_module = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+	static TSharedPtr<IImageWrapper> jpeg_image_wrapper = jpeg_image_wrapper_module.CreateImageWrapper(EImageFormat::JPEG);
+
+	// Set the size of color pixel array
+	const uint32 byte_array_size = InHeight * InWidth * BitDepth;
+
+	// Set image wrapper raw data
+	jpeg_image_wrapper->SetRaw(InRawImageData,
+		byte_array_size,
+		InHeight,
+		InWidth,
+		RawFormat, 8);
+
+	// Assign compressed image
+	OutCompressedImageData = jpeg_image_wrapper->GetCompressed();
+
+}
+
+void URobofleetBPFunctionLibrary::GetByteArrayFromTextureRenderTarget(UTextureRenderTarget2D* RenderTarget, TArray<uint8>& OutRawImageData, uint32& OutHeight, uint32& OutWidth, uint32& OutBitDepth)
+{
+	// Get render target resource
+	FRenderTarget* render_target = RenderTarget->GameThread_GetRenderTargetResource();
+
+	// Set the size of color pixel array
+	FIntPoint render_target_size = render_target->GetSizeXY();
+	const uint32 raw_image_array_size = render_target_size.X * render_target_size.Y * 4;
+
+	// Use a preallocated buffer for the raw byte array
+	static TArray<FColor> raw_color_buffer;
+	raw_color_buffer.SetNumUninitialized(raw_image_array_size);
+	render_target->ReadPixelsPtr(raw_color_buffer.GetData());
+
+	OutBitDepth = 4;
+	const uint32 ColorDataSize = raw_color_buffer.Num();
+	const uint32 TextureSize = raw_color_buffer.Num() * OutBitDepth;
+	OutRawImageData.SetNumUninitialized(TextureSize);
+	UE_LOG(LogTemp, Error, TEXT("Texture Size: %d"), TextureSize);
+
+	for (uint32 i = 0; i < ColorDataSize; i++)
+	{
+		OutRawImageData[(i * 4)] = raw_color_buffer[i].R;
+		OutRawImageData[(i * 4) + 1] = raw_color_buffer[i].G;
+		OutRawImageData[(i * 4) + 2] = raw_color_buffer[i].B;
+		OutRawImageData[(i * 4) + 3] = raw_color_buffer[i].A;
+	}
+}
+
+void URobofleetBPFunctionLibrary::GetCompressedByteArrayFromTextureRenderTarget(UTextureRenderTarget2D* RenderTarget, TArray<uint8>& OutCompressedImageData)
+{
+	TArray<uint8> RawImageData;
+	uint32 Height{ 0 };
+	uint32 Width{ 0 };
+	uint32 BitDepth{ 0 };
+
+	GetByteArrayFromTextureRenderTarget(RenderTarget, RawImageData, Height, Width, BitDepth);
+	ToCompressedJPEGImage(RawImageData.GetData(), Height, Width, BitDepth, ERGBFormat::RGBA, OutCompressedImageData);
+}
+
+void URobofleetBPFunctionLibrary::GetRenderTargetFormat(UTextureRenderTarget2D* RenderTarget, FString& Type)
+{
+	// Print out pixel format
+	EPixelFormat pixel_format = RenderTarget->GetFormat();
+	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPixelFormat"), true);
+	if (EnumPtr)
+	{
+		Type = EnumPtr->GetDisplayNameTextByValue((int64)pixel_format).ToString();
+		UE_LOG(LogTemp, Warning, TEXT("Render target format: %s"), *Type);
+	}
+	else
+	{
+		Type = "Cannot Get Type";
+	}
+
 }
