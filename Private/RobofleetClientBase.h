@@ -206,7 +206,7 @@ public:
 	// ***********************************************************
 	// nav_msgs/OccupancyGrid getters
 	FMapMetaData GetOccupancyGridInfo(const FString& RobotName);
-	TArray<uint8> GetOccupancyGridImage(const FString& RobotName);
+	const TArray<uint8> GetOccupancyGridImage(const FString& RobotName);
 
 	// ***********************************************************
 	// augre_msgs/DetectedItem getters
