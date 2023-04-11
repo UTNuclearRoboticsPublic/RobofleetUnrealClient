@@ -155,6 +155,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static FVector GetDetectedItemPosition(const FString& DetectedItemUid);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
+	static FString GetDetectedItemImageURL(const FString& DetectedItemUid);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
 	static TArray<FString> GetAllDetectedItems();
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")

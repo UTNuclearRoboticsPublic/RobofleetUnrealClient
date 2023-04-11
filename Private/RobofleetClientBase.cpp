@@ -1372,6 +1372,12 @@ FVector URobofleetBase::GetDetectedItemPosition(const FString& DetectedItemUid)
 		           DetectedItemAugreMap[DetectedItemUidStd].pose.pose.position.z);
 }
 
+FString URobofleetBase::GetDetectedItemImageURL(const FString& DetectedItemUid)
+{
+	if (DetectedItemAugreMap.count(DetectedItemUid) == 0) return "NoUrl";
+	return FString(DetectedItemAugreMap[DetectedItemUid].url.c_str());
+}
+
 TArray<FString> URobofleetBase::GetAllDetectedItems()
 {
 	TArray<FString> ListOfDetectedItems;

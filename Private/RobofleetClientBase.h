@@ -233,6 +233,8 @@ public:
 
 	FVector GetDetectedItemPosition(const FString& DetectedItemUid);
 
+	FString GetDetectedItemImageURL(const FString& DetectedItemUid);
+
 	TArray<FString> GetAllDetectedItems();
 
 	void RemoveDetectedItem(const FString& DetectedItemUid);

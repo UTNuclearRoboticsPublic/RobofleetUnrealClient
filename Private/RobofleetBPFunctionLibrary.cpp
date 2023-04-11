@@ -459,6 +459,17 @@ FVector URobofleetBPFunctionLibrary::GetDetectedItemPosition(const FString& Dete
 	return FVector(0, 0, 0);
 }
 
+FString URobofleetBPFunctionLibrary::GetDetectedItemImageURL(const FString& DetectedItemUid)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		return FRobofleetUnrealClientModule::Get()->RobofleetClient->GetDetectedItemImageURL(DetectedItemUid);
+	}
+	return TEXT("No Robofleet Connection");
+
+}
+
+
 TArray<FString> URobofleetBPFunctionLibrary::GetAllDetectedItems()
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
