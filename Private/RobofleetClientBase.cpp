@@ -1163,20 +1163,20 @@ FMapMetaData URobofleetBase::GetOccupancyGridInfo(const FString& RobotName)
 	else
 	{
 		FMapMetaData mdata_;
-		//FTime t_;
-		//FPose p_;
-		//t_._nsec = OccupancyGridMap[RobotNamestd].info.map_load_time._nsec;
-		//t_._sec = OccupancyGridMap[RobotNamestd].info.map_load_time._sec;
-		//p_.position.x = OccupancyGridMap[RobotNamestd].info.origin.position.x;
-		//p_.position.y = OccupancyGridMap[RobotNamestd].info.origin.position.y;
-		//p_.position.z = OccupancyGridMap[RobotNamestd].info.origin.position.y;
-		//p_.orientation.W = OccupancyGridMap[RobotNamestd].info.origin.orientation.w;
+		FTime t_;
+		FPose p_;
+		t_._nsec = OccupancyGridMap[RobotNamestd].info.map_load_time._nsec;
+		t_._sec = OccupancyGridMap[RobotNamestd].info.map_load_time._sec;
+		p_.position.x = OccupancyGridMap[RobotNamestd].info.origin.position.x;
+		p_.position.y = OccupancyGridMap[RobotNamestd].info.origin.position.y;
+		p_.position.z = OccupancyGridMap[RobotNamestd].info.origin.position.y;
+		p_.orientation.W = OccupancyGridMap[RobotNamestd].info.origin.orientation.w;
 
-		//mdata_.map_load_time = t_;
-		//mdata_.resolution = OccupancyGridMap[RobotNamestd].info.resolution;
-		//mdata_.width = static_cast<int32>(OccupancyGridMap[RobotNamestd].info.width);
-		//mdata_.height = static_cast<int32>(OccupancyGridMap[RobotNamestd].info.height);
-		//mdata_.origin = p_;
+		mdata_.map_load_time = t_;
+		mdata_.resolution = OccupancyGridMap[RobotNamestd].info.resolution;
+		mdata_.width = static_cast<int32>(OccupancyGridMap[RobotNamestd].info.width);
+		mdata_.height = static_cast<int32>(OccupancyGridMap[RobotNamestd].info.height);
+		mdata_.origin = p_;
 
 		return mdata_;
 	}

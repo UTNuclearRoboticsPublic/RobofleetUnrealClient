@@ -541,38 +541,23 @@ struct FMapMetaData
 {
 	GENERATED_BODY()
 
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-		FTime map_load_time;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTime map_load_time;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-		float resolution;
+	float resolution;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-		int32 width;
+	int32 width;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-		int32 height;
+	int32 height;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-		FPose origin;
+	FPose origin;
 
 };
 
-//USTRUCT(BlueprintType)
-//struct FOccupancyGrid
-//{
-//	GENERATED_BODY()
-//
-//		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-//		FHeader header;
-//
-//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-//		FMapMetaData info;
-//
-//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-//		TArray<int8> data;
-//
-//};
 
 USTRUCT(BlueprintType)
 struct FCompressedImage

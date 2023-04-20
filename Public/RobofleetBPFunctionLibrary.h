@@ -91,7 +91,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	static TArray<uint8> GetOccupancyGridImage(const FString& RobotName);
 
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | HeatMap")
-	FMapMetaData GetOccupancyGridInfo(const FString& RobotName);
+	static FMapMetaData GetOccupancyGridInfo(const FString& RobotName);
 
 	//UFUNCTION(BlueprintCallable, Category = "HeatMap")
 	//static TArray<uint8> ConvertGridtoRGBA(const TArray<int8>& OccupancyGridData);
