@@ -300,6 +300,10 @@ public:
 
 	void PublishTFMsg(const FString& TopicName, const FString& Namespace, const TFMessage& TFMessageMsg); // **to replace PublishTFMessage
 
+	void PublishCompressedImageMsg(const FString& TopicName, const FString& Namespace, const CompressedImage& Msg);
+
+	void PublishImageMsg(const FString& TopicName, const FString& Namespace, const Image& Msg);
+
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
 	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);

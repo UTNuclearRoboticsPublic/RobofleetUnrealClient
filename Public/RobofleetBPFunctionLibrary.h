@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
+#include "Runtime/Engine/Classes/Engine/Texture2D.h"
+#include "Runtime/Engine/Classes/Engine/TextureRenderTarget2D.h"
 #include "RobofleetBPMessageStructs.h"
 #include "RobofleetBPFunctionLibrary.generated.h"
 
@@ -213,7 +217,7 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStopUMRFMsg(const FStopUMRF& StopUMRFMsg);
 
-	UFUNCTION(BlueprintCallable, Category = "Robofleet|Haptics Research")
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | Haptics Research")
 	static void PublishHapticsResearchMsg(const FString& RobotName, const FPoseStamped& PoseStampedMsg, FDateTime CurTimeStamp);
 
 	UFUNCTION(BlueprintCallable, Category = "TeMoto")
@@ -222,9 +226,26 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
     static void PublishDetection(const FDetectedItem& detection);
 
-	
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | Hololens Sensors")
+	static void PublishVLCImageMsg(const FString& TopicName, const FString& Namespace, const FImageROS& ImageMsg);
 
-	
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | Hololens Sensors")
+	static void PublishVLCCompressedImageMsg(const FString& TopicName, const FString& Namespace, const FCompressedImage& CompressedImageMsg, const int& ImageHeight, const int& ImageWidth, const int& BitDepth);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | Hololens Sensors")
+	static void PublishPVImageMsg(const FString& TopicName, const FString& Namespace, const FImageROS& ImageMsg, UTextureRenderTarget2D* RenderTarget);
+
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | Hololens Sensors")
+	static void PublishPVCompressedImageMsg(const FString& TopicName, const FString& Namespace, const FCompressedImage& ImageMsg, UTextureRenderTarget2D* RenderTarget);
+
+	// Utility Functions
+	static void ToCompressedJPEGImage(const void* InRawImageData, const uint32& InHeight, const uint32& InWidth, const uint32& InBitDepth, const ERGBFormat RawFormat, TArray<uint8>& OutCompressedImageData);
+
+	static void GetByteArrayFromTextureRenderTarget(UTextureRenderTarget2D* RenderTarget, TArray<uint8>& OutCompressedImageData, uint32& OutHeight, uint32& OutWidth, uint32& OutBitDepth);
+
+	static void GetCompressedByteArrayFromTextureRenderTarget(UTextureRenderTarget2D* RenderTarget, TArray<uint8>& OutCompressedImageData);
+
+	static void GetRenderTargetFormat(UTextureRenderTarget2D* RenderTarget, FString& Type);
 
 	// Use only for delegates
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
