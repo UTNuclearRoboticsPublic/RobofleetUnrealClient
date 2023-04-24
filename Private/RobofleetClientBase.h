@@ -128,7 +128,7 @@ private:
 
 	void DecodeMsg(const void* Data, FString topic, FString RobotNamespace);
 
-	void DecodeTFMsg(const void* Data);
+	void DecodeTFMsg(const void* Data,bool is_static=false);
 
 	template <typename T> 
 	void EncodeRosMsg(
@@ -260,6 +260,8 @@ public:
 	void GetPeopleTracked(const FString& RobotName, PersonArray& PeopleTrackedArray);
 
 	bool isValidUuid(const FString& id);
+
+
 
 	UFUNCTION()
 	void RefreshRobotList();
