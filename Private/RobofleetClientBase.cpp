@@ -111,7 +111,7 @@ void URobofleetBase::RemoveObjectFromRoot()
  */
 void URobofleetBase::PruneInactiveRobots() {
 	std::map<FString, FDateTime> newMap;
-	int CutoffTime = 5;
+	int CutoffTime = 30;
 	for (std::map<FString, FDateTime>::iterator it = RobotsSeenTime.begin(); it != RobotsSeenTime.end(); ++it) {
 		if (FDateTime::Now().GetSecond() - it->second.GetSecond() > CutoffTime) {
 			OnRobotPruned.Broadcast(it->first);
