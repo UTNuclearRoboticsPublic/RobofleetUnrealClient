@@ -70,7 +70,6 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 
 	UE_LOG(LogRobofleet, Warning, TEXT("Setting refresh timers"));
 	GEngine->GetWorldFromContextObjectChecked(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
-	//GEngine->GetWorldFromContextObject(WorldContextObject)->GetTimerManager().SetTimer(RefreshTimerHandle, this, &URobofleetBase::RefreshRobotList, 5, true);
 	
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
@@ -94,6 +93,8 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotSubscription("detected_leg_clusters", "*");
 	RegisterRobotSubscription("people_detected", "*");
 	RegisterRobotSubscription("people_tracked", "*");
+
+	RegisterRobotSubscription("gaze", "*");
 
 	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 
@@ -245,6 +246,8 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("global_path", "*");
 		RegisterRobotSubscription("trail_path", "*");
 		RegisterRobotSubscription("twist_path", "*");
+
+		RegisterRobotSubscription("gaze", "*");
 
 		//PruneInactiveRobots();
 		updateTFFrames();
@@ -402,7 +405,6 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	else if (topic == "heat_map/count_rate_grid") {
 		OccupancyGridMap[RobotNamespace] = DecodeMsg<OccupancyGrid>(Data);
 		OnOccupancyGridReceived.Broadcast(RobotNamespace);
-
 	}
 
 	//Leg Tracker
@@ -436,6 +438,12 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		}
 		LegTrackingMap[RobotNamespace]->PeopleTracker = DecodeMsg<PersonArray>(Data);
 		// TODO: Create Delegate
+	}
+
+	// Gaze
+	else if (topic == "gaze") {
+	HRIGazeMap[RobotNamespace] = DecodeMsg<Gaze>(Data);
+	OnGazeMessageReceived.Broadcast(RobotNamespace);
 	}
 }
 
@@ -1005,6 +1013,19 @@ void URobofleetBase::PublishDetection(const DetectedItem_augre& Detection)
 	std::string to = "/hololens/detection";
 	UE_LOG(LogTemp, Warning, TEXT("[Publish Detection : ..."));
 	EncodeRosMsg<DetectedItem_augre>(Detection, topic, from, to);
+}
+
+
+void URobofleetBase::PublishGazeMsg(const FString& TopicName, const FString& Namespace, const Gaze& Msg)
+{
+	std::string topic = "hri_msgs/Gaze";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	if (!Namespace.IsEmpty()) {
+		from = "/" + std::string(TCHAR_TO_UTF8(*Namespace)) + from;
+		to = "/" + std::string(TCHAR_TO_UTF8(*Namespace)) + to;
+	}
+	EncodeRosMsg<Gaze>(Msg, topic, from, to);
 }
 
 /*

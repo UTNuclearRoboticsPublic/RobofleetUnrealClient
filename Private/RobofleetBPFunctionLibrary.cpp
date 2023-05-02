@@ -1274,3 +1274,21 @@ void URobofleetBPFunctionLibrary::GetRenderTargetFormat(UTextureRenderTarget2D* 
 	}
 
 }
+
+void URobofleetBPFunctionLibrary::PublishGazeMsg(const FString& TopicName, const FString& Namespace, const FGaze& GazeMsg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		Gaze temp;
+		temp.header.frame_id = std::string(TCHAR_TO_UTF8(*GazeMsg.header.frame_id));
+		temp.header.seq = GazeMsg.header.seq;
+		temp.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+		temp.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
+		temp.sender = std::string(TCHAR_TO_UTF8(*GazeMsg.sender));
+		temp.receiver = std::string(TCHAR_TO_UTF8(*GazeMsg.receiver));
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishGazeMsg(TopicName, Namespace, temp);
+	}
+}
+
+

@@ -238,6 +238,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | Hololens Sensors")
 	static void PublishPVCompressedImageMsg(const FString& TopicName, const FString& Namespace, const FCompressedImage& ImageMsg, UTextureRenderTarget2D* RenderTarget);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | HRI Messages")
+	static void PublishGazeMsg(const FString& TopicName, const FString& Namespace, const FGaze& GazeMsg);
+
 	// Utility Functions
 	static void ToCompressedJPEGImage(const void* InRawImageData, const uint32& InHeight, const uint32& InWidth, const uint32& InBitDepth, const ERGBFormat RawFormat, TArray<uint8>& OutCompressedImageData);
 

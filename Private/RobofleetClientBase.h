@@ -76,6 +76,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPathReceived, FString, Tag, FP
 //OnAgentStatusUpdate event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedLegClusterReceived, FString, RobotName);
 
+//OnGazeMsgReceived event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGazeMessageReceived, FString, RobotName);
+
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
 
 UCLASS(Blueprintable)
@@ -119,6 +122,7 @@ private:
 	std::set<FString> AnchorGTSAM = {};
 	std::map<FString, OccupancyGrid> OccupancyGridMap;
 	std::map<FString, DetectionArray> LegDetectionMap;
+	std::map<FString, Gaze> HRIGazeMap;
 
 	NavSatFix WorldGeoOrigin;
 	bool bIsWorldGeoOriginSet;
@@ -324,6 +328,8 @@ public:
 
 	void PublishDetection(const DetectedItem_augre& Detection);
 
+	void PublishGazeMsg(const FString& TopicName, const FString& Namespace, const Gaze& Msg);
+
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnNewRobotSeen OnNewRobotSeen;
 
@@ -359,6 +365,10 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnResetAllAgentsSeen OnResetAllAgentsSeen;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnGazeMessageReceived OnGazeMessageReceived;
+
 
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC

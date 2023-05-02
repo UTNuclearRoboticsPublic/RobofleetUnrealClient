@@ -634,3 +634,18 @@ struct FDetectedItem
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FString url;	
 };
+
+USTRUCT(BlueprintType)
+struct FGaze
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString sender;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString receiver;
+};
