@@ -74,6 +74,7 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotStatusSubscription();
 	RegisterRobotSubscription("localization", "*");
 	RegisterRobotSubscription("image_raw/compressed", "*");
+	RegisterRobotSubscription("point_cloud", "*");
 	
 	RegisterRobotSubscription("detection", "*");
 	RegisterRobotSubscription("ScrewParameters", "*");
@@ -234,6 +235,7 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("tf", "*");
 		RegisterRobotSubscription("detection", "*");
 		RegisterRobotSubscription("image_raw/compressed", "*");
+		RegisterRobotSubscription("point_cloud", "*");
 
 		RegisterRobotSubscription("heat_map/count_rate_grid", "*");
 		RegisterRobotSubscription("heat_map/count_time_grid", "*");
@@ -270,30 +272,10 @@ typename T URobofleetBase::DecodeMsg(const void* Data)
  * (and aren't just sending it over the wire like in ROS)
  */
 void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNamespace) {
-	//UE_LOG(LogTemp, Warning, TEXT("In Decode Message"));
 	
-	//if (topic == "status") {
-	//	RobotStatus rs = DecodeMsg<RobotStatus>(Data);
-	//	if (!RobotMap[RobotNamespace]->Status.location.empty())
-	//	{
-	//		std::string OldLocation = RobotMap[RobotNamespace]->Status.location; // Need to revisit. Should be frame_id from localization message.
-
-	//		if (OldLocation != rs.location)
-	//		{
-	//			OnRobotLocationChanged.Broadcast(RobotNamespace, UTF8_TO_TCHAR(OldLocation.c_str()), UTF8_TO_TCHAR(rs.location.c_str()));
-	//		}
-	//	}
-	//	RobotMap[RobotNamespace]->Status = rs;
-	//}
-
 	if (topic == "agent_status") {
 		AgentStatus agent_status = DecodeMsg<AgentStatus>(Data);
 		FString AgentNameSpace = FString(agent_status.uid.c_str());
-		//if (!AgentStatusMap[AgentNameSpace].agent_type.empty())
-		//if (AgentStatusMap.find(AgentNameSpace) == AgentStatusMap.end())
-		//{
-		//	OnAgentStatusUpdate.Broadcast(AgentNameSpace);
-		//}
 		AgentStatusMap[AgentNameSpace] = agent_status;
 	}
 
@@ -317,12 +299,6 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		UE_LOG(LogTemp, Warning, TEXT("===Detected Item %s ===") , *DetectedItemUid);
 		DetectedItemAugreMap[DetectedItemUid] = decoded_detected_item;
 		OnDetectedItemReceived.Broadcast(DetectedItemUid, frame_id);
-
-		/*if (!DetectedItemAugreMap[DetectedItemUid].uid.empty())
-		{
-			OnDetectedItemReceived.Broadcast(DetectedItemUid, frame_id);
-		}
-		DetectedItemAugreMap[DetectedItemUid] = decoded_detected_item;*/
 	}
 
 	//ScrewParam Item AugRe_msgs
@@ -333,10 +309,16 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 
 	else if (topic == "image_raw/compressed") {
 		//call function to convert msg to bitmap
-		//return bitmap
-		//UE_LOG(LogTemp, Display, TEXT("Found a compressed image"));
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
+	}
+
+	else if (topic == "point_cloud") {
+		if (!PointCloudMap[RobotNamespace].IsValid()) {
+			PointCloudMap[RobotNamespace] = MakeShared<PointCloud2>();
+		}
+		*PointCloudMap[RobotNamespace] = DecodeMsg<PointCloud2>(Data);
+		OnPointCloudMessageReceived.Broadcast(RobotNamespace);
 	}
 
 	else if (topic == "NavSatFix") {
@@ -344,7 +326,7 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		
 		if (bIsWorldGeoOriginSet)
 		{
-			// TODO: Frank do it
+			// TODO
 			// Convert navsatfix position to x,y,z w.r.t. the worldgeoorigin.
 			// set location in RobotMap eg. RobotMap[RobotNamespace]->Location.x ...
 			ConvertToCartesian(NavSatFixMap[RobotNamespace], RobotNamespace);
@@ -948,6 +930,18 @@ void  URobofleetBase::PublishImageMsg(const FString& TopicName, const FString& N
 	EncodeRosMsg<Image>(Msg, topic, from, to);
 }
 
+void  URobofleetBase::PublishPointCloudMsg(const FString& TopicName, const FString& Namespace, const PointCloud2& Msg)
+{
+	std::string topic = "sensor_msgs/PointCloud2";
+	std::string from = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	std::string to = "/" + std::string(TCHAR_TO_UTF8(*TopicName));
+	if (!Namespace.IsEmpty()) {
+		from = "/" + std::string(TCHAR_TO_UTF8(*Namespace)) + from;
+		to = "/" + std::string(TCHAR_TO_UTF8(*Namespace)) + to;
+	}
+	EncodeRosMsg<PointCloud2>(Msg, topic, from, to);
+}
+
 void URobofleetBase::PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const PoseStamped& PoseStampedMsg)
 {
 	std::string topic = "geometry_msgs/PoseStamped";
@@ -1549,6 +1543,17 @@ FPath URobofleetBase::GetFPath(const FString& RobotName)
 	return Fp;
 }
 
+
+void URobofleetBase::GetPointCloud(const FString& RobotName, TSharedPtr<PointCloud2> PointCloud)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (PointCloudMap.count(RobotNamestd) == 0) {
+		UE_LOG(LogRobofleet, Warning, TEXT("[ERROR] In URobofleetBase::GetPointCloud(): No key exists in PointCloudMap"));
+	}
+	else {
+		PointCloud = PointCloudMap[RobotName];
+	}
+}
 
 /*
 * Leg Tracker Detections

@@ -1050,31 +1050,69 @@ void URobofleetBPFunctionLibrary::PublishHapticsResearchMsg(const FString& Robot
 
 }
 
+void URobofleetBPFunctionLibrary::PublishPointCloudMsg(const FString& TopicName, const FString& Namespace, const FPointCloud2& Msg)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		// Init
+		PointCloud2 temp;
+		uint32 time_stamp = FDateTime::UtcNow().GetMillisecond();
+
+		// Convert and fill ROS sensor_msgs/PointCloud2 message
+		temp.header.frame_id = std::string(TCHAR_TO_UTF8(*Msg.header.frame_id));
+		temp.height = Msg.height;
+		temp.width = Msg.width;
+		temp.is_bigendian = Msg.is_bigendian;
+		temp.point_step = Msg.point_step;
+		temp.row_step = Msg.row_step;
+		temp.is_dense = Msg.is_dense;
+
+		// Fill data vector
+		temp.data.reserve(Msg.data.Num());
+		temp.data.assign(Msg.data.GetData(), Msg.data.GetData() + Msg.data.Num());
+
+		// Fill fields vector
+		temp.fields.reserve(Msg.fields.Num());
+		for (const FPointField& src : Msg.fields)
+		{
+			PointField dst;
+			dst.name = std::string(TCHAR_TO_UTF8(*src.name));;
+			dst.offset = src.offset;
+			dst.datatype = src.datatype;
+			dst.count = src.count;
+			temp.fields.push_back(dst);
+		}
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishPointCloudMsg(TopicName, Namespace, temp);
+	}
+}
+
+
 void URobofleetBPFunctionLibrary::PublishVLCImageMsg(const FString& TopicName, const FString& Namespace, const FImageROS& ImageMsg)
 {
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
 		// Init
-		Image msg;
+		Image temp;
 		uint32 time_stamp = FDateTime::UtcNow().GetMillisecond();
 
 		// Convert and fill ROS sensor_msgs/Image message
-		msg.header.frame_id = std::string(TCHAR_TO_UTF8(*ImageMsg.header.frame_id));
-		msg.header.seq = ImageMsg.header.seq;
-		msg.header.stamp._nsec = time_stamp * 1000000;
-		msg.header.stamp._sec = time_stamp;
-		msg.height = ImageMsg.height;
-		msg.width = ImageMsg.width;
-		msg.encoding = std::string(TCHAR_TO_UTF8(*ImageMsg.encoding));
-		msg.is_bigendian = ImageMsg.is_bigendian;
-		msg.step = ImageMsg.step;
+		temp.header.frame_id = std::string(TCHAR_TO_UTF8(*ImageMsg.header.frame_id));
+		temp.header.seq = ImageMsg.header.seq;
+		temp.header.stamp._nsec = time_stamp * 1000000;
+		temp.header.stamp._sec = time_stamp;
+		temp.height = ImageMsg.height;
+		temp.width = ImageMsg.width;
+		temp.encoding = std::string(TCHAR_TO_UTF8(*ImageMsg.encoding));
+		temp.is_bigendian = ImageMsg.is_bigendian;
+		temp.step = ImageMsg.step;
 
 		// Fill robofleet vector with data
-		msg.data.reserve(ImageMsg.data.Num());
-		msg.data.assign(ImageMsg.data.GetData(), ImageMsg.data.GetData() + ImageMsg.data.Num());
+		temp.data.reserve(ImageMsg.data.Num());
+		temp.data.assign(ImageMsg.data.GetData(), ImageMsg.data.GetData() + ImageMsg.data.Num());
 
 		// Call RobofleetClient Publish Image Msg
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishImageMsg(TopicName, Namespace, msg);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishImageMsg(TopicName, Namespace, temp);
 
 		//UE_LOG(LogTemp, Warning, TEXT("Byte Array Size: %d"), ImageMsg.data.Num());
 	}
@@ -1092,28 +1130,28 @@ void URobofleetBPFunctionLibrary::PublishVLCCompressedImageMsg(const FString& To
 	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
 	{
 		// Init
-		CompressedImage msg;
+		CompressedImage temp;
 		TArray<uint8> OutCompressedImageMsg;
 		uint32 time_stamp = FDateTime::UtcNow().GetMillisecond();
 
 		// Convert and fill ROS sensor_msgs/CompressedImage message
-		msg.header.frame_id = std::string(TCHAR_TO_UTF8(*CompressedImageMsg.header.frame_id));
-		msg.header.seq = CompressedImageMsg.header.seq;
-		msg.header.stamp._nsec = time_stamp * 1000000;
-		msg.header.stamp._sec = time_stamp;
-		msg.format = std::string(TCHAR_TO_UTF8(*CompressedImageMsg.format));
+		temp.header.frame_id = std::string(TCHAR_TO_UTF8(*CompressedImageMsg.header.frame_id));
+		temp.header.seq = CompressedImageMsg.header.seq;
+		temp.header.stamp._nsec = time_stamp * 1000000;
+		temp.header.stamp._sec = time_stamp;
+		temp.format = std::string(TCHAR_TO_UTF8(*CompressedImageMsg.format));
 
 		// Compress image to jpeg
 		ToCompressedJPEGImage(CompressedImageMsg.data.GetData(), ImageHeight, ImageWidth, BitDepth, ERGBFormat::Gray, OutCompressedImageMsg);
 
 		// Fill robofleet vector with data
-		msg.data.reserve(OutCompressedImageMsg.Num());
-		msg.data.assign(OutCompressedImageMsg.GetData(), OutCompressedImageMsg.GetData() + OutCompressedImageMsg.Num());
+		temp.data.reserve(OutCompressedImageMsg.Num());
+		temp.data.assign(OutCompressedImageMsg.GetData(), OutCompressedImageMsg.GetData() + OutCompressedImageMsg.Num());
 
 		//UE_LOG(LogTemp, Warning, TEXT("Compression Size: %d"), OutCompressedImageMsg.Num());
 
 		// Call RobofleetClient publish msg
-		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishCompressedImageMsg(TopicName, Namespace, msg);
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishCompressedImageMsg(TopicName, Namespace, temp);
 	}
 	else { UE_LOG(LogTemp, Error, TEXT("Robofleet Session Not Runnning")); }
 

@@ -79,6 +79,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedLegClusterReceived, FStri
 //OnGazeMsgReceived event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGazeMessageReceived, FString, RobotName);
 
+//OnGazeMsgReceived event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPointCloudMessageReceived, FString, RobotName);
+
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
 
 UCLASS(Blueprintable)
@@ -104,6 +107,7 @@ private:
 	
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, TSharedPtr<LegTrackingData> > LegTrackingMap;
+	std::map<FString, TSharedPtr<PointCloud2>> PointCloudMap;
 	std::map<FString, AgentStatus> AgentStatusMap;
 	std::map<FString, TransformStamped> TransformStampedMap;
 	std::map<FString, TSharedPtr<FrameInfo>> FrameInfoMap;
@@ -255,6 +259,8 @@ public:
 
 	void PrintRobotsSeen();
 
+	void GetPointCloud(const FString& RobotName, TSharedPtr<PointCloud2> PointCloud);
+
 	void GetNonLegClusters(const FString& RobotName, DetectionArray& NonLegClusterArray);
 	
 	void GetDetectedLegClusters(const FString& RobotName, DetectionArray& DetectedLegClusterArray);
@@ -310,6 +316,8 @@ public:
 
 	void PublishImageMsg(const FString& TopicName, const FString& Namespace, const Image& Msg);
 
+	void PublishPointCloudMsg(const FString& TopicName, const FString& Namespace, const PointCloud2& Msg);
+
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
 	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);
@@ -343,7 +351,7 @@ public:
 	FOnImageReceived OnImageReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-		FOnOccupancyGridReceived OnOccupancyGridReceived;
+	FOnOccupancyGridReceived OnOccupancyGridReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedItemReceived OnDetectedItemReceived;
@@ -368,6 +376,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnGazeMessageReceived OnGazeMessageReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnPointCloudMessageReceived OnPointCloudMessageReceived;
 
 
 

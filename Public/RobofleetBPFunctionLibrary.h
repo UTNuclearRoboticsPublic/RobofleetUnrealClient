@@ -220,6 +220,9 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet | Haptics Research")
 	static void PublishHapticsResearchMsg(const FString& RobotName, const FPoseStamped& PoseStampedMsg, FDateTime CurTimeStamp);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | Hololens Sensors")
+	static void PublishPointCloudMsg(const FString& TopicName, const FString& Namespace, const FPointCloud2& Msg);
+
 	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStringCommand(const FString& cmd);
 
