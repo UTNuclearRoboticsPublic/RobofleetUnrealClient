@@ -187,18 +187,22 @@ void URobofleetBase::WebsocketDataCB(const void* Data)
 	// *********************************************************************************
 
 	// If the message received is a tf message, we must handle differently	
-	if (TopicIsolated == "tf" || TopicIsolated == "tf_static")
+	if (TopicIsolated == "tf")
 	{
 		DecodeTFMsg(Data); // Update RobotNamespace
-	}	
+	}
+	else if (TopicIsolated == "tf_static")
+	{
+		DecodeTFMsg(Data, true); // Update RobotNamespace
+	}
 	else
 	{
 		RobotsSeenTime[RobotNamespace] = FDateTime::Now();
-		
+
 		//RobotsSeen.insert(RobotNamespace); // Not sure if this is needed
 
 		DecodeMsg(Data, TopicIsolated, RobotNamespace);
-		
+
 	}
 }
 
@@ -512,7 +516,7 @@ std::string GetTFRoot()
 ////////////////////////////
 
 // Grab namespace from the TF Message
-void URobofleetBase::DecodeTFMsg(const void* Data) {
+void URobofleetBase::DecodeTFMsg(const void* Data, bool is_static) {
 	
 	TFMessage tf_msg = DecodeMsg<TFMessage>(Data);
 
@@ -578,7 +582,7 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		{
 			tf_tree.insert({ {full_frame_id, child_frame_id} });
 		}
-		//if node its already in the tree, update parent
+		//if node is already in the tree, update parent
 		else
 		{
 			tf_tree.erase(it);
@@ -592,6 +596,13 @@ void URobofleetBase::DecodeTFMsg(const void* Data) {
 		FrameInfoMap[FString(child_frame_id.c_str())]->TransformStamped = rs;
 		//update header timestamp with local time to avoid erros
 		FrameInfoMap[FString(child_frame_id.c_str())]->TransformStamped.header.stamp._sec = FDateTime::Now().ToUnixTimestamp();
+
+		// If tf_static
+		if (is_static)
+		{
+			FrameInfoMap[FString(child_frame_id.c_str())]->TransformStamped.header.stamp._sec = -1;
+			UE_LOG(LogRobofleet, Warning, TEXT("FrameInfoMap: %s %d"), *FString(child_frame_id.c_str()), FrameInfoMap[FString(child_frame_id.c_str())]->TransformStamped.header.stamp._sec);
+		}
 
 		// debug
 		//UE_LOG(LogRobofleet, Warning, TEXT("full_frame_id: %s"), *FString(full_frame_id.c_str()));
@@ -959,6 +970,15 @@ void URobofleetBase::PublishStringCommand(const FString& cmd)
 	std::string to = "/umrf_parser/cmd";
 	UE_LOG(LogTemp, Warning, TEXT("[Publish String Cmd : ...  %s"), *cmd);
 	EncodeRosMsg<String>(test, topic, from, to);
+}
+
+void URobofleetBase::PublishDetection(const DetectedItem_augre& Detection)
+{
+	std::string topic = "augre_msgs/DetectedItem";
+	std::string from = "/hololens/detection";
+	std::string to = "/hololens/detection";
+	UE_LOG(LogTemp, Warning, TEXT("[Publish Detection : ..."));
+	EncodeRosMsg<DetectedItem_augre>(Detection, topic, from, to);
 }
 
 /*

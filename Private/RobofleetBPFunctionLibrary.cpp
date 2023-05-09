@@ -1040,6 +1040,58 @@ void URobofleetBPFunctionLibrary::PublishTFMsg(const FString& TopicName, const F
 	}
 }
 
+void URobofleetBPFunctionLibrary::PublishDetection(const FDetectedItem& detection)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		DetectedItem_augre detection_augre;
+
+		detection_augre.uid = std::string(TCHAR_TO_UTF8(*detection.uid));
+		detection_augre.callsign = std::string(TCHAR_TO_UTF8(*detection.callsign));
+		detection_augre.type = std::string(TCHAR_TO_UTF8(*detection.type));
+		detection_augre.type_label = std::string(TCHAR_TO_UTF8(*detection.type_label));
+		detection_augre.how = std::string(TCHAR_TO_UTF8(*detection.how));
+		detection_augre.how_label = std::string(TCHAR_TO_UTF8(*detection.how_label));
+
+		detection_augre.pose.header.frame_id = std::string(TCHAR_TO_UTF8(*detection.pose.header.frame_id));
+		detection_augre.pose.header.seq = detection.pose.header.seq;
+		detection_augre.pose.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+		detection_augre.pose.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
+		detection_augre.pose.pose.position.x = detection.pose.Transform.GetTranslation().X;
+		detection_augre.pose.pose.position.y = detection.pose.Transform.GetTranslation().Y;
+		detection_augre.pose.pose.position.z = detection.pose.Transform.GetTranslation().Z;
+		detection_augre.pose.pose.orientation.x = detection.pose.Transform.GetRotation().X;
+		detection_augre.pose.pose.orientation.y = detection.pose.Transform.GetRotation().Y;
+		detection_augre.pose.pose.orientation.z = detection.pose.Transform.GetRotation().Z;
+		detection_augre.pose.pose.orientation.w = detection.pose.Transform.GetRotation().W;
+
+		detection_augre.cmpr_image.header.frame_id = std::string(TCHAR_TO_UTF8(*detection.cmpr_image.header.frame_id));
+		detection_augre.cmpr_image.header.seq = detection.cmpr_image.header.seq;
+		detection_augre.cmpr_image.header.stamp._nsec = FDateTime::UtcNow().GetMillisecond() * 1000000;
+		detection_augre.cmpr_image.header.stamp._sec = FDateTime::UtcNow().ToUnixTimestamp();
+		detection_augre.cmpr_image.format = std::string(TCHAR_TO_UTF8(*detection.cmpr_image.format));
+
+		//for (auto& data : detection.cmpr_image.data)
+		//{
+		//	detection_augre.cmpr_image.data.push_back(data);
+		//}
+
+		//// Get UTexture2D into a TArray
+		//TArray<uint8> out_compressed_image;
+		//GetCompressedImageData(detection.cmpr_image.data, out_compressed_image);
+		//
+		//// reserve space in image vector to avoid reallocations
+		//detection_augre.cmpr_image.data.reserve(out_compressed_image.Num());
+		//
+		//// copy the contents of the TArray to the std::vector
+		//detection_augre.cmpr_image.data.assign(out_compressed_image.GetData(), out_compressed_image.GetData() + out_compressed_image.Num());
+		//
+		//detection_augre.url = std::string(TCHAR_TO_UTF8(*detection.url));
+
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->PublishDetection(detection_augre);
+	}
+}
+
 // Publish TeMoto msgs
 void URobofleetBPFunctionLibrary::PublishStartUMRFMsg(const FStartUMRF& StartUMRFMsg)
 {

@@ -246,7 +246,8 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "TeMoto")
 	static void PublishStringCommand(const FString& cmd);
 
-	
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | DetectedItem")
+	static void PublishDetection(const FDetectedItem& detection);
 
 	// Use only for delegates
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
