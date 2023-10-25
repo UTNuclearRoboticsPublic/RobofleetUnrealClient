@@ -40,7 +40,7 @@ These shared components are detailed here.
 
     </details>
     <details>
-    <summary>d. Copy and paste the schema just geneated in the {your_pkg}_msgs_robofleet directory just created into the msg_schemas directory in `robofleet_client_lib`. (Expand Below)</summary>
+    <summary>d. Copy and paste the schema just generated in the {your_pkg}_msgs_robofleet directory just created into the msg_schemas directory in `robofleet_client_lib`. (Expand Below)</summary>
     
     ![04_copy_and_paste_schema](https://user-images.githubusercontent.com/84527482/235498904-86d05cab-9e1f-448f-9307-7051525d2600.png)
 
