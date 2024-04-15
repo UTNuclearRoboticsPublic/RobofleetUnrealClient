@@ -79,6 +79,10 @@ void URobofleetBase::Initialize(FString HostUrl, const UObject* WorldContextObje
 	RegisterRobotSubscription("people_detected", "*");
 	RegisterRobotSubscription("people_tracked", "*");
 
+	RegisterRobotSubscription("broadcast_start_umrf_graph", "*");
+	RegisterRobotSubscription("umrf_status", "*");
+	RegisterRobotSubscription("state", "*");
+
 	UE_LOG(LogRobofleet, Log, TEXT("RobofleetBase initialized"));
 
 	bIsInitilized = true;
@@ -199,6 +203,10 @@ void URobofleetBase::RefreshRobotList()
 		RegisterRobotSubscription("trail_path", "*");
 		RegisterRobotSubscription("twist_path", "*");
 
+		RegisterRobotSubscription("broadcast_start_umrf_graph", "*");
+		RegisterRobotSubscription("umrf_status", "*");
+		RegisterRobotSubscription("state", "*");
+
 		//PruneInactiveRobots();
 		// updateTFFrames();
 	}
@@ -284,9 +292,17 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 	else if (topic == "image_raw/compressed") {
 		//call function to convert msg to bitmap
 		//return bitmap
-		UE_LOG(LogTemp, Warning, TEXT("Found a compressed image"));
+		//UE_LOG(LogTemp, Warning, TEXT("Found a compressed image"));
 		RobotImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
 		OnImageReceived.Broadcast(RobotNamespace);
+	}
+
+	else if (topic == "photo") {
+		//call function to convert msg to bitmap
+		//return bitmap
+		//UE_LOG(LogTemp, Warning, TEXT("Found a compressed image"));
+		ReportedImageMap[RobotNamespace] = DecodeMsg<CompressedImage>(Data);
+		OnPhotoReceived.Broadcast(RobotNamespace);
 	}
 
 	else if (topic == "NavSatFix") {
@@ -382,6 +398,28 @@ void URobofleetBase::DecodeMsg(const void* Data, FString topic, FString RobotNam
 		}
 		LegTrackingMap[RobotNamespace]->PeopleTracker = DecodeMsg<PersonArray>(Data);
 		// TODO: Create Delegate
+	}
+
+	else if(topic == "broadcast_start_umrf_graph"){
+		StartUMRF decoded_umrf_g = DecodeMsg<StartUMRF>(Data);
+		FString umrf_graph_json = FString(decoded_umrf_g.umrf_graph_json.c_str());
+		UMRF_Graph[umrf_graph_json] = decoded_umrf_g;
+		OnUMRGGraphReceived.Broadcast(umrf_graph_json);
+	}
+
+	else if(topic == "umrf_status") {
+		String umrf_status = DecodeMsg<String>(Data);
+		std::string action_status = umrf_status.data;
+		int action = action_status.substr(1, action_status.length()).find(';');
+		FString action_name = FString(action_status.substr(0, action+1).c_str());
+		FString status = FString(action_status.substr(action + 2, action_status.length()).c_str());
+		OnUMRGGraphStatus.Broadcast(action_name, status);	
+	}
+
+	else if (topic == "state") {
+	UE_LOG(LogTemp, Warning, TEXT("=== GPT Parser State ==="));
+	String state = DecodeMsg<String>(Data);
+	OnGPTParserState.Broadcast(FString(state.data.c_str()));
 	}
 }
 
@@ -1047,6 +1085,19 @@ TArray<uint8> URobofleetBase::GetRobotImage(const FString& RobotName)
 	
 }
 
+TArray<uint8> URobofleetBase::GetPhoto(const FString& RobotName)
+{
+	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
+	if (ReportedImageMap.count(RobotNamestd) == 0)
+	{
+		return TArray<uint8>();
+	}
+	else
+	{
+		return 	TArray<uint8>(&ReportedImageMap[RobotNamestd].data[0], ReportedImageMap[RobotNamestd].data.size());
+	}	
+}
+
 bool URobofleetBase::IsRobotImageCompressed(const FString& RobotName)
 {
 	FString RobotNamestd = FString(TCHAR_TO_UTF8(*RobotName));
@@ -1251,6 +1302,12 @@ void URobofleetBase::PublishStopUMRFMsg(StopUMRF& StopUMRFMsg)
 	std::string to = "/BroadcastStopUMRFgraph";
 	EncodeRosMsg<StopUMRF>(StopUMRFMsg, topic, from, to);
 	UE_LOG(LogTemp, Warning, TEXT("Publishing UMRF - Broadcast"));
+}
+
+FString URobofleetBase::GetUMRFJson(const FString& umrf_graph_name)
+{
+	if (UMRF_Graph.count(umrf_graph_name) == 0) return "Item unavailable";
+	return FString(UMRF_Graph[umrf_graph_name].umrf_graph_json.c_str());
 }
 
 Path URobofleetBase::GetPath(const FString& RobotName)

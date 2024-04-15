@@ -55,6 +55,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnResetAllAgentsSeen);
 //OnImageRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
 
+//OnImageRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhotoReceived, FString, RobotName);
+
 //OnDetectedItemRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDetectedItemReceived, FString, DetectedItemUid, FString, frame_id);
 
@@ -72,6 +75,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPathReceived, FString, Tag, FP
 
 //OnAgentStatusUpdate event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedLegClusterReceived, FString, RobotName);
+
+//OnUMRGGraphReceived
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUMRGGraphReceived, FString, umrf_graph);
+
+//OnUMRGGraphStatus
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUMRGGraphStatus, FString, umrf_graph, FString, state);
+
+//OnGPTParserState
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGPTParserState, FString, state);
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
 
@@ -102,6 +114,7 @@ private:
 	std::map<FString, TransformStamped> TransformStampedMap;
 	std::map<FString, TSharedPtr<FrameInfo>> FrameInfoMap;
 	std::map<FString, CompressedImage> RobotImageMap;
+	std::map<FString, CompressedImage> ReportedImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, FString> AnchorMap;
 	std::map<FString, DetectedItem_augre> DetectedItemAugreMap;
@@ -115,6 +128,8 @@ private:
 	std::set<FString> RobotsSeen = {};
 	std::set<FString> AnchorGTSAM = {};
 	std::map<FString, DetectionArray> LegDetectionMap;
+	std::map<FString, StartUMRF> UMRF_Graph;
+
 
 	NavSatFix WorldGeoOrigin;
 	bool bIsWorldGeoOriginSet;
@@ -183,6 +198,8 @@ public:
 
 	TArray<uint8> GetRobotImage(const FString& RobotName);     // image_raw/compressed
 
+	TArray<uint8> GetPhoto(const FString& RobotName);     // image_raw/compressed
+
 	bool IsRobotImageCompressed(const FString& RobotName);
 
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
@@ -246,6 +263,8 @@ public:
 
 	void GetPeopleTracked(const FString& RobotName, PersonArray& PeopleTrackedArray);
 
+	FString GetUMRFJson(const FString& umrf_graph_name);
+
 	UFUNCTION()
 	void RefreshRobotList();
 
@@ -308,6 +327,9 @@ public:
 	FOnImageReceived OnImageReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnPhotoReceived OnPhotoReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedItemReceived OnDetectedItemReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
@@ -324,6 +346,15 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnDetectedLegClusterReceived OnDetectedLegClusterReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnUMRGGraphReceived OnUMRGGraphReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnUMRGGraphStatus OnUMRGGraphStatus;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+	FOnGPTParserState OnGPTParserState;
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
 	FOnResetAllAgentsSeen OnResetAllAgentsSeen;

@@ -6,6 +6,8 @@
 #include "RobofleetUnrealClientModule.h"
 #include "RobofleetClientBase.h"
 
+
+
 void URobofleetBPFunctionLibrary::StartRobofleetSession(FString HostUrl, const UObject* WorldContextObject)
 {
 	FRobofleetUnrealClientModule::Get()->StartRobofleetSession(HostUrl, WorldContextObject);
@@ -447,6 +449,19 @@ void URobofleetBPFunctionLibrary::GetPeopleTracked(const FString& RobotName, FPe
 		}
 	}
 }
+
+void URobofleetBPFunctionLibrary::GetUMRF_graph(const FString& graph_name)
+{
+	if (FRobofleetUnrealClientModule::Get()->IsSessionRunning())
+	{
+		FRobofleetUnrealClientModule::Get()->RobofleetClient->GetUMRFJson(graph_name);
+	}
+
+
+}
+
+
+
 
 // Publish Messages to Robofleet
 // *TODO: These need to be rate limited somewhere in the client as there is the potential to overload the server

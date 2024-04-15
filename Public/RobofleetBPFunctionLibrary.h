@@ -142,6 +142,8 @@ class ROBOFLEETUNREALCLIENT_API	URobofleetBPFunctionLibrary : public UBlueprintF
 	UFUNCTION(BlueprintCallable, Category = "Robofleet|Leg Tracker")
 	static void GetPeopleTracked(const FString& RobotName, FPersonArray& PeopleTrackedArray_);
 
+	UFUNCTION(BlueprintCallable, Category = "Robofleet | TeMoto")
+	void GetUMRF_graph(const FString& graph_name);
 
 	// Publish Messages to Robofleet
 	UFUNCTION(BlueprintCallable, Category = "Robofleet")
