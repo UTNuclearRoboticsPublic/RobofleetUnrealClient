@@ -19,7 +19,7 @@
 
 struct RobotData {
 	RobotLocation Location;
-	RobotStatus Status;
+	// RobotStatus Status;
 	bool IsAlive;
 };
 
@@ -53,7 +53,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRobotPruned, FString, RobotName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnResetAllAgentsSeen);
 
 //OnImageRecevied  event
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnImageReceived, FString, RobotName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnImageReceived, FString, RobotName, FString, StreamName);
+
+//OnOccupacyGridRecevied  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOccupancyGridReceived, FString, RobotName);
 
 //OnDetectedItemRecevied  event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDetectedItemReceived, FString, DetectedItemUid, FString, frame_id);
@@ -73,7 +76,40 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPathReceived, FString, Tag, FP
 //OnAgentStatusUpdate event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectedLegClusterReceived, FString, RobotName);
 
+//OnPointCloudMessageReceived
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPointCloudMessageReceived, FString, RobotName);
+
+//OnGoalPoseReceived
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGoalPoseReceived, FString, RobotName);
+
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathReceived, FString, RobotName);
+
+//OnPVCamRequest  event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPVCamRequest, FString, AgentName, bool, req);
+
+//OnMarkerArrayMessageReceived
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMarkerArrayMessageReceived, FString, RobotName);
+
+// surface repair 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStudyModalityReceived, FString, RobotName);
+
+//OnUMRGGraphReceived
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUMRFGraphReceived, FString, umrf_graph);
+
+//OnUMRGGraphStatus
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUMRFGraphStatus, FString, umrf_graph, FString, state);
+
+//OnGPTParserState
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGPTParserState, FString, state);
+
+// Publish Gesture Classifications
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGestureCmd, FString, RobotName);
+
+// Publish Speech Classificationss
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpeechCmd, FString, RobotName);
+
+// Publish Fused Classificationss
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFusedCmd, FString, RobotName);
 
 UCLASS(Blueprintable)
 class ROBOFLEETUNREALCLIENT_API URobofleetBase : public UObject
@@ -92,16 +128,17 @@ private:
 	bool bIsInitilized = false;
 
 	UPROPERTY()
-	UWebsocketClient* SocketClient;
+		UWebsocketClient* SocketClient;
 
 	FTimerHandle RefreshTimerHandle;
-	
+
 	std::map<FString, TSharedPtr<RobotData> > RobotMap;
 	std::map<FString, TSharedPtr<LegTrackingData> > LegTrackingMap;
+	std::map<FString, TSharedPtr<PointCloud2>> PointCloudMap;
 	std::map<FString, AgentStatus> AgentStatusMap;
 	std::map<FString, TransformStamped> TransformStampedMap;
 	std::map<FString, TSharedPtr<FrameInfo>> FrameInfoMap;
-	std::map<FString, CompressedImage> RobotImageMap;
+	std::map<FString, std::map<FString, TSharedPtr<CompressedImage>> > RobotImageMap;
 	std::map<FString, FDateTime> RobotsSeenTime;
 	std::map<FString, FString> AnchorMap;
 	std::map<FString, DetectedItem_augre> DetectedItemAugreMap;
@@ -112,21 +149,33 @@ private:
 	std::map<FString, FLinearColor> ColorGlobalPath;
 	std::map<FString, FLinearColor> ColorTwistPath;
 	std::map<FString, FLinearColor> ColorTrailPath;
+	std::map<FString, Path> GlobalPath;
+	std::map<FString, Path> TwistPath;
+	std::map<FString, Path> TrailPath;
 	std::set<FString> RobotsSeen = {};
 	std::set<FString> AnchorGTSAM = {};
+	std::map<FString, OccupancyGrid> OccupancyGridMap;
 	std::map<FString, DetectionArray> LegDetectionMap;
+	std::map<FString, PoseStamped> GoalPoseMap;
+	std::map<FString, Header> StudyModalityMap;
+	std::map<FString, String> GestureCmdMap;
+	std::map<FString, String> SpeechCmdMap;
+	std::map<FString, String> FusedCmdMap;
+
+	std::map<FString, TSharedPtr<MarkerArray>> MarkerArrayMap;
+	std::map<FString, StartUMRF> UMRF_Graph;
 
 	NavSatFix WorldGeoOrigin;
 	bool bIsWorldGeoOriginSet;
 
-	template <typename T> 
+	template <typename T>
 	typename T DecodeMsg(const void* Data);
 
 	void DecodeMsg(const void* Data, FString topic, FString RobotNamespace);
 
-	void DecodeTFMsg(const void* Data);
+	void DecodeTFMsg(const void* Data, bool is_static = false);
 
-	template <typename T> 
+	template <typename T>
 	void EncodeRosMsg(
 		const T& msg,
 		const std::string& msg_type,
@@ -139,7 +188,7 @@ private:
 	FString FWorldOrigin = FString(WorldOrigin.c_str());
 
 public:
-	
+
 	bool IsInitilized();
 	bool IsConnected();
 	// TODO: Move the Blueprint exposure to the BP function library
@@ -149,8 +198,6 @@ public:
 	void Disconnect();
 
 	void SetWorldGeoOrigin(NavSatFix OriginPose);
-
-	FString GetRobotStatus(const FString& RobotName);
 
 	// ***********************************************************
 	// augre_msgs/agent_status getters
@@ -164,7 +211,7 @@ public:
 
 	FString GetOwner(const FString& RobotName);
 
-	FString GetControlStatus(const FString& RobotName);	
+	FString GetControlStatus(const FString& RobotName);
 
 	// ***********************************************************
 	// geometry_msgs/TransformStamped getters
@@ -172,6 +219,8 @@ public:
 	FString GetRobotLocationString(const FString& RobotName);
 
 	FVector GetRobotPosition(const FString& RobotName);
+
+	void GetGoalPose(const FString& RobotName, PoseStamped& PoseStamped, bool& MsgReceived);
 
 	FTransform GetFrameTransform(const FString& NodeName);
 
@@ -181,9 +230,10 @@ public:
 
 	int GetAgeTransform(const FString& NodeName);
 
-	TArray<uint8> GetRobotImage(const FString& RobotName);     // image_raw/compressed
+	TSet<FString> GetImageStreams(const FString& RobotName);
+	void GetRobotImage(const FString& RobotName, const FString& StreamName, TArray<uint8>& Image);
 
-	bool IsRobotImageCompressed(const FString& RobotName);
+	bool IsRobotImageCompressed(const FString& RobotName, const FString& StreamName);
 
 	TArray<FString> GetAllRobotsAtSite(const FString& Location);
 
@@ -193,6 +243,8 @@ public:
 
 	bool isFrameAvailable(const FString& FrameName);
 
+	bool isAnchorFrame(const FString& FrameName);
+
 	bool IsAgentPublishingStatusMsg(const FString& AgentUid);
 
 	TArray<FString> GetChildrenFrameId(const FString& NodeName);
@@ -200,7 +252,16 @@ public:
 	FTransform LookupTransform(const FString& target_frame, const FString& source_frame);
 
 	// ***********************************************************
+	// nav_msgs/OccupancyGrid getters
+	FMapMetaData GetOccupancyGridInfo(const FString& RobotName);
+	TArray<uint8> GetOccupancyGridImage(const FString& RobotName);
+
+	// ***********************************************************
 	// augre_msgs/DetectedItem getters
+
+	FString ConvertAsaToFrameId(const FString& asa, const FString& tf_prefix);
+
+	FString ConvertFrameIdToAsa(const FString& frame_id, const FString& tf_prefix);
 
 	FString GetDetectedName(const FString& RobotName);		//callsign
 
@@ -214,11 +275,21 @@ public:
 
 	FPoseStamped GetDetectedItemPose(const FString& DetectedItemUid);
 
+	FDateTime GetDetectedItemTimeStamped(const FString& DetectedItemUid);
+
 	TArray<uint8> GetDetectedImage(const FString& RobotName);
 
 	FVector GetDetectedImageSize(const FString& ObjectName);
 
 	FVector GetDetectedItemPosition(const FString& DetectedItemUid);
+
+	FString GetDetectedItemImageURL(const FString& DetectedItemUid);
+
+	TArray<FString> GetAllDetectedItems();
+
+	void RemoveDetectedItem(const FString& DetectedItemUid);
+
+	void AddDetectionToAugReMap(const DetectedItem_augre& Detection);
 
 	// ***********************************************************
 
@@ -230,37 +301,56 @@ public:
 
 	Path GetPath(const FString& RobotName);
 
-	FPath GetFPath(const FString& RobotName);
+	FPath GetFPath(const FString& RobotName, const FString& Type);
 
 	void AssingBaseColor(const FString& RobotName);
 
-	bool IsRobotOk(const FString& RobotName);
-
 	void PrintRobotsSeen();
 
-	void GetNonLegClusters(const FString& RobotName, DetectionArray& NonLegClusterArray);
+	void IsPointCloudReceived(const FString& RobotName, bool& MsgReceived);
+
+	void GetPointCloudFrame(const FString& RobotName, FString& PointCloudFrame);
+
+	void GetPointCloud(const FString& RobotName, TSharedPtr<PointCloud2>& PointCloud, bool& MsgReceived);
+
+	void GetStudyModality(const std::string& RobotName, Header& Msg);
 	
+	// natural input commands
+	void GetGestureResult(const FString& RobotName, std::string& Result);
+
+	void GetSpeechResult(const FString& RobotName, std::string& Result);
+
+	void GetFusedResult(const FString& RobotName, std::string& Result);
+
+	void GetNonLegClusters(const FString& RobotName, DetectionArray& NonLegClusterArray);
+
 	void GetDetectedLegClusters(const FString& RobotName, DetectionArray& DetectedLegClusterArray);
 
 	void GetPeopleDetected(const FString& RobotName, PersonArray& PeopleDetectedArray);
 
 	void GetPeopleTracked(const FString& RobotName, PersonArray& PeopleTrackedArray);
 
+	void GetMarkerArray(const FString& RobotName, TSharedPtr<MarkerArray>& Markers);
+
+	bool isValidUuid(const FString& id);
+	bool isValidUuid(const std::string& id);
+
 	UFUNCTION()
-	void RefreshRobotList();
+		void RefreshRobotList();
 
 	void PruneInactiveRobots();
 
 	void updateTFFrames();
 
 	void ResetAllAgentsSeen();
-	
+
 	void RegisterRobotStatusSubscription();
 
 	void RegisterRobotSubscription(FString TopicName, FString RobotName);
 
-	void PublishStatusMsg(FString RobotName, RobotStatus& RobotStatus);
+	void PublishHeaderMsg(const std::string& TopicName, const std::string& Namespace, const Header& Msg);
 
+	// TODO: To remove
 	void PublishLocationMsg(FString RobotName, RobotLocationStamped& LocationMsg);
 
 	// augre_msgs/agent_status
@@ -269,13 +359,15 @@ public:
 	// augre_msgs/TransformWithCovarianceStamped
 	void PublishTransformWithCovarianceStampedMsg(const FString& TopicName, const TransformWithCovarianceStamped& TFwithCovStamped);
 
+	void PublishBoundingObject3DArrayMsg(const std::string& TopicName, const std::string& Namespace, const BoundingObject3DArray& Msg);
+
 	void PublishAzureSpatialAnchorMsg(const FString& RobotName, const AzureSpatialAnchor& RosAzureSpatialAnchor);
 
 	void PublishMoveBaseSimpleGoal(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
 	void PublishHandPose(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
-	void PublishPath(const FString& RobotName, const Path& PathMsg);
+	void PublishNavigationPath(const FString& RobotName, const Path& PathMsg);
 
 	void PublishTwistMsg(const FString& RobotName, const FString& TopicName, const Twist& TwistMsg);
 
@@ -283,53 +375,126 @@ public:
 
 	void PublishTFMessage(const TFMessage& TFMessageMsg);
 
+	void PublishTFMsg(const FString& TopicName, const FString& Namespace, const TFMessage& TFMessageMsg); // **to replace PublishTFMessage
+
 	void PublishHololensOdom(const FString& RobotName, const PoseStamped& PoseStampedMsg);
 
+	void PublishOdomMsg(const FString& AgentName, const Odometry& OdometryMsg);
+
+	void PublishCompressedImageMsg(const FString& TopicName, const FString& Namespace, const CompressedImage& Msg);
+
+	void PublishImageMsg(const FString& TopicName, const FString& Namespace, const Image& Msg);
+
+	void PublishPointCloudMsg(const FString& TopicName, const FString& Namespace, const PointCloud2& Msg);
+
 	void PublishStartUMRFMsg(StartUMRF& StartUMRFMsg);
-	
+
 	void PublishStopUMRFMsg(StopUMRF& StopUMRFMsg);
 
-	void PublishFollowPose(const FString& RobotUid, const PoseStamped& FollowPoseMsg);
+	void PublishPoseStamped(const FString& RobotUid, const FString& TopicName, const PoseStamped& PoseStampedMsg);
 
-	void PublishFollowCancel(const FString& RobotUid);
+	/*void PublishPolygonStamped(const std::string& TopicName, const std::string& Namespace, const PolygonStamped& Msg);*/
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnNewRobotSeen OnNewRobotSeen;
+	void PublishCancel(const FString& RobotUid, const FString& TopicName);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnNewAnchorSeen OnNewAnchorSeen;
+	void PublishEmptyMsg(const FString& TopicName, const FString& Namespace);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnRobotPruned OnRobotPruned;
+	void PublishUInt8MultiArrayMsg(const std::string& TopicName, const std::string& Namespace, const UInt8MultiArray& Msg);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnImageReceived OnImageReceived;
+	void PublishStringMsg(const std::string& TopicName, const std::string& Namespace, const std::string& StringMessage);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnDetectedItemReceived OnDetectedItemReceived;
+	void PublishUInt8Msg(const std::string& TopicName, const std::string& Namespace, const uint8_t& UInt8Message);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnScrewParametersReceived OnScrewParametersReceived;
+	void PublishAudioData(const std::string& TopicName, const std::string& Namespace, const AudioData& Msg);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnRobotLocationChanged OnRobotLocationChanged;
+	void PublishAudioDataStamped(const std::string& TopicName, const std::string& Namespace, const AudioDataStamped& Msg);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnAgentStatusUpdate OnAgentStatusUpdate;
+	void PublishAudioInfo(const std::string& TopicName, const std::string& Namespace, const AudioInfo& Msg);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnPathReceived OnPathReceived;
+	void PublishBoolMsg(const FString& TopicName, const FString& Namespace, const bool& cmd);
 
-	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnDetectedLegClusterReceived OnDetectedLegClusterReceived;
+	void PublishHapticsResearchMsg(const FString& RobotName, const PoseStamped& PoseStampedMsg);
+
+	void PublishStringCommand(const FString& cmd);
+
+	void PublishDetection(const DetectedItem_augre& Detection);
+
+	void PublishHeaderArrayMsg(const std::string& TopicName, const std::string& Namespace, const HeaderArrayStamped& Msg);
+
+	void PublishImuMsg(const std::string& TopicName, const std::string& Namespace, const Imu& Msg);
 
 	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
-	FOnResetAllAgentsSeen OnResetAllAgentsSeen;
+		FOnNewRobotSeen OnNewRobotSeen;
 
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnNewAnchorSeen OnNewAnchorSeen;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnRobotPruned OnRobotPruned;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnImageReceived OnImageReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnOccupancyGridReceived OnOccupancyGridReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnDetectedItemReceived OnDetectedItemReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnScrewParametersReceived OnScrewParametersReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnRobotLocationChanged OnRobotLocationChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnAgentStatusUpdate OnAgentStatusUpdate;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnPathReceived OnPathReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnDetectedLegClusterReceived OnDetectedLegClusterReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnResetAllAgentsSeen OnResetAllAgentsSeen;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnPointCloudMessageReceived OnPointCloudMessageReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnGoalPoseReceived OnGoalPoseReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnPVCamRequest OnPVCamRequest;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnMarkerArrayMessageReceived OnMarkerArrayMessageReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnStudyModalityReceived OnStudyModalityReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnUMRFGraphReceived OnUMRFGraphReceived;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnUMRFGraphStatus OnUMRFGraphStatus;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnGPTParserState OnGPTParserState;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnGestureCmd OnGestureCmd;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnSpeechCmd OnSpeechCmd;
+
+	UPROPERTY(BlueprintAssignable, Category = "Robofleet")
+		FOnFusedCmd OnFusedCmd;
 
 	//TODO: fix this terrible Idea for demo crunch. This is an extremely hacky way to avoid GC
 	UFUNCTION(BlueprintCallable)
-	void RemoveObjectFromRoot();
+		void RemoveObjectFromRoot();
 
 	void ConvertToCartesian(const NavSatFix& GeoPose, const FString RobotNamespace);
 };

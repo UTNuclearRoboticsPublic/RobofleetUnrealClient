@@ -39,6 +39,19 @@ struct FHeader
 };
 
 USTRUCT(BlueprintType)
+struct FHeaderArrayStamped
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FHeader> data;
+};
+
+
+USTRUCT(BlueprintType)
 struct FPoint
 {
 	GENERATED_BODY()
@@ -78,24 +91,6 @@ struct FPose2D
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	float theta;
-};
-
-USTRUCT(BlueprintType)
-struct FRobotStatus
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString status;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	bool is_ok;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	float battery_level;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString location;
 };
 
 USTRUCT(BlueprintType)
@@ -243,6 +238,9 @@ struct FAzureSpatialAnchor
 	FString ns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString anchor_type;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	FTime timestamp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
@@ -253,85 +251,6 @@ struct FAzureSpatialAnchor
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	TArray<FString> neighbors;
-};
-
-USTRUCT(BlueprintType)
-struct FTeMotoAction
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString name;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	int id;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString children_node;  /// It shopuld be an array... for now just one element 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	int children_id;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString parent_node;	/// It shopuld be an array... for now just one element 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	int parent_id;
-};
-
-USTRUCT(BlueprintType)
-struct FUMRFgraphDiff
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString ADD;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString SUBTRACT;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString operation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString umrf_json;
-};
-
-USTRUCT(BlueprintType)
-struct FStartUMRF
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString umrf_graph_name;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	bool name_match_required;
-
-	//vector
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	TArray<FString> targets;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString umrf_graph_json;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	TArray<FUMRFgraphDiff> umrf_graph_diffs;
-
-}; 
-
-USTRUCT(BlueprintType)
-struct FStopUMRF
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	FString umrf_graph_name;
-
-	//vector
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
-	TArray<FString> targets;
-
 };
 
 USTRUCT(BlueprintType)
@@ -411,6 +330,19 @@ struct FTwistStamped
 	FTwist twist;
 
 };
+
+USTRUCT(BlueprintType)
+struct FTwistWithCovariance
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTwist twist;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<float> covariance;
+};
+
 
 USTRUCT(BlueprintType)
 struct FScrew
@@ -502,4 +434,363 @@ struct FPersonArray
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
 	TArray<FPerson> people;
+};
+
+// Affordance Primitive 
+USTRUCT(BlueprintType)
+struct FScrewStamped
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoint origin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FVector axis;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	bool is_pure_translation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float pitch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float min;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float max;
+};
+
+// Occupancy Grid
+USTRUCT(BlueprintType)
+struct FMapMetaData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTime map_load_time;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float resolution;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 width;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 height;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTransform origin;
+
+};
+
+
+USTRUCT(BlueprintType)
+struct FImageROS
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 height;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 width;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString encoding;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	uint8 is_bigendian;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 step;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<uint8> data;
+};
+
+USTRUCT(BlueprintType)
+struct FCompressedImage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString format;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<uint8> data;
+};
+
+USTRUCT(BlueprintType)
+struct FPointField
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 offset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	uint8 datatype;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 count;
+};
+
+USTRUCT(BlueprintType)
+struct FPointCloud2
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 height;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 width;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FPointField> fields;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	bool is_bigendian;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 point_step;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int32 row_step;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<uint8> data;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	bool is_dense;
+};
+
+USTRUCT(BlueprintType)
+struct FDetectedItem
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString uid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString callsign;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString type;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString type_label;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString how;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString how_label;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoseStamped pose;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FCompressedImage cmpr_image;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString url;
+};
+
+USTRUCT(BlueprintType)
+struct FBoundingObject3D
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	int shape;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString uid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float size_x;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float size_y;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float size_z;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	float radius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoseStamped centroid;
+
+};
+
+USTRUCT(BlueprintType)
+struct FBoundingObject3DArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<FBoundingObject3D> objects;
+
+};
+
+USTRUCT(BlueprintType)
+struct FMarker
+{
+	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FString ns;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		int32 id;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		int32 type;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		int32 action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FTransform pose;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FVector scale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FLinearColor color;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		bool frame_locked;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		TArray<FPoint> points;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		TArray<FLinearColor> colors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FString text;
+};
+
+USTRUCT(BlueprintType)
+struct FMarkerArray
+{
+	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		TArray<FMarker> points;
+};
+
+USTRUCT(BlueprintType)
+struct FAudioData
+{
+	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		TArray<uint8> data;
+};
+
+USTRUCT(BlueprintType)
+struct FAudioDataStamped
+{
+	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FAudioData audio;
+};
+
+USTRUCT(BlueprintType)
+struct FAudioInfo
+{
+	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		int channels;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		int sample_rate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FString sample_format;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		int bitrate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+		FString coding_format;
+};
+
+USTRUCT(BlueprintType)
+struct FImu
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FQuat orientation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<float> orientation_covariance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FVector angular_velocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<float> angular_velocity_covariance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FVector linear_acceleration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	TArray<float> linear_acceleration_covariance;
+};
+
+
+USTRUCT(BlueprintType)
+struct FOdometry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FHeader header;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FString child_frame_id;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FPoseWithCovariance pose;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Robofleet")
+	FTwistWithCovariance twist;
+
 };

@@ -16,7 +16,7 @@ UWebsocketClient::~UWebsocketClient()
 {
 	callbackRegistered = false;
 	Disconnect();
-	UE_LOG(LogRobofleet, Warning, TEXT("Websocket Client destroyed"));
+	UE_LOG(LogRobofleet, Warning, TEXT("Websocket Client destroyed"));	
 }
 
 void UWebsocketClient::Initialize(FString ServerURL /*= TEXT("ws://localhost:8080")*/, FString ServerProtocol /*= TEXT("ws")*/, bool isVerbose /*= false*/) 
@@ -83,7 +83,7 @@ void UWebsocketClient::OnMessageReceived(const void* Data, SIZE_T Size, SIZE_T B
 		else
 		{
 			memcpy(DataBuffer+PrevSize, Data, Size);
-			PrevSize = Size;
+			PrevSize = PrevSize + Size;
 		}
 	}
 	else
